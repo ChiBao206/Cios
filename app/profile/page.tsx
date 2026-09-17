@@ -192,10 +192,10 @@ export default function ProfilePage() {
         <Link href="/" style={{ color: '#cbd5e1', textDecoration: 'none', fontSize: '14px' }}><i className="fas fa-home"></i> Về trang chủ</Link>
       </header>
 
-      <div style={{ maxWidth: '1200px', width: '95%', margin: '30px auto', display: 'flex', gap: '30px', flex: 1, alignItems: 'flex-start' }}>
+      <div className="profile-layout" style={{ maxWidth: '1200px', width: '95%', margin: '30px auto', display: 'flex', gap: '30px', flex: 1, alignItems: 'flex-start' }}>
         
         {/* SIDEBAR BÊN TRÁI */}
-        <aside style={{ width: '280px', background: 'white', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+        <aside className="profile-sidebar" style={{ width: '280px', background: 'white', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
           
           <div style={{ padding: '30px 20px', textAlign: 'center', borderBottom: '1px solid #f1f5f9' }}>
             <div 
@@ -236,7 +236,7 @@ export default function ProfilePage() {
         </aside>
 
         {/* NỘI DUNG CHÍNH BÊN PHẢI */}
-        <main style={{ flex: 1, background: 'white', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0', padding: '40px', minHeight: '600px', position: 'relative' }}>
+        <main className="profile-main" style={{ flex: 1, background: 'white', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0', padding: '40px', minHeight: '600px', position: 'relative' }}>
           
           <style>{`
             .avatar-container:hover .avatar-overlay { opacity: 1 !important; }
@@ -250,6 +250,16 @@ export default function ProfilePage() {
             /* Chat CSS */
             .chat-bubble-user { background: #3b82f6; color: white; padding: 12px 18px; border-radius: 18px 18px 0 18px; max-width: 70%; font-size: 14px; align-self: flex-end; box-shadow: 0 2px 5px rgba(59,130,246,0.2); }
             .chat-bubble-admin { background: #f1f5f9; color: #1e293b; padding: 12px 18px; border-radius: 18px 18px 18px 0; max-width: 70%; font-size: 14px; border: 1px solid #e2e8f0; }
+
+            /* TỰ ĐỘNG CĂN CHỈNH CHO ĐIỆN THOẠI */
+            @media (max-width: 768px) {
+              .profile-layout { flex-direction: column !important; }
+              .profile-sidebar { width: 100% !important; }
+              .profile-main { width: 100% !important; padding: 20px !important; min-height: auto !important; }
+              .invoice-table { display: block; overflow-x: auto; white-space: nowrap; }
+              .settings-container { flex-direction: column !important; gap: 20px !important; }
+              #chat-box-container { min-height: 400px !important; max-height: 60vh !important; }
+            }
           `}</style>
 
           {/* TAB 1: LỊCH SỬ ĐƠN HÀNG */}
@@ -266,7 +276,7 @@ export default function ProfilePage() {
               </div>
 
               {displayedOrders.length > 0 ? (
-                <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px' }}>
+                <table className="invoice-table" style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px' }}>
                   <thead><tr style={{ textAlign: 'left', color: '#64748b', fontSize: '12px', borderBottom: '2px solid #f1f5f9' }}><th style={{ padding: '15px 10px' }}>MÃ ĐƠN</th><th>NGÀY ĐẶT</th><th>TỔNG TIỀN</th><th>TRẠNG THÁI</th><th style={{ textAlign: 'right', paddingRight: '10px' }}></th></tr></thead>
                   <tbody>
                     {displayedOrders.map((order, index) => (
@@ -306,7 +316,7 @@ export default function ProfilePage() {
                   <Link href="/" style={{ color: '#3b82f6', fontWeight: 'bold', textDecoration: 'underline', marginTop: '10px', display: 'inline-block' }}>Khám phá ngay</Link>
                 </div>
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
                   {favorites.map((fav) => (
                     <div key={fav.id} className="fav-card">
                       <button onClick={() => removeFavorite(fav.id)} style={{ position: 'absolute', top: '10px', right: '10px', background: 'white', border: '1px solid #e2e8f0', color: '#ef4444', width: '30px', height: '30px', borderRadius: '50%', cursor: 'pointer', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -393,7 +403,7 @@ export default function ProfilePage() {
           {activeTab === 'settings' && (
             <div>
               <h2 style={{ fontSize: '22px', fontWeight: '800', color: '#1e293b', marginBottom: '30px', paddingBottom: '15px', borderBottom: '1px solid #f1f5f9' }}>Cài đặt tài khoản</h2>
-              <div style={{ display: 'flex', gap: '30px' }}>
+              <div className="settings-container" style={{ display: 'flex', gap: '30px' }}>
                 
                 {/* Đổi thông tin cá nhân */}
                 <div style={{ flex: 1, border: '1px solid #e2e8f0', padding: '25px', borderRadius: '8px', background: 'white' }}>
@@ -436,7 +446,7 @@ export default function ProfilePage() {
         </main>
       </div>
 
-      {/* MODAL HÓA ĐƠN CHI TIẾT (Giữ nguyên không đổi) */}
+      {/* MODAL HÓA ĐƠN CHI TIẾT */}
       {viewOrder && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, backdropFilter: 'blur(4px)' }}>
           <div style={{ background: 'white', borderRadius: '12px', width: '700px', maxWidth: '95%', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', overflow: 'hidden' }}>
@@ -453,21 +463,23 @@ export default function ProfilePage() {
                 <div><span style={{ fontSize: '11px', color: '#64748b', fontWeight: '700', display: 'block' }}>TRẠNG THÁI</span><strong style={{ color: viewOrder.status === 'Đã hủy' ? '#ef4444' : '#10b981', fontSize: '14px' }}>{viewOrder.status}</strong></div>
               </div>
 
-              <table className="invoice-table" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '25px' }}>
-                <thead><tr><th>ĐÁNH GIÁ</th><th>SP</th><th style={{ textAlign: 'center' }}>HÌNH ẢNH</th><th style={{ textAlign: 'center' }}>SL</th><th style={{ textAlign: 'right' }}>GIÁ</th><th style={{ textAlign: 'right' }}>THÀNH TIỀN</th></tr></thead>
-                <tbody>
-                  {viewOrder.items?.map((item: any, index: number) => (
-                    <tr key={index}>
-                      <td style={{ color: '#94a3b8', fontSize: '12px', fontStyle: 'italic' }}>(Chưa đánh giá)</td>
-                      <td style={{ width: '30%', lineHeight: '1.4' }}>{item.name}</td>
-                      <td style={{ textAlign: 'center' }}><img src={item.img} alt={item.name} style={{ width: '45px', height: '45px', objectFit: 'contain', border: '1px solid #e2e8f0', borderRadius: '4px' }} /></td>
-                      <td style={{ textAlign: 'center', fontWeight: '600' }}>{item.qty}</td>
-                      <td style={{ textAlign: 'right' }}>{item.price}</td>
-                      <td style={{ textAlign: 'right', fontWeight: '700', color: '#e11d48' }}>{item.total}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <div style={{ overflowX: 'auto' }}>
+                <table className="invoice-table" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '25px', minWidth: '500px' }}>
+                  <thead><tr><th>ĐÁNH GIÁ</th><th>SP</th><th style={{ textAlign: 'center' }}>HÌNH ẢNH</th><th style={{ textAlign: 'center' }}>SL</th><th style={{ textAlign: 'right' }}>GIÁ</th><th style={{ textAlign: 'right' }}>THÀNH TIỀN</th></tr></thead>
+                  <tbody>
+                    {viewOrder.items?.map((item: any, index: number) => (
+                      <tr key={index}>
+                        <td style={{ color: '#94a3b8', fontSize: '12px', fontStyle: 'italic' }}>(Chưa đánh giá)</td>
+                        <td style={{ width: '30%', lineHeight: '1.4' }}>{item.name}</td>
+                        <td style={{ textAlign: 'center' }}><img src={item.img} alt={item.name} style={{ width: '45px', height: '45px', objectFit: 'contain', border: '1px solid #e2e8f0', borderRadius: '4px' }} /></td>
+                        <td style={{ textAlign: 'center', fontWeight: '600' }}>{item.qty}</td>
+                        <td style={{ textAlign: 'right' }}>{item.price}</td>
+                        <td style={{ textAlign: 'right', fontWeight: '700', color: '#e11d48' }}>{item.total}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
 
               <div style={{ textAlign: 'right', paddingRight: '10px' }}>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '40px', alignItems: 'center' }}>

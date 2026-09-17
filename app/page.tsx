@@ -38,21 +38,23 @@ export default function Home() {
   const [isCategoryOpen, setIsCategoryOpen] = useState(false); 
   const productsPerPage = 8; 
 
-  // 1. CÁC STATE CHO BỘ LỌC
+// 1. CÁC STATE CHO BỘ LỌC
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [maxPrice, setMaxPrice] = useState(5000000); // Mặc định 5 triệu
+  const [minPrice, setMinPrice] = useState(0); // Thêm giá tối thiểu
+  const [maxPrice, setMaxPrice] = useState(5000000); 
   const [searchTerm, setSearchTerm] = useState("");
 
   // 2. TỰ ĐỘNG VỀ TRANG 1 KHI ĐỔI BỘ LỌC
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedCategory, maxPrice, searchTerm]);
+  }, [selectedCategory, minPrice, maxPrice, searchTerm]);
 
   // 3. THUẬT TOÁN LỌC SẢN PHẨM TỔNG HỢP
-  const baseProducts = db.products.slice(4); // Lấy danh sách bỏ 4 sp TOP đầu
+  const baseProducts = db.products.slice(4); 
   const filteredProducts = baseProducts.filter(product => {
     const matchCat = selectedCategory === "all" || String(product.category_id) === String(selectedCategory);
-    const matchPrice = Number(product.price) <= maxPrice;
+    // Tính toán khoảng giá (từ minPrice đến maxPrice)
+    const matchPrice = Number(product.price) >= minPrice && Number(product.price) <= maxPrice;
     const matchSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
     return matchCat && matchPrice && matchSearch;
   });
@@ -308,33 +310,48 @@ export default function Home() {
           </div>
 
           <div className="sidebar-box">
-            <h3>
-              <i
-                className="fas fa-money-bill-wave"
-                style={{ color: "#eab308" }}
-              ></i>{" "}
-              KHOẢNG GIÁ
-            </h3>
-            <div className="sidebar-box">
-            <h3>
+            <h3 style={{ marginBottom: '15px' }}>
               <i className="fas fa-money-bill-wave" style={{ color: "#eab308" }}></i> KHOẢNG GIÁ
             </h3>
-            <div style={{ padding: '15px 0 5px' }}>
+            
+            {/* THANH KÉO GIÁ */}
+            <div style={{ paddingBottom: '15px', borderBottom: '1px solid #e2e8f0', marginBottom: '15px' }}>
               <input
                 type="range"
                 min="0"
                 max="5000000"
                 step="100000"
                 value={maxPrice}
-                onChange={(e) => setMaxPrice(Number(e.target.value))}
+                onChange={(e) => {
+                  setMinPrice(0); // Về 0 khi dùng thanh kéo
+                  setMaxPrice(Number(e.target.value));
+                }}
                 style={{ width: '100%', cursor: 'pointer', accentColor: '#e11d48' }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginTop: '10px', color: '#64748b', fontWeight: 'bold' }}>
                 <span>0 đ</span>
-                <span style={{ color: '#e11d48', borderBottom: '1px dashed' }}>Dưới {maxPrice.toLocaleString('vi-VN')} đ</span>
+                <span style={{ color: '#e11d48' }}>Dưới {maxPrice.toLocaleString('vi-VN')} đ</span>
               </div>
             </div>
-          </div>
+
+            {/* CÁC Ô CHỌN GIÁ NHANH */}
+            <ul className="price-filter-list" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              <li style={{ cursor: 'pointer', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: minPrice === 0 && maxPrice === 500000 ? '#e11d48' : '#334155', fontWeight: minPrice === 0 && maxPrice === 500000 ? 'bold' : 'normal' }} onClick={() => { setMinPrice(0); setMaxPrice(500000); }}>
+                <div style={{ width: '16px', height: '16px', borderRadius: '4px', border: '1px solid', borderColor: minPrice === 0 && maxPrice === 500000 ? '#e11d48' : '#cbd5e1', background: minPrice === 0 && maxPrice === 500000 ? '#e11d48' : 'white' }}></div> Dưới 500k
+              </li>
+              <li style={{ cursor: 'pointer', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: minPrice === 500000 && maxPrice === 1000000 ? '#e11d48' : '#334155', fontWeight: minPrice === 500000 && maxPrice === 1000000 ? 'bold' : 'normal' }} onClick={() => { setMinPrice(500000); setMaxPrice(1000000); }}>
+                <div style={{ width: '16px', height: '16px', borderRadius: '4px', border: '1px solid', borderColor: minPrice === 500000 && maxPrice === 1000000 ? '#e11d48' : '#cbd5e1', background: minPrice === 500000 && maxPrice === 1000000 ? '#e11d48' : 'white' }}></div> 500k - 1 Triệu
+              </li>
+              <li style={{ cursor: 'pointer', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: minPrice === 1000000 && maxPrice === 3000000 ? '#e11d48' : '#334155', fontWeight: minPrice === 1000000 && maxPrice === 3000000 ? 'bold' : 'normal' }} onClick={() => { setMinPrice(1000000); setMaxPrice(3000000); }}>
+                <div style={{ width: '16px', height: '16px', borderRadius: '4px', border: '1px solid', borderColor: minPrice === 1000000 && maxPrice === 3000000 ? '#e11d48' : '#cbd5e1', background: minPrice === 1000000 && maxPrice === 3000000 ? '#e11d48' : 'white' }}></div> 1 - 3 Triệu
+              </li>
+              <li style={{ cursor: 'pointer', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: minPrice === 3000000 && maxPrice === 50000000 ? '#e11d48' : '#334155', fontWeight: minPrice === 3000000 && maxPrice === 50000000 ? 'bold' : 'normal' }} onClick={() => { setMinPrice(3000000); setMaxPrice(50000000); }}>
+                <div style={{ width: '16px', height: '16px', borderRadius: '4px', border: '1px solid', borderColor: minPrice === 3000000 && maxPrice === 50000000 ? '#e11d48' : '#cbd5e1', background: minPrice === 3000000 && maxPrice === 50000000 ? '#e11d48' : 'white' }}></div> Trên 3 Triệu
+              </li>
+              <li style={{ cursor: 'pointer', marginTop: '15px', fontSize: '13px', color: '#3b82f6', fontWeight: 'bold', textAlign: 'center' }} onClick={() => { setMinPrice(0); setMaxPrice(5000000); }}>
+                <i className="fas fa-sync-alt"></i> Bỏ lọc giá
+              </li>
+            </ul>
           </div>
 
           <div className="sidebar-box">
