@@ -11,7 +11,7 @@ export default function RegisterPage() {
     fullname: '', username: '', phone: '', email: '', password: '', confirmPassword: ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
       alert("Mật khẩu nhập lại không khớp!");
@@ -28,21 +28,14 @@ export default function RegisterPage() {
       (u) => u.username === inputUser || u.email === inputEmail
     );
 
-    // 2. Kiểm tra xem đã có trong bộ nhớ tạm (localStorage) chưa
-    const existingLocalUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-    const existInLocal = existingLocalUsers.find(
-      (u: any) => u.username === inputUser || u.email === inputEmail
-    );
-
     // Báo lỗi nếu dính 1 trong 2 nơi
-    if (existInDB || existInLocal) {
+    if (existInDB) {
       alert("Tên đăng nhập hoặc Email đã được sử dụng!");
       return;
     }
 
     // Tạo user mới
     const newUser = {
-      id: Date.now(),
       username: inputUser,
       email: inputEmail,
       phone: formData.phone,
@@ -50,11 +43,26 @@ export default function RegisterPage() {
       role: "0" // 0 là khách hàng bình thường
     };
 
-    // Lưu vào localStorage
-    localStorage.setItem('registeredUsers', JSON.stringify([...existingLocalUsers, newUser]));
+    try {
+      const res = await fetch('/api/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newUser),
+      });
 
-    alert("Đăng ký thành công! Vui lòng đăng nhập.");
-    router.push('/login');
+      if (res.ok) {
+        alert("Đăng ký thành công! Vui lòng đăng nhập.");
+        router.push('/login');
+      } else {
+        const errorData = await res.json();
+        alert(errorData.error || "Đăng ký thất bại!");
+      }
+    } catch (error) {
+      console.error("Lỗi khi đăng ký:", error);
+      alert("Đã xảy ra lỗi, vui lòng thử lại sau.");
+    }
   };
 
   return (
