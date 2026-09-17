@@ -268,6 +268,19 @@ export default function AdminDashboard() {
         
         .chat-bubble-customer { background: #f1f5f9; color: #1e293b; padding: 12px 18px; border-radius: 18px 18px 18px 0; max-width: 75%; font-size: 14px; align-self: flex-start; border: 1px solid #e2e8f0; }
         .chat-bubble-admin { background: #3b82f6; color: white; padding: 12px 18px; border-radius: 18px 18px 0 18px; max-width: 75%; font-size: 14px; align-self: flex-end; box-shadow: 0 2px 5px rgba(59,130,246,0.2); }
+        /* Tự động điều chỉnh giao diện trên điện thoại */
+        @media (max-width: 768px) {
+          .admin-layout { flex-direction: column; }
+          .admin-sidebar { width: 100%; position: relative; height: auto; }
+          .admin-menu { display: flex; flex-wrap: wrap; justify-content: center; padding: 10px; gap: 5px; }
+          .admin-menu li { padding: 8px 12px; border-left: none; border-bottom: 3px solid transparent; font-size: 13px; }
+          .admin-menu li:hover, .admin-menu li.active { border-left: none; border-bottom-color: #38bdf8; }
+          .admin-main { margin-left: 0; width: 100%; padding: 15px; }
+          .chart-container { flex-direction: column; }
+          .chart-box { height: auto; min-height: 300px; }
+          .admin-table { display: block; overflow-x: auto; white-space: nowrap; } /* Cho phép vuốt ngang bảng */
+          .stat-card { min-width: 100%; }
+        }
       `}</style>
 
       <div className="admin-layout">
