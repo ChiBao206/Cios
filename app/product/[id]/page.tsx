@@ -132,7 +132,12 @@ export default function ProductDetail() {
     );
   }
 
-  const handleBuyNow = (product: any) => {
+const handleBuyNow = (product: any) => {
+    if (!user) {
+      alert("Vui lòng đăng nhập để mua hàng!");
+      router.push('/login');
+      return;
+    }
     addToCart(product, quantity, false); 
     router.push('/cart'); 
   };
@@ -301,10 +306,25 @@ export default function ProductDetail() {
             </div>
 
             <div className="pd-buttons">
-              <button className="btn-add" onClick={() => addToCart(product, quantity, true)}>
-                <i className="fas fa-cart-plus"></i> THÊM VÀO GIỎ
-              </button>
-              <button className="btn-buy" onClick={() => handleBuyNow(product)}>
+              <button className="btn-add" onClick={() => {
+    if (!user) {
+      alert("Vui lòng đăng nhập để thêm vào giỏ hàng!");
+      router.push('/login');
+    } else {
+      addToCart(product, quantity, true);
+    }
+  }}>
+    <i className="fas fa-cart-plus"></i> THÊM VÀO GIỎ
+  </button>
+             <button className="btn-buy" onClick={() => {
+                if (!user) {
+                  alert("Vui lòng đăng nhập để mua hàng!");
+                  router.push('/login');
+                } else {
+                  addToCart(product, quantity, false);
+                  router.push('/cart');
+                }
+              }}>
                 MUA NGAY
               </button>
             </div>

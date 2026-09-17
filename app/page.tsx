@@ -1,15 +1,15 @@
 "use client"; // Bắt buộc phải có dòng này ở đầu file để dùng useState trong Next.js
 
 import Link from "next/link";
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation'; // 1. Khai báo công cụ chuyển trang
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation"; // 1. Khai báo công cụ chuyển trang
 import db from "../db.json";
-import { useCart } from './context/CartContext';
-import NotifBadge from '@/app/components/NotifBadge';
+import { useCart } from "./context/CartContext";
+import NotifBadge from "@/app/components/NotifBadge";
 
 export default function Home() {
   const categories = db.categories;
- const router = useRouter(); // 2. Khởi tạo router
+  const router = useRouter(); // 2. Khởi tạo router
   // 1. Lấy 4 sản phẩm đầu làm "Bán chạy nhất"
   const hotProducts = db.products.slice(0, 4);
 
@@ -21,21 +21,21 @@ export default function Home() {
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    const loggedInUser = localStorage.getItem('currentUser');
+    const loggedInUser = localStorage.getItem("currentUser");
     if (loggedInUser) {
       setUser(JSON.parse(loggedInUser));
     }
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('currentUser');
+    localStorage.removeItem("currentUser");
     setUser(null);
   };
   // ==========================================
   // THUẬT TOÁN PHÂN TRANG (PAGINATION LOGIC)
   // ==========================================
   const [currentPage, setCurrentPage] = useState(1);
-  const [isCategoryOpen, setIsCategoryOpen] = useState(false); 
+  const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const productsPerPage = 8; // Cho hiển thị 8 sản phẩm / trang (2 hàng)
 
   // Tính toán vị trí cắt dữ liệu cho trang hiện tại
@@ -47,10 +47,15 @@ export default function Home() {
     indexOfFirstProduct,
     indexOfLastProduct,
   );
- // 3. TẠO HÀM XỬ LÝ NÚT MUA NGAY
+  // 3. TẠO HÀM XỬ LÝ NÚT MUA NGAY
   const handleBuyNow = (product: any) => {
-    addToCart(product);       // Bước A: Thêm vào giỏ
-    router.push('/cart');     // Bước B: Chuyển ngay sang trang Giỏ hàng
+    if (!user) {
+      alert("Vui lòng đăng nhập để mua hàng!");
+      router.push("/login"); // Chuyển hướng sang trang đăng nhập
+      return;
+    }
+    addToCart(product);
+    router.push("/cart");
   };
   // Tính tổng số trang (Ví dụ: 35 / 8 = 5 trang)
   const totalPages = Math.ceil(remainingProducts.length / productsPerPage);
@@ -105,34 +110,96 @@ export default function Home() {
             <Link href="/contact" className="nav-link">
               <i className="fas fa-phone-alt"></i> Liên hệ
             </Link>
-            <Link href="/notifications" className="nav-link" style={{ position: 'relative' }}>
-  <i className="fas fa-bell"></i> Thông báo
-  <NotifBadge />
-</Link>
-            <Link href="/cart" className="nav-link" style={{ position: 'relative' }}>
-  <i className="fas fa-shopping-cart"></i> Giỏ hàng
-  {totalItems > 0 && (
-    <span style={{ position: 'absolute', top: '-8px', right: '-12px', background: '#e11d48', color: 'white', fontSize: '10px', padding: '2px 6px', borderRadius: '50%' }}>
-      {totalItems}
-    </span>
-  )}
-</Link>
-  {user ? (
+            <Link
+              href="/notifications"
+              className="nav-link"
+              style={{ position: "relative" }}
+            >
+              <i className="fas fa-bell"></i> Thông báo
+              <NotifBadge />
+            </Link>
+            <Link
+              href="/cart"
+              className="nav-link"
+              style={{ position: "relative" }}
+            >
+              <i className="fas fa-shopping-cart"></i> Giỏ hàng
+              {totalItems > 0 && (
+                <span
+                  style={{
+                    position: "absolute",
+                    top: "-8px",
+                    right: "-12px",
+                    background: "#e11d48",
+                    color: "white",
+                    fontSize: "10px",
+                    padding: "2px 6px",
+                    borderRadius: "50%",
+                  }}
+                >
+                  {totalItems}
+                </span>
+              )}
+            </Link>
+            {user ? (
               /* NẾU ĐÃ ĐĂNG NHẬP */
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginLeft: '10px' }}>
-                <Link href={String(user.role) === "1" ? "/admin" : "/profile"} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textDecoration: 'none', lineHeight: '1.2' }}>
-                  <span style={{ color: '#94a3b8', fontSize: '11px' }}>Xin chào,</span>
-                  <span style={{ color: '#4ade80', fontSize: '14px', fontWeight: 'bold' }}>{user.username.toUpperCase()}</span>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "15px",
+                  marginLeft: "10px",
+                }}
+              >
+                <Link
+                  href={String(user.role) === "1" ? "/admin" : "/profile"}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    textDecoration: "none",
+                    lineHeight: "1.2",
+                  }}
+                >
+                  <span style={{ color: "#94a3b8", fontSize: "11px" }}>
+                    Xin chào,
+                  </span>
+                  <span
+                    style={{
+                      color: "#4ade80",
+                      fontSize: "14px",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {user.username.toUpperCase()}
+                  </span>
                 </Link>
-                <button onClick={handleLogout} style={{ background: '#ef4444', color: 'white', border: 'none', padding: '6px 15px', borderRadius: '4px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s' }}>
+                <button
+                  onClick={handleLogout}
+                  style={{
+                    background: "#ef4444",
+                    color: "white",
+                    border: "none",
+                    padding: "6px 15px",
+                    borderRadius: "4px",
+                    fontSize: "13px",
+                    fontWeight: "bold",
+                    cursor: "pointer",
+                    transition: "0.2s",
+                  }}
+                >
                   Thoát
                 </button>
               </div>
             ) : (
               /* NẾU CHƯA ĐĂNG NHẬP: HIỂN THỊ ĐĂNG NHẬP / ĐĂNG KÝ */
               <>
-                <Link href="/login" className="nav-link"><i className="fas fa-user"></i> Đăng nhập</Link>
-                <Link href="/register" className="nav-link"><i className="fas fa-user-plus"></i> Đăng ký</Link>
+                <Link href="/login" className="nav-link">
+                  <i className="fas fa-user"></i> Đăng nhập
+                </Link>
+                <Link href="/register" className="nav-link">
+                  <i className="fas fa-user-plus"></i> Đăng ký
+                </Link>
               </>
             )}
           </nav>
@@ -164,36 +231,62 @@ export default function Home() {
         {/* CỘT TRÁI (SIDEBAR) */}
         <aside className="sidebar-left">
           {/* DANH MỤC (ĐÃ SỬA LỖI ĐÓNG MỞ) */}
-          <div 
+          <div
             className="sidebar-box category-dropdown"
             onMouseEnter={() => setIsCategoryOpen(true)}
             onMouseLeave={() => setIsCategoryOpen(false)}
           >
-            <h3 
-              onClick={() => setIsCategoryOpen(!isCategoryOpen)} 
-              style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-            >
-              <span><i className="fas fa-folder-open" style={{ color: '#facc15', marginRight: '8px' }}></i> DANH MỤC</span>
-              <i 
-                className="fas fa-caret-down arrow-icon" 
-                style={{ transform: isCategoryOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }}
-              ></i>
-            </h3>
-            <ul 
-              className="category-vertical" 
-              style={{ 
-                maxHeight: isCategoryOpen ? '500px' : '0', 
-                opacity: isCategoryOpen ? 1 : 0,
-                overflow: 'hidden',
-                transition: 'all 0.4s ease',
-                marginTop: isCategoryOpen ? '10px' : '0',
-                paddingTop: isCategoryOpen ? '10px' : '0',
-                borderTop: isCategoryOpen ? '1px dashed #e2e8f0' : 'none'
+            <h3
+              onClick={() => setIsCategoryOpen(!isCategoryOpen)}
+              style={{
+                cursor: "pointer",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
               }}
             >
-              <li className="active">Tất cả <i className="fas fa-arrow-right" style={{ fontSize: '10px' }}></i></li>
+              <span>
+                <i
+                  className="fas fa-folder-open"
+                  style={{ color: "#facc15", marginRight: "8px" }}
+                ></i>{" "}
+                DANH MỤC
+              </span>
+              <i
+                className="fas fa-caret-down arrow-icon"
+                style={{
+                  transform: isCategoryOpen ? "rotate(180deg)" : "rotate(0deg)",
+                  transition: "0.3s",
+                }}
+              ></i>
+            </h3>
+            <ul
+              className="category-vertical"
+              style={{
+                maxHeight: isCategoryOpen ? "500px" : "0",
+                opacity: isCategoryOpen ? 1 : 0,
+                overflow: "hidden",
+                transition: "all 0.4s ease",
+                marginTop: isCategoryOpen ? "10px" : "0",
+                paddingTop: isCategoryOpen ? "10px" : "0",
+                borderTop: isCategoryOpen ? "1px dashed #e2e8f0" : "none",
+              }}
+            >
+              <li className="active">
+                Tất cả{" "}
+                <i
+                  className="fas fa-arrow-right"
+                  style={{ fontSize: "10px" }}
+                ></i>
+              </li>
               {categories.map((cat) => (
-                <li key={cat.id}>{cat.name} <i className="fas fa-arrow-right" style={{ fontSize: '10px' }}></i></li>
+                <li key={cat.id}>
+                  {cat.name}{" "}
+                  <i
+                    className="fas fa-arrow-right"
+                    style={{ fontSize: "10px" }}
+                  ></i>
+                </li>
               ))}
             </ul>
           </div>
@@ -262,9 +355,12 @@ export default function Home() {
             </button>
           </div>
 
-         {/* BÁN CHẠY NHẤT */}
-          <h2 className="section-title"><i className="fas fa-fire" style={{ color: '#e11d48' }}></i> BÁN CHẠY NHẤT</h2>
-          <div className="hot-grid" style={{ marginBottom: '40px' }}>
+          {/* BÁN CHẠY NHẤT */}
+          <h2 className="section-title">
+            <i className="fas fa-fire" style={{ color: "#e11d48" }}></i> BÁN
+            CHẠY NHẤT
+          </h2>
+          <div className="hot-grid" style={{ marginBottom: "40px" }}>
             {hotProducts.map((product) => (
               <div className="hot-card" key={product.id}>
                 <div className="hot-badge">TOP 1</div>
@@ -274,16 +370,28 @@ export default function Home() {
                   </Link>
                 </div>
                 <div className="hot-info">
-                  <Link href={`/product/${product.id}`} style={{ textDecoration: 'none' }}>
+                  <Link
+                    href={`/product/${product.id}`}
+                    style={{ textDecoration: "none" }}
+                  >
                     <h3>{product.name}</h3>
                   </Link>
-                  <div className="hot-price">{Number(product.price).toLocaleString('vi-VN')} đ</div>
-                  
-                  {/* GẮN HÀM MUA NGAY VÀO ĐÂY */}
-                  <button className="btn-hot-add" onClick={() => handleBuyNow(product)}>
+                  <div className="hot-price">
+                    {Number(product.price).toLocaleString("vi-VN")} đ
+                  </div>
+
+               {/* GẮN HÀM MUA NGAY TRỰC TIẾP VÀO NÚT */}
+                  <button className="btn-hot-add" onClick={() => {
+                    if (!user) {
+                      alert("Vui lòng đăng nhập để mua hàng!");
+                      router.push('/login');
+                    } else {
+                      addToCart(product);
+                      router.push('/cart');
+                    }
+                  }}>
                     Mua Ngay
                   </button>
-                  
                 </div>
               </div>
             ))}
@@ -326,7 +434,19 @@ export default function Home() {
                     <i className="fas fa-tag"></i> Chỉ còn: {product.quantity}{" "}
                     cái
                   </div>
-                  <button className="btn-hot-add" onClick={() => addToCart(product)}>Thêm vào giỏ hàng</button>
+                  <button
+                    className="btn-hot-add"
+                    onClick={() => {
+                      if (!user) {
+                        alert("Vui lòng đăng nhập để thêm vào giỏ hàng!");
+                        router.push('/login');
+                      } else {
+                        addToCart(product);
+                      }
+                    }}
+                  >
+                    Thêm vào giỏ hàng
+                  </button>
                 </div>
               </div>
             ))}
