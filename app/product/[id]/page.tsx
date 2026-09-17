@@ -549,7 +549,28 @@ export default function ProductDetail() {
       {/* FOOTER */}
       <footer className="pro-footer" style={{ background: '#1e293b', color: '#cbd5e1', paddingTop: '60px' }}>
         <div className="footer-container" style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', flexWrap: 'wrap', gap: '40px', padding: '0 20px', paddingBottom: '40px' }}>
-         <div className="footer-col" style={{ flex: 1.5, minWidth: '250px' }}>
+          <div className="footer-col" style={{ flex: 1.5, minWidth: '250px' }}>
+            <h3 style={{ color: 'white', marginBottom: '20px' }}>CAMERA B&N</h3>
+            <p style={{ lineHeight: 1.6, marginBottom: '20px' }}>Đối tác tin cậy cung cấp giải pháp an ninh toàn diện. Cam kết sản phẩm chính hãng, dịch vụ tận tâm và hỗ trợ kỹ thuật trọn đời.</p>
+            <div className="social-icons" style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+              <div className="social-btn" style={{ width: '35px', height: '35px', borderRadius: '50%', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: '#3b5998' }}><i className="fab fa-facebook-f"></i></div>
+              <div className="social-btn" style={{ width: '35px', height: '35px', borderRadius: '50%', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: '#e1306c' }}><i className="fab fa-instagram"></i></div>
+              <div className="social-btn" style={{ width: '35px', height: '35px', borderRadius: '50%', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: '#ff0000' }}><i className="fab fa-youtube"></i></div>
+            </div>
+          </div>
+
+          <div className="footer-col" style={{ flex: 1, minWidth: '200px' }}>
+            <h3 style={{ color: 'white', marginBottom: '20px' }}>CHÍNH SÁCH HỖ TRỢ</h3>
+            <ul className="footer-links" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              <li style={{ marginBottom: '12px' }}><span style={{ color: '#0ea5e9', marginRight: '8px' }}>›</span> Chính sách bảo hành 24 tháng</li>
+              <li style={{ marginBottom: '12px' }}><span style={{ color: '#0ea5e9', marginRight: '8px' }}>›</span> Đổi trả 1-1 trong 30 ngày</li>
+              <li style={{ marginBottom: '12px' }}><span style={{ color: '#0ea5e9', marginRight: '8px' }}>›</span> Chính sách bảo mật thông tin</li>
+              <li style={{ marginBottom: '12px' }}><span style={{ color: '#0ea5e9', marginRight: '8px' }}>›</span> Hướng dẫn mua hàng online</li>
+              <li style={{ marginBottom: '12px' }}><span style={{ color: '#0ea5e9', marginRight: '8px' }}>›</span> Hướng dẫn thanh toán</li>
+            </ul>
+          </div>
+
+          <div className="footer-col" style={{ flex: 1.5, minWidth: '250px' }}>
             <h3 style={{ color: 'white', marginBottom: '20px' }}>LIÊN HỆ VỚI CHÚNG TÔI</h3>
             <div style={{ display: 'flex', gap: '15px', marginBottom: '15px' }}>
               <div style={{ color: '#0ea5e9', fontSize: '18px' }}><i className="fas fa-map-marker-alt"></i></div>
