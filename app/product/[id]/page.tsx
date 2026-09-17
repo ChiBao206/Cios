@@ -584,6 +584,29 @@ export default function ProductDetail() {
               <div style={{ color: '#0ea5e9', fontSize: '18px' }}><i className="fas fa-envelope"></i></div>
               <div><strong style={{ color: 'white' }}>Email hỗ trợ:</strong><p style={{ margin: '5px 0 0 0' }}>hotro@cameracb.com</p></div>
             </div>
+            <div className="footer-col">
+            <h3>BẢN ĐỒ CỬA HÀNG</h3>
+            <div
+              className="map-frame"
+              style={{
+                background: "#ccc",
+                height: "150px",
+                borderRadius: "8px",
+                display: "flex",
+                alignItems: "center",
+                justifyItems: "center",
+              }}
+            >
+              <iframe
+                src="https://maps.google.com/maps?q=12%20Tr%E1%BB%8Bnh%20%C4%90%C3%ACnh%20Th%E1%BA%A3o%2C%20Ho%C3%A0%20Th%E1%BA%A1nh%2C%20T%C3%A2n%20Ph%C3%BA%2C%20H%E1%BB%93%20Ch%C3%AD%20Minh&t=&z=16&ie=UTF8&iwloc=&output=embed"
+                width="100%"
+                height="200"
+                style={{ border: 0 }}
+                allowFullScreen={true}
+                loading="lazy"
+              ></iframe>
+            </div>
+          </div>
           </div>
         </div>
         <div style={{ background: '#0f172a', textAlign: 'center', padding: '20px', fontSize: '14px', borderTop: '1px solid #334155' }}>

@@ -270,6 +270,9 @@ export default function AdminDashboard() {
         .chat-bubble-admin { background: #3b82f6; color: white; padding: 12px 18px; border-radius: 18px 18px 0 18px; max-width: 75%; font-size: 14px; align-self: flex-end; box-shadow: 0 2px 5px rgba(59,130,246,0.2); }
         /* Tự động điều chỉnh giao diện trên điện thoại */
         @media (max-width: 768px) {
+        /* Sửa lỗi giao diện phần Hỗ trợ */
+      .support-box { flex-direction: column !important; height: 85vh !important; }
+      .support-box > div:first-child { width: 100% !important; max-height: 180px !important; border-right: none !important; border-bottom: 2px solid #e2e8f0 !important; }
           .admin-layout { flex-direction: column; }
           .admin-sidebar { width: 100%; position: relative; height: auto; }
           .admin-menu { display: flex; flex-wrap: wrap; justify-content: center; padding: 10px; gap: 5px; }
@@ -511,7 +514,7 @@ export default function AdminDashboard() {
               )}
 
               {activeTab === 'support' && (
-                <div className="admin-card" style={{ padding: 0, overflow: 'hidden', display: 'flex', height: 'calc(100vh - 180px)', border: '1px solid #e2e8f0' }}>
+                <div className="admin-card support-box" style={{ padding: 0, overflow: 'hidden', display: 'flex', height: 'calc(100vh - 180px)', border: '1px solid #e2e8f0' }}>
                   <div style={{ width: '320px', background: '#f8fafc', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column' }}>
                     <div style={{ padding: '20px', background: '#1e293b', color: 'white', fontWeight: 'bold', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span><i className="fas fa-inbox"></i> Hộp thư Khách hàng</span>
