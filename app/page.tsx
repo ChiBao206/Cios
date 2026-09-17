@@ -509,17 +509,26 @@ export default function Home() {
         </main>
       </div>
 
-      {/* 4. FLOATING BUTTONS */}
+     {/* 4. FLOATING BUTTONS */}
       <div className="floating-buttons">
-        <a href="#" className="float-btn zalo">
+        {/* Mở Zalo ở tab mới */}
+        <a href="https://zalo.me/0971024173" target="_blank" rel="noopener noreferrer" className="float-btn zalo">
           <i className="fas fa-comment-dots"></i> Chat Zalo
         </a>
-        <a href="#" className="float-btn phone">
+        
+        {/* Kích hoạt cuộc gọi */}
+        <a href="tel:0971024173" className="float-btn phone">
           <i className="fas fa-phone-alt"></i> 0971.024.173
         </a>
-        <a href="#" className="float-btn up-top">
+        
+        {/* Cuộn lên đầu trang mượt mà */}
+        <button 
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} 
+          className="float-btn up-top" 
+          style={{ border: 'none', cursor: 'pointer' }}
+        >
           <i className="fas fa-arrow-up"></i>
-        </a>
+        </button>
       </div>
 
       {/* 5. FOOTER */}
