@@ -237,7 +237,11 @@ export default function Home() {
           <p style={{ fontSize: "16px", marginBottom: "20px" }}>
             Camera B&N - Đối tác an ninh tin cậy của mọi gia đình Việt
           </p>
-          <button className="btn-hero" style={{ background: "#e11d48" }}>
+          <button 
+            className="btn-hero" 
+            style={{ background: "#e11d48" }}
+            onClick={() => router.push('/contact')}
+          >
             TƯ VẤN NGAY
           </button>
         </div>
