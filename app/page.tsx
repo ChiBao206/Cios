@@ -31,22 +31,38 @@ export default function Home() {
     localStorage.removeItem("currentUser");
     setUser(null);
   };
-  // ==========================================
-  // THUẬT TOÁN PHÂN TRANG (PAGINATION LOGIC)
+// ==========================================
+  // THUẬT TOÁN BỘ LỌC & PHÂN TRANG (PAGINATION LOGIC)
   // ==========================================
   const [currentPage, setCurrentPage] = useState(1);
-  const [isCategoryOpen, setIsCategoryOpen] = useState(false);
-  const productsPerPage = 8; // Cho hiển thị 8 sản phẩm / trang (2 hàng)
+  const [isCategoryOpen, setIsCategoryOpen] = useState(false); 
+  const productsPerPage = 8; 
 
-  // Tính toán vị trí cắt dữ liệu cho trang hiện tại
+  // 1. CÁC STATE CHO BỘ LỌC
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [maxPrice, setMaxPrice] = useState(5000000); // Mặc định 5 triệu
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // 2. TỰ ĐỘNG VỀ TRANG 1 KHI ĐỔI BỘ LỌC
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCategory, maxPrice, searchTerm]);
+
+  // 3. THUẬT TOÁN LỌC SẢN PHẨM TỔNG HỢP
+  const baseProducts = db.products.slice(4); // Lấy danh sách bỏ 4 sp TOP đầu
+  const filteredProducts = baseProducts.filter(product => {
+    const matchCat = selectedCategory === "all" || String(product.category_id) === String(selectedCategory);
+    const matchPrice = Number(product.price) <= maxPrice;
+    const matchSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchCat && matchPrice && matchSearch;
+  });
+
+  // 4. CẮT DỮ LIỆU SẢN PHẨM ĐÃ LỌC ĐỂ HIỂN THỊ TRÊN TRANG HIỆN TẠI
   const indexOfLastProduct = currentPage * productsPerPage;
   const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
+  const currentProducts = filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
+  const totalPages = Math.ceil(filteredProducts.length / productsPerPage) || 1;
 
-  // Sản phẩm sẽ hiển thị trên màn hình hiện tại
-  const currentProducts = remainingProducts.slice(
-    indexOfFirstProduct,
-    indexOfLastProduct,
-  );
   // 3. TẠO HÀM XỬ LÝ NÚT MUA NGAY
   const handleBuyNow = (product: any) => {
     if (!user) {
@@ -57,15 +73,14 @@ export default function Home() {
     addToCart(product);
     router.push("/cart");
   };
-  // Tính tổng số trang (Ví dụ: 35 / 8 = 5 trang)
-  const totalPages = Math.ceil(remainingProducts.length / productsPerPage);
+
 
   // Hàm xử lý nút Tới/Lùi có tính năng vòng lặp
   const handlePrev = () => {
     // Nếu đang ở trang 1 mà bấm Lùi thì nhảy tới trang cuối (totalPages)
     setCurrentPage(currentPage === 1 ? totalPages : currentPage - 1);
   };
-
+  
   const handleNext = () => {
     // Nếu đang ở trang cuối mà bấm Tới thì quay về trang 1
     setCurrentPage(currentPage === totalPages ? 1 : currentPage + 1);
@@ -260,32 +275,33 @@ export default function Home() {
                 }}
               ></i>
             </h3>
-            <ul
-              className="category-vertical"
-              style={{
-                maxHeight: isCategoryOpen ? "500px" : "0",
+            <ul 
+              className="category-vertical" 
+              style={{ 
+                maxHeight: isCategoryOpen ? '500px' : '0', 
                 opacity: isCategoryOpen ? 1 : 0,
-                overflow: "hidden",
-                transition: "all 0.4s ease",
-                marginTop: isCategoryOpen ? "10px" : "0",
-                paddingTop: isCategoryOpen ? "10px" : "0",
-                borderTop: isCategoryOpen ? "1px dashed #e2e8f0" : "none",
+                overflow: 'hidden',
+                transition: 'all 0.4s ease',
+                marginTop: isCategoryOpen ? '10px' : '0',
+                paddingTop: isCategoryOpen ? '10px' : '0',
+                borderTop: isCategoryOpen ? '1px dashed #e2e8f0' : 'none'
               }}
             >
-              <li className="active">
-                Tất cả{" "}
-                <i
-                  className="fas fa-arrow-right"
-                  style={{ fontSize: "10px" }}
-                ></i>
+              <li 
+                className={selectedCategory === "all" ? "active" : ""} 
+                onClick={() => setSelectedCategory("all")}
+                style={{ cursor: 'pointer' }}
+              >
+                Tất cả <i className="fas fa-arrow-right" style={{ fontSize: '10px' }}></i>
               </li>
               {categories.map((cat) => (
-                <li key={cat.id}>
-                  {cat.name}{" "}
-                  <i
-                    className="fas fa-arrow-right"
-                    style={{ fontSize: "10px" }}
-                  ></i>
+                <li 
+                  key={cat.id}
+                  className={selectedCategory === String(cat.id) ? "active" : ""} 
+                  onClick={() => setSelectedCategory(String(cat.id))}
+                  style={{ cursor: 'pointer' }}
+                >
+                  {cat.name} <i className="fas fa-arrow-right" style={{ fontSize: '10px' }}></i>
                 </li>
               ))}
             </ul>
@@ -299,20 +315,26 @@ export default function Home() {
               ></i>{" "}
               KHOẢNG GIÁ
             </h3>
-            <ul className="price-filter-list">
-              <li>
-                <div className="custom-checkbox"></div> Dưới 500k
-              </li>
-              <li>
-                <div className="custom-checkbox"></div> 500k - 1 Triệu
-              </li>
-              <li>
-                <div className="custom-checkbox"></div> 1 - 3 Triệu
-              </li>
-              <li>
-                <div className="custom-checkbox"></div> Trên 3 Triệu
-              </li>
-            </ul>
+            <div className="sidebar-box">
+            <h3>
+              <i className="fas fa-money-bill-wave" style={{ color: "#eab308" }}></i> KHOẢNG GIÁ
+            </h3>
+            <div style={{ padding: '15px 0 5px' }}>
+              <input
+                type="range"
+                min="0"
+                max="5000000"
+                step="100000"
+                value={maxPrice}
+                onChange={(e) => setMaxPrice(Number(e.target.value))}
+                style={{ width: '100%', cursor: 'pointer', accentColor: '#e11d48' }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginTop: '10px', color: '#64748b', fontWeight: 'bold' }}>
+                <span>0 đ</span>
+                <span style={{ color: '#e11d48', borderBottom: '1px dashed' }}>Dưới {maxPrice.toLocaleString('vi-VN')} đ</span>
+              </div>
+            </div>
+          </div>
           </div>
 
           <div className="sidebar-box">
@@ -349,7 +371,12 @@ export default function Home() {
             <span style={{ padding: "10px 15px", color: "#3b82f6" }}>
               <i className="fas fa-search"></i>
             </span>
-            <input type="text" placeholder="Bạn muốn tìm camera loại nào?" />
+            <input 
+              type="text" 
+              placeholder="Bạn muốn tìm camera loại nào?" 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
             <button style={{ background: "#1e293b" }}>
               <i className="fas fa-search"></i>
             </button>
