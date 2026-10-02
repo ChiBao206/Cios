@@ -64,15 +64,15 @@ export default function ProjectsPage() {
         "/images/projects/oocl-3.jpg", "/images/projects/oocl-4.jpg", "/images/projects/oocl-5.jpg"
       ]
     },
-    {
+{
       id: "kalbi",
-      title: "Giải pháp Giám sát Nhà hàng Kalbi",
-      description: "Bảo đảm an ninh khu vực ăn uống, bếp và quầy thu ngân.",
+      title: "Giải pháp Giám sát & Mạng nội bộ Nhà hàng Kalbi",
+      description: "Bảo đảm an ninh khu vực kinh doanh và quản lý hạ tầng mạng tập trung chuẩn doanh nghiệp.",
       details: [
-        "Sử dụng Camera Wifi góc rộng kết hợp đàm thoại 2 chiều khu vực bếp để bếp trưởng điều phối.",
-        "Camera thu âm chuyên dụng tại quầy thu ngân để xử lý tranh chấp khi thanh toán.",
-        "Cấu hình hệ thống router Wifi Mesh phủ sóng toàn nhà hàng, đảm bảo camera không bị rớt mạng.",
-        "Cài đặt ứng dụng trên điện thoại cho quản lý, hỗ trợ xem trực tiếp 4 khung hình cùng lúc."
+        "Sử dụng Camera Wifi góc rộng kết hợp đàm thoại 2 chiều tại khu vực bếp để bếp trưởng điều phối linh hoạt.",
+        "Trang bị camera thu âm chuyên dụng tại quầy thu ngân với độ nét cao để theo dõi và xử lý chính xác các sự cố thanh toán.",
+        "Triển khai hạ tầng mạng TP-Link Omada SDN chuyên dụng, đảm bảo kết nối WiFi Roaming xuyên suốt không điểm chết cho toàn bộ hệ thống camera không dây.",
+        "Tích hợp bộ điều khiển Omada Cloud Controller cho phép chủ nhà hàng giám sát toàn bộ lưu lượng mạng, cấu hình từ xa và nhận cảnh báo sự cố thiết bị theo thời gian thực."
       ],
       images: [
         "/images/projects/kalbi-1.jpg", "/images/projects/kalbi-2.jpg", 
@@ -97,12 +97,12 @@ export default function ProjectsPage() {
     {
       id: "photobooth",
       title: "Hệ thống Photobooth Chụp Ảnh Tự Động",
-      description: "Bảo vệ tài sản tại các điểm chụp ảnh tự động không người trực.",
+      description: "Bảo vệ tài sản và quản trị mạng từ xa cho chuỗi điểm chụp ảnh không người trực.",
       details: [
-        "Lắp đặt Camera Wifi nhỏ gọn, góc nhìn siêu rộng bao quát toàn bộ buồng chụp.",
-        "Trang bị tính năng báo động phát hiện người lạ đột nhập ngoài giờ hoạt động.",
-        "Cấu hình lưu trữ kép: thẻ nhớ MicroSD 256GB tại chỗ và đồng bộ sự kiện lên Cloud.",
-        "Bảo mật mạng nội bộ, ngăn chặn truy cập trái phép vào dữ liệu hình ảnh của khách hàng."
+        "Lắp đặt hệ thống Camera siêu nhỏ gọn với góc nhìn toàn cảnh, bao quát khu vực buồng chụp mà không gây mất thẩm mỹ.",
+        "Trang bị tính năng AI báo động chủ động, tự động phát hiện và cảnh báo qua App khi có người lạ đột nhập ngoài giờ hoạt động.",
+        "Thiết lập mạng diện rộng đồng bộ qua nền tảng Omada Cloud SDN, giúp IT quản lý băng thông và trạng thái mạng của hàng loạt chi nhánh buồng chụp từ một giao diện duy nhất.",
+        "Cấu hình VLAN và tường lửa (Firewall) bảo mật cấp doanh nghiệp trên Omada Gateway để cô lập hệ thống camera, bảo vệ tuyệt đối dữ liệu hình ảnh riêng tư của khách hàng."
       ],
       images: [
         "/images/projects/photobooth-1.jpg", "/images/projects/photobooth-2.jpg", 
