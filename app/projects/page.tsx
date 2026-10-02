@@ -105,8 +105,8 @@ export default function ProjectsPage() {
         "Cấu hình VLAN và tường lửa (Firewall) bảo mật cấp doanh nghiệp trên Omada Gateway để cô lập hệ thống camera, bảo vệ tuyệt đối dữ liệu hình ảnh riêng tư của khách hàng."
       ],
       images: [
-        "/uploads/photobooth1.png", "/uploads/photobooth2.JPG", 
-        "/uploads/photobooth3.PNG", "/uploads/photobooth4.JPG", "/uploads/photobooth5.JPG"
+        "/uploads/photobooth3.PNG", "/uploads/photobooth2.JPG", 
+        "/uploads/photobooth1.png", "/uploads/photobooth4.JPG", "/uploads/photobooth5.JPG"
       ]
     },
     {
