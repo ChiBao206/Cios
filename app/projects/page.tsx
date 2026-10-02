@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import NotifBadge from '@/app/components/NotifBadge';
 
 // COMPONENT SLIDER ẢNH CHO TỪNG DỰ ÁN
 const ProjectSlider = ({ images }: { images: string[] }) => {
@@ -17,12 +16,12 @@ const ProjectSlider = ({ images }: { images: string[] }) => {
   };
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: '400px', borderRadius: '12px', overflow: 'hidden', background: '#f1f5f9', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+    <div style={{ position: 'relative', width: '100%', height: '400px', borderRadius: '12px', overflow: 'hidden', background: '#e2e8f0', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
       <img 
         src={images[currentIndex]} 
         alt="Hình ảnh dự án" 
-        style={{ width: '100%', height: '100%', objectFit: 'cover', transition: '0.3s' }} 
-        // Nếu không tìm thấy ảnh, tự động hiển thị ảnh chờ
+        // Đã sửa 'cover' thành 'contain' để không bao giờ bị cắt mất viền ảnh
+        style={{ width: '100%', height: '100%', objectFit: 'contain', transition: '0.3s' }} 
         onError={(e) => { e.currentTarget.src = "https://placehold.co/800x400?text=Chua+Co+Anh+Du+An" }}
       />
       
@@ -39,7 +38,7 @@ const ProjectSlider = ({ images }: { images: string[] }) => {
       {/* Dấu chấm chỉ báo số ảnh */}
       <div style={{ position: 'absolute', bottom: '15px', left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '8px' }}>
         {images.map((_, idx) => (
-          <div key={idx} style={{ width: '10px', height: '10px', borderRadius: '50%', background: currentIndex === idx ? '#3b82f6' : 'rgba(255,255,255,0.5)', transition: '0.3s' }} />
+          <div key={idx} style={{ width: '10px', height: '10px', borderRadius: '50%', background: currentIndex === idx ? '#3b82f6' : 'rgba(15, 23, 42, 0.4)', transition: '0.3s' }} />
         ))}
       </div>
     </div>
@@ -47,17 +46,17 @@ const ProjectSlider = ({ images }: { images: string[] }) => {
 };
 
 export default function ProjectsPage() {
-// DỮ LIỆU 5 DỰ ÁN
+  // DỮ LIỆU 5 DỰ ÁN ĐÃ CHỈNH SỬA NỘI DUNG CHUYÊN NGÀNH
   const projectsData = [
     {
       id: "oocl",
-      title: "Hệ thống An ninh Văn phòng OOCL",
-      description: "Thi công hệ thống giám sát toàn diện cho văn phòng làm việc.",
+      title: "Hệ thống Mạng & IT Văn phòng OOCL",
+      description: "Thi công hạ tầng mạng và lắp đặt thiết bị tin học toàn diện cho văn phòng làm việc.",
       details: [
-        "Lắp đặt hệ thống Camera IP Dome ốp trần cho các khu vực làm việc chung và hành lang.",
-        "Đi dây cáp mạng chuẩn Cat6 âm trần thẩm mỹ, kết nối tập trung về Switch PoE.",
-        "Cấu hình IP tĩnh cho toàn bộ thiết bị, thiết lập phân quyền truy cập camera theo từng phòng ban.",
-        "Tích hợp đầu ghi hình NVR lưu trữ băng thông chuẩn H.265+, đảm bảo xem lại mượt mà trong 30 ngày."
+        "Thi công, lắp ráp và đi dây gọn gàng cho hệ thống tủ Rack trung tâm.",
+        "Triển khai kéo cáp, bấm node mạng nội bộ đến từng vị trí bàn làm việc của nhân viên.",
+        "Lắp đặt, cài đặt hệ điều hành và phần mềm cho toàn bộ hệ thống máy tính văn phòng.",
+        "Kiểm tra và nghiệm thu tín hiệu mạng, đảm bảo kết nối ổn định cho toàn bộ công ty."
       ],
       images: [
         "/uploads/oocl1.JPG", "/uploads/oocl2.JPG", 
@@ -67,12 +66,12 @@ export default function ProjectsPage() {
     {
       id: "kalbi",
       title: "Giải pháp Giám sát & Mạng nội bộ Nhà hàng Kalbi",
-      description: "Bảo đảm an ninh khu vực kinh doanh và quản lý hạ tầng mạng tập trung chuẩn doanh nghiệp.",
+      description: "Bảo đảm an ninh khu vực kinh doanh, quản lý hạ tầng mạng và hệ thống âm thanh.",
       details: [
-        "Sử dụng Camera Wifi góc rộng kết hợp đàm thoại 2 chiều tại khu vực bếp để bếp trưởng điều phối linh hoạt.",
-        "Trang bị camera thu âm chuyên dụng tại quầy thu ngân với độ nét cao để theo dõi và xử lý chính xác các sự cố thanh toán.",
-        "Triển khai hạ tầng mạng TP-Link Omada SDN chuyên dụng, đảm bảo kết nối WiFi Roaming xuyên suốt không điểm chết cho toàn bộ hệ thống camera không dây.",
-        "Tích hợp bộ điều khiển Omada Cloud Controller cho phép chủ nhà hàng giám sát toàn bộ lưu lượng mạng, cấu hình từ xa và nhận cảnh báo sự cố thiết bị theo thời gian thực."
+        "Sử dụng và lắp đặt hệ thống Camera Dome Wifi, đảm bảo tính thẩm mỹ cao cho không gian nhà hàng.",
+        "Triển khai hạ tầng mạng và cấu hình quản lý tập trung thông qua hệ thống Omada Controller.",
+        "Thi công lắp đặt hệ thống loa phát nhạc nền và thông báo, tạo không gian chuyên nghiệp cho thực khách.",
+        "Tối ưu hóa vùng phủ sóng wifi, đảm bảo kết nối ổn định cho cả khách hàng và hệ thống vận hành nội bộ."
       ],
       images: [
         "/uploads/kalbi1.JPG", "/uploads/kalbi2.JPG", 
@@ -82,12 +81,12 @@ export default function ProjectsPage() {
     {
       id: "hocmon",
       title: "Trường Dạy Lái Xe Hóc Môn",
-      description: "Giám sát bãi tập lái xe ngoài trời và phòng học lý thuyết.",
+      description: "Triển khai hệ thống camera giám sát ngoài trời với hạ tầng cáp quang chuyên dụng.",
       details: [
-        "Triển khai Camera PTZ (xoay 360 độ) ngoài trời, chuẩn chống nước IP67 tại bãi sa hình.",
-        "Thiết lập kết nối quang point-to-point (P2P) truyền tín hiệu từ bãi tập xa về trung tâm điều hành.",
-        "Lắp đặt camera độ nét cao tại các phòng thi lý thuyết chống gian lận.",
-        "Cấu hình tự động theo dõi chuyển động (Smart Tracking) đối với xe tập lái trong khu vực quan trọng."
+        "Trang bị và lắp đặt hệ thống camera thân Vantech chuyên dụng, chống chịu tốt với điều kiện thời tiết ngoài trời.",
+        "Triển khai kéo cáp quang khoảng cách xa để truyền tải tín hiệu camera từ sa hình về trung tâm điều hành.",
+        "Thực hiện đo kiểm và hàn nối cáp quang chuyên nghiệp, đảm bảo suy hao tín hiệu ở mức thấp nhất.",
+        "Cấu hình hệ thống lưu trữ và hiển thị giám sát bao quát toàn bộ bãi sa hình tập lái xe."
       ],
       images: [
         "/uploads/hocmon1.JPG", "/uploads/hocmon2.JPG", 
@@ -105,19 +104,19 @@ export default function ProjectsPage() {
         "Cấu hình VLAN và tường lửa (Firewall) bảo mật cấp doanh nghiệp trên Omada Gateway để cô lập hệ thống camera, bảo vệ tuyệt đối dữ liệu hình ảnh riêng tư của khách hàng."
       ],
       images: [
-        "/uploads/photobooth3.PNG", "/uploads/photobooth2.JPG", 
-        "/uploads/photobooth1.png", "/uploads/photobooth4.JPG", "/uploads/photobooth5.JPG"
+        "/uploads/photobooth1.png", "/uploads/photobooth2.JPG", 
+        "/uploads/photobooth3.PNG", "/uploads/photobooth4.JPG", "/uploads/photobooth5.JPG"
       ]
     },
     {
       id: "dongsgn",
       title: "Bệnh viện Đông Sài Gòn",
-      description: "Dự án giám sát an ninh quy mô lớn đáp ứng tiêu chuẩn y tế.",
+      description: "Thi công hệ thống điện mạng và trang thiết bị cảnh báo y tế chuyên dụng.",
       details: [
-        "Triển khai hơn 50+ camera IP độ phân giải 4K tại hành lang, sảnh chờ và khu vực cấp cứu.",
-        "Lắp ráp tủ Rack trung tâm chứa hệ thống Server, Switch quang và Đầu ghi NVR mở rộng ổ cứng 32TB.",
-        "Cấu hình phần mềm CMS quản lý tập trung trên màn hình Tivi lớn tại phòng bảo vệ.",
-        "Thiết lập tính năng nhận diện khuôn mặt và cảnh báo khu vực cấm xâm nhập (vùng cách ly y tế)."
+        "Thi công hạ tầng đi dây cáp mạng và cáp điện an toàn, đáp ứng tiêu chuẩn khắt khe của bệnh viện.",
+        "Lắp đặt hệ thống thiết bị y tế chuyên dụng: trung tâm đầu báo, nút bấm gọi y tá tại các giường bệnh.",
+        "Trang bị và kết nối hệ thống đèn báo hiệu trước cửa phòng bệnh và hành lang khu vực cấp cứu.",
+        "Đồng bộ hóa hệ thống gọi y tá với trung tâm trực ban, đảm bảo phản ứng nhanh chóng trong các tình huống khẩn cấp."
       ],
       images: [
         "/uploads/dongsgn1.JPG", "/uploads/dongsgn2.JPG", 
@@ -146,7 +145,7 @@ export default function ProjectsPage() {
       {/* BANNER DỰ ÁN */}
       <div style={{ background: 'linear-gradient(rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.8)), url("https://images.unsplash.com/photo-1557804506-669a67965ba0?q=80&w=2000")', backgroundSize: 'cover', backgroundPosition: 'center', padding: '80px 20px', textAlign: 'center', color: 'white' }}>
         <h1 style={{ fontSize: '36px', fontWeight: '900', textTransform: 'uppercase', marginBottom: '15px' }}>Dự Án Đã Thi Công</h1>
-        <p style={{ fontSize: '16px', color: '#cbd5e1', maxWidth: '600px', margin: '0 auto' }}>Tự hào là đối tác triển khai hệ thống an ninh giám sát cho hàng trăm doanh nghiệp, cơ quan và cửa hàng.</p>
+        <p style={{ fontSize: '16px', color: '#cbd5e1', maxWidth: '600px', margin: '0 auto' }}>Tự hào là đối tác triển khai hệ thống an ninh giám sát và mạng hạ tầng cho hàng trăm doanh nghiệp, cơ quan và cửa hàng.</p>
       </div>
 
       {/* DANH SÁCH DỰ ÁN */}
