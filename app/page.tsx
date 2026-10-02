@@ -127,6 +127,9 @@ export default function Home() {
             <Link href="/contact" className="nav-link">
               <i className="fas fa-phone-alt"></i> Liên hệ
             </Link>
+            <Link href="/projects" className="nav-link">
+  <i className="fas fa-project-diagram"></i> Dự án
+</Link>
             <Link
               href="/notifications"
               className="nav-link"
