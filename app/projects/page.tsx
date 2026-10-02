@@ -47,7 +47,7 @@ const ProjectSlider = ({ images }: { images: string[] }) => {
 };
 
 export default function ProjectsPage() {
-  // DỮ LIỆU 5 DỰ ÁN
+// DỮ LIỆU 5 DỰ ÁN
   const projectsData = [
     {
       id: "oocl",
@@ -60,8 +60,8 @@ export default function ProjectsPage() {
         "Tích hợp đầu ghi hình NVR lưu trữ băng thông chuẩn H.265+, đảm bảo xem lại mượt mà trong 30 ngày."
       ],
       images: [
-        "/uploads/oocl1.jpg", "/uploads/oocl2.jpg", 
-        "/uploads/oocl3.jpg", "/uploads/oocl4.jpg", "/uploads/oocl5.jpg"
+        "/uploads/oocl1.JPG", "/uploads/oocl2.JPG", 
+        "/uploads/oocl3.JPG", "/uploads/oocl4.JPG", "/uploads/oocl5.JPG"
       ]
     },
     {
@@ -75,8 +75,8 @@ export default function ProjectsPage() {
         "Tích hợp bộ điều khiển Omada Cloud Controller cho phép chủ nhà hàng giám sát toàn bộ lưu lượng mạng, cấu hình từ xa và nhận cảnh báo sự cố thiết bị theo thời gian thực."
       ],
       images: [
-        "/uploads/kalbi1.jpg", "/uploads/kalbi2.jpg", 
-        "/uploads/kalbi3.jpg", "/uploads/kalbi4.jpg", "/uploads/kalbi5.jpg"
+        "/uploads/kalbi1.JPG", "/uploads/kalbi2.JPG", 
+        "/uploads/kalbi3.JPG", "/uploads/kalbi4.JPG", "/uploads/kalbi5.JPG"
       ]
     },
     {
@@ -90,8 +90,8 @@ export default function ProjectsPage() {
         "Cấu hình tự động theo dõi chuyển động (Smart Tracking) đối với xe tập lái trong khu vực quan trọng."
       ],
       images: [
-        "/uploads/hocmon1.jpg", "/uploads/hocmon2.jpg", 
-        "/uploads/hocmon3.jpg", "/uploads/hocmon4.jpg", "/uploads/hocmon5.jpg"
+        "/uploads/hocmon1.JPG", "/uploads/hocmon2.JPG", 
+        "/uploads/hocmon3.JPG", "/uploads/hocmon4.JPG", "/uploads/hocmon5.JPG"
       ]
     },
     {
@@ -105,8 +105,8 @@ export default function ProjectsPage() {
         "Cấu hình VLAN và tường lửa (Firewall) bảo mật cấp doanh nghiệp trên Omada Gateway để cô lập hệ thống camera, bảo vệ tuyệt đối dữ liệu hình ảnh riêng tư của khách hàng."
       ],
       images: [
-        "/uploads/photobooth1.jpg", "/uploads/photobooth2.jpg", 
-        "/uploads/photobooth3.jpg", "/uploads/photobooth4.jpg", "/uploads/photobooth5.jpg"
+        "/uploads/photobooth1.png", "/uploads/photobooth2.JPG", 
+        "/uploads/photobooth3.PNG", "/uploads/photobooth4.JPG", "/uploads/photobooth5.JPG"
       ]
     },
     {
@@ -120,8 +120,8 @@ export default function ProjectsPage() {
         "Thiết lập tính năng nhận diện khuôn mặt và cảnh báo khu vực cấm xâm nhập (vùng cách ly y tế)."
       ],
       images: [
-        "/uploads/dongsgn1.jpg", "/uploads/dongsgn2.jpg", 
-        "/uploads/dongsgn3.jpg", "/uploads/dongsgn4.jpg", "/uploads/dongsgn5.jpg"
+        "/uploads/dongsgn1.JPG", "/uploads/dongsgn2.JPG", 
+        "/uploads/dongsgn3.JPG", "/uploads/dongsgn4.JPG", "/uploads/dongsgn5.JPG"
       ]
     }
   ];
