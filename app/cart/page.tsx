@@ -180,24 +180,20 @@ export default function CartPage() {
         ) : (
           <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
 
-            {/* ĐÃ SỬA THÀNH GIAO DIỆN CHUẨN SHOPEE/TIKTOK - KHÔNG CUỘN NGANG NỮA */}
+            {/* CỘT TRÁI: SẢN PHẨM */}
             <div style={{ flex: '1 1 60%', width: '100%', background: 'white', borderRadius: '12px', padding: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0' }}>
               {cartItems.map((item: any) => (
                 <div key={item.id} style={{ display: 'flex', alignItems: 'stretch', padding: '15px 0', borderBottom: '1px solid #f1f5f9', gap: '12px' }}>
                   
-                  {/* Cột 1: Checkbox */}
                   <div style={{ display: 'flex', alignItems: 'center' }}>
                     <input type="checkbox" checked={item.checked} onChange={() => toggleCheck(item.id)} style={{ cursor: 'pointer', width: '18px', height: '18px', accentColor: '#e11d48' }} />
                   </div>
 
-                  {/* Cột 2: Hình ảnh */}
                   <div style={{ width: '80px', height: '80px', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '4px', flexShrink: 0 }}>
                     <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                   </div>
 
-                  {/* Cột 3: Tên, Giá, và Nút (Xếp chồng) */}
                   <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minWidth: 0 }}>
-                    
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' }}>
                       <Link href={`/product/${item.id}`} style={{ fontWeight: '600', color: '#1e293b', textDecoration: 'none', fontSize: '14px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                         {item.name}
@@ -218,7 +214,6 @@ export default function CartPage() {
                         <button onClick={() => updateQty(item.id, item.cartQty + 1)} disabled={item.cartQty >= item.maxQty} style={{ width: '28px', height: '28px', background: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold', color: '#475569' }}>+</button>
                       </div>
                     </div>
-
                   </div>
                 </div>
               ))}
@@ -274,17 +269,21 @@ export default function CartPage() {
                       <div style={{ fontSize: '12px', color: '#64748b' }}>Quét mã QR qua ứng dụng ngân hàng, Momo</div>
                     </div>
                   </div>
+                  
                   {paymentMethod === 'qr' && (
                     <div style={{ marginTop: '15px', background: '#f8fafc', border: '1px dashed #3b82f6', borderRadius: '8px', padding: '20px', textAlign: 'center' }}>
                       <p style={{ fontSize: '13px', color: '#334155', fontWeight: '600', marginBottom: '15px' }}>Quét mã QR bên dưới bằng ứng dụng Ngân hàng hoặc Ví điện tử của bạn để thanh toán:</p>
-                      <div style={{ width: '220px', height: '220px', margin: '0 auto', background: 'white', borderRadius: '12px', boxShadow: '0 4px 10px rgba(0,0,0,0.1)', overflow: 'hidden', position: 'relative' }}>
+                      
+                      {/* ĐÃ SỬA LẠI: Vì ảnh mới cắt rất vuông vức, chỉ cần dùng objectFit contain và căn giữa là đẹp! */}
+                      <div style={{ width: '220px', height: '220px', margin: '0 auto', background: 'white', borderRadius: '12px', boxShadow: '0 4px 10px rgba(0,0,0,0.1)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px' }}>
                         <img 
                           src="/uploads/qrck.jpg" 
                           alt="Mã QR Thanh Toán" 
-                          style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) scale(1.7)', width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 55%' }}
+                          style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                           onError={(e) => { e.currentTarget.src = "https://placehold.co/200x200?text=Ma+QR+Loi" }}
                         />
                       </div>
+                      
                       <div style={{ marginTop: '15px', fontSize: '12px', color: '#ef4444', fontStyle: 'italic' }}>
                         * Vui lòng nhập nội dung chuyển khoản là: <strong>SĐT của bạn</strong>
                       </div>
