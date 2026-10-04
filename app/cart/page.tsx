@@ -269,17 +269,30 @@ export default function CartPage() {
                       <div style={{ fontSize: '12px', color: '#64748b' }}>Quét mã QR qua ứng dụng ngân hàng, Momo</div>
                     </div>
                   </div>
-                  {paymentMethod === 'qr' && (
+                {paymentMethod === 'qr' && (
                     <div style={{ marginTop: '15px', background: '#f8fafc', border: '1px dashed #3b82f6', borderRadius: '8px', padding: '20px', textAlign: 'center' }}>
                       <p style={{ fontSize: '13px', color: '#334155', fontWeight: '600', marginBottom: '15px' }}>Quét mã QR bên dưới bằng ứng dụng Ngân hàng hoặc Ví điện tử của bạn để thanh toán:</p>
-                      <div style={{ width: '220px', height: '220px', margin: '0 auto', background: 'white', borderRadius: '12px', boxShadow: '0 4px 10px rgba(0,0,0,0.1)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      
+                      {/* ĐÃ SỬA LẠI KHUNG CHỨA QR: Phóng to và định vị chuẩn xác để cắt viền */}
+                      <div style={{ width: '220px', height: '220px', margin: '0 auto', background: 'white', borderRadius: '12px', boxShadow: '0 4px 10px rgba(0,0,0,0.1)', overflow: 'hidden', position: 'relative' }}>
                         <img 
                           src="/uploads/qrck.jpg" 
                           alt="Mã QR Thanh Toán" 
-                          style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scale(1.2)' }}
+                          style={{ 
+                            position: 'absolute', 
+                            top: '50%', 
+                            left: '50%', 
+                            // Phóng to mạnh lên 1.7 lần để mất viền, dịch tâm để lấy đúng cái khung trắng
+                            transform: 'translate(-50%, -50%) scale(1.7)', 
+                            width: '100%', 
+                            height: '100%', 
+                            objectFit: 'cover',
+                            objectPosition: 'center 55%'
+                          }}
                           onError={(e) => { e.currentTarget.src = "https://placehold.co/200x200?text=Ma+QR+Loi" }}
                         />
                       </div>
+                      
                       <div style={{ marginTop: '15px', fontSize: '12px', color: '#ef4444', fontStyle: 'italic' }}>
                         * Vui lòng nhập nội dung chuyển khoản là: <strong>SĐT của bạn</strong>
                       </div>
