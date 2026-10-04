@@ -342,12 +342,13 @@ export default function CartPage() {
                     <div style={{ marginTop: '15px', background: '#f8fafc', border: '1px dashed #3b82f6', borderRadius: '8px', padding: '20px', textAlign: 'center' }}>
                       <p style={{ fontSize: '13px', color: '#334155', fontWeight: '600', marginBottom: '15px' }}>Quét mã QR bên dưới bằng ứng dụng Ngân hàng hoặc Ví điện tử của bạn để thanh toán:</p>
                       
-                      {/* ĐÂY CHÍNH LÀ CHỖ GẮN ẢNH qrck.jpg */}
-                      <div style={{ width: '200px', height: '200px', margin: '0 auto', background: 'white', padding: '10px', borderRadius: '12px', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }}>
+                    {/* ĐÂY CHÍNH LÀ CHỖ GẮN ẢNH qrck.jpg */}
+                      <div style={{ width: '240px', height: '240px', margin: '0 auto', background: 'white', borderRadius: '12px', boxShadow: '0 4px 10px rgba(0,0,0,0.1)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <img 
                           src="/uploads/qrck.jpg" 
                           alt="Mã QR Thanh Toán" 
-                          style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                          // Dùng cover và scale để zoom cận cảnh vào mã QR, cắt bỏ viền vàng thừa
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scale(1.3)' }}
                           onError={(e) => { e.currentTarget.src = "https://placehold.co/200x200?text=Ma+QR+Loi" }}
                         />
                       </div>
