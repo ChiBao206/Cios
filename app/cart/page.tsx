@@ -6,22 +6,15 @@ import { useState, useEffect } from 'react';
 import NotifBadge from '@/app/components/NotifBadge';
 
 export default function CartPage() {
-  const { cartItems, removeFromCart, updateQty, toggleCheck, totalItems } = useCart();
+  // Đã lấy thêm hàm clearCart từ Context
+  const { cartItems, removeFromCart, updateQty, toggleCheck, totalItems, clearCart } = useCart();
   const totalAmount = cartItems.reduce((sum: number, item: any) => sum + (item.checked ? Number(item.price) * item.cartQty : 0), 0);
 
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [addressDetail, setAddressDetail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false); 
-  
-  // ========================================================
-  // STATE LƯU THÔNG TIN THANH TOÁN
-  // ========================================================
-  const [paymentMethod, setPaymentMethod] = useState('cod'); // Mặc định là COD
-
-  // ========================================================
-  // STATE LƯU THÔNG TIN USER ĐĂNG NHẬP
-  // ========================================================
+  const [paymentMethod, setPaymentMethod] = useState('cod'); 
   const [user, setUser] = useState<any>(null);
 
   const [provinces, setProvinces] = useState<any[]>([]);
@@ -32,7 +25,6 @@ export default function CartPage() {
   const [selectedDistrict, setSelectedDistrict] = useState('');
   const [selectedWard, setSelectedWard] = useState('');
 
-  // Tải dữ liệu Tỉnh thành và User khi vào trang
   useEffect(() => {
     const loggedInUser = localStorage.getItem('currentUser');
     if (loggedInUser) {
@@ -48,7 +40,6 @@ export default function CartPage() {
       .catch(err => console.error("Lỗi tải tỉnh thành: ", err));
   }, []);
 
-  // HÀM ĐĂNG XUẤT
   const handleLogout = () => {
     localStorage.removeItem('currentUser');
     window.location.reload(); 
@@ -98,7 +89,6 @@ export default function CartPage() {
     const distName = districts.find(d => String(d.code) === String(selectedDistrict))?.name || '';
     const wardName = wards.find(w => String(w.code) === String(selectedWard))?.name || '';
     
-    // Đã thêm thông tin phương thức thanh toán vào chuỗi địa chỉ để Admin xem tạm (Tối ưu nhất là tạo cột mới trong CSDL)
     const paymentText = paymentMethod === 'cod' ? '(COD - Thanh toán khi nhận hàng)' : '(Đã thanh toán Chuyển khoản QR)';
     const fullAddress = `${addressDetail}, ${wardName}, ${distName}, ${provName} ${paymentText}`;
 
@@ -110,7 +100,7 @@ export default function CartPage() {
       customer_name: name,
       customer_phone: phone,
       shipping_address: fullAddress,
-      items: JSON.parse(JSON.stringify(cartItems)) 
+      items: JSON.parse(JSON.stringify(cartItems.filter((i: any) => i.checked))) 
     };
     
     try {
@@ -122,7 +112,10 @@ export default function CartPage() {
 
       if (res.ok) {
         alert("🎉 Đặt hàng thành công! Cảm ơn bạn đã mua sắm tại Camera B&N.");
-        localStorage.removeItem('camera_bn_cart'); 
+        
+        // ĐÂY LÀ CHÌA KHÓA: Gọi clearCart để xóa trống giỏ hàng cả ở máy lẫn trên MongoDB!
+        clearCart(); 
+        
         window.location.href = '/profile'; 
       } else {
         alert("Có lỗi xảy ra khi lưu đơn hàng vào hệ thống.");
@@ -134,22 +127,19 @@ export default function CartPage() {
   };
 
   return (
-    <div style={{ background: '#f8fafc', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {/* 1. HEADER ĐÃ ĐỒNG BỘ */}
+    <div style={{ background: '#f8fafc', minHeight: '100vh', display: 'flex', flexDirection: 'column', overflowX: 'hidden' }}>
       <header style={{ background: '#1e293b', padding: '12px 0', borderBottom: '1px solid #0f172a' }}>
-        <div style={{ maxWidth: '1140px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '96%' }}>
+        <div style={{ maxWidth: '1140px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '96%', flexWrap: 'wrap', gap: '10px' }}>
           <div style={{ color: 'white', fontWeight: 'bold', fontSize: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
             <i className="fas fa-video"></i> CAMERA B&N
           </div>
-          <nav style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <nav style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', alignItems: 'center' }}>
             <Link href="/" className="nav-link" style={{ color: 'white', textDecoration: 'none', fontSize: '14px', fontWeight: 'bold' }}><i className="fas fa-home"></i> Trang chủ</Link>
             <Link href="/contact" className="nav-link" style={{ color: 'white', textDecoration: 'none', fontSize: '14px', fontWeight: 'bold' }}><i className="fas fa-phone-alt"></i> Liên hệ</Link>
-            
             <Link href="/notifications" className="nav-link" style={{ position: 'relative', color: 'white', textDecoration: 'none', fontSize: '14px', fontWeight: 'bold' }}>
               <i className="fas fa-bell"></i> Thông báo
               <NotifBadge />
             </Link>
-            
             <Link href="/cart" className="nav-link" style={{ color: '#38bdf8', textDecoration: 'none', fontSize: '14px', fontWeight: 'bold', position: 'relative' }}>
               <i className="fas fa-shopping-cart"></i> Giỏ hàng
               {totalItems > 0 && (
@@ -158,15 +148,13 @@ export default function CartPage() {
                 </span>
               )}
             </Link>
-            
-            {/* HIỂN THỊ NÚT ĐĂNG NHẬP / TÊN TÀI KHOẢN CHUẨN */}
             {user ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <Link href="/profile" style={{ textAlign: 'right', fontSize: '12px', color: '#94a3b8', textDecoration: 'none' }}>
                   Xin chào,<br/>
                   <strong style={{ color: '#4ade80', fontSize: '14px', textTransform: 'uppercase' }}>{user.username}</strong>
                 </Link>
-                <button onClick={handleLogout} style={{ background: '#ef4444', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s' }}>Thoát</button>
+                <button onClick={handleLogout} style={{ background: '#ef4444', color: 'white', border: 'none', padding: '6px 10px', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s', fontSize: '12px' }}>Thoát</button>
               </div>
             ) : (
               <Link href="/login" className="nav-link" style={{ color: 'white', textDecoration: 'none', fontSize: '14px', fontWeight: 'bold' }}>
@@ -177,9 +165,8 @@ export default function CartPage() {
         </div>
       </header>
 
-      {/* 2. MAIN CART CONTAINER */}
       <main style={{ maxWidth: '1200px', width: '95%', margin: '30px auto', flex: 1 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
           <h1 style={{ fontSize: '22px', fontWeight: '800', color: '#1e293b' }}>
             GIỎ HÀNG <span style={{ fontSize: '16px', color: '#64748b', fontWeight: 'normal' }}>({cartItems.length} sản phẩm)</span>
           </h1>
@@ -195,171 +182,110 @@ export default function CartPage() {
             <Link href="/" style={{ display: 'inline-block', background: '#3b82f6', color: 'white', padding: '12px 30px', borderRadius: '6px', fontWeight: 'bold', textDecoration: 'none' }}>MUA SẮM NGAY</Link>
           </div>
         ) : (
-          <div style={{ display: 'flex', gap: '30px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
+          <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
 
-            {/* CỘT TRÁI: SẢN PHẨM */}
-            <div style={{ flex: '1.5', minWidth: '600px', background: 'white', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0' }}>
-              {cartItems.map((item: any) => (
-                <div key={item.id} style={{ display: 'flex', alignItems: 'center', padding: '15px 0', borderBottom: '1px solid #f1f5f9' }}>
-                  <div style={{ width: '40px', textAlign: 'center' }}>
-                    <input type="checkbox" checked={item.checked} onChange={() => toggleCheck(item.id)} style={{ cursor: 'pointer' }} />
-                  </div>
-                  <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '15px' }}>
-                    <div style={{ width: '70px', height: '70px', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '5px' }}>
-                      <img src={item.image} alt={item.name} style={{ maxWidth: '100%', maxHeight: '100%' }} />
+            {/* CỘT TRÁI: SẢN PHẨM (Đã sửa CSS để không bị tràn màn hình điện thoại) */}
+            <div style={{ flex: '1 1 60%', width: '100%', background: 'white', borderRadius: '12px', padding: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0', overflowX: 'auto' }}>
+              <div style={{ minWidth: '550px' }}> {/* Ép danh sách cuộn ngang trên mobile thay vì tràn vỡ form */}
+                {cartItems.map((item: any) => (
+                  <div key={item.id} style={{ display: 'flex', alignItems: 'center', padding: '15px 0', borderBottom: '1px solid #f1f5f9' }}>
+                    <div style={{ width: '40px', textAlign: 'center' }}>
+                      <input type="checkbox" checked={item.checked} onChange={() => toggleCheck(item.id)} style={{ cursor: 'pointer' }} />
                     </div>
-                    <Link href={`/product/${item.id}`} style={{ fontWeight: '700', color: '#1e293b', textDecoration: 'none', fontSize: '15px' }}>{item.name}</Link>
-                  </div>
-                  <div style={{ width: '120px', textAlign: 'center', fontWeight: '600', color: '#475569', fontSize: '14px' }}>
-                    {Number(item.price).toLocaleString('vi-VN')} đ
-                  </div>
-                  <div style={{ width: '120px', display: 'flex', justifyContent: 'center' }}>
-                    <div style={{ display: 'flex', border: '1px solid #cbd5e1', borderRadius: '4px', overflow: 'hidden' }}>
-                      <button onClick={() => updateQty(item.id, item.cartQty - 1)} disabled={item.cartQty <= 1} style={{ width: '30px', background: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>-</button>
-                      <input type="text" value={item.cartQty} readOnly style={{ width: '40px', border: 'none', textAlign: 'center', fontWeight: 'bold', fontSize: '13px' }} />
-                      <button onClick={() => updateQty(item.id, item.cartQty + 1)} disabled={item.cartQty >= item.maxQty} style={{ width: '30px', background: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>+</button>
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '15px' }}>
+                      <div style={{ width: '70px', height: '70px', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '5px' }}>
+                        <img src={item.image} alt={item.name} style={{ maxWidth: '100%', maxHeight: '100%' }} />
+                      </div>
+                      <Link href={`/product/${item.id}`} style={{ fontWeight: '700', color: '#1e293b', textDecoration: 'none', fontSize: '15px' }}>{item.name}</Link>
+                    </div>
+                    <div style={{ width: '120px', textAlign: 'center', fontWeight: '600', color: '#475569', fontSize: '14px' }}>
+                      {Number(item.price).toLocaleString('vi-VN')} đ
+                    </div>
+                    <div style={{ width: '110px', display: 'flex', justifyContent: 'center' }}>
+                      <div style={{ display: 'flex', border: '1px solid #cbd5e1', borderRadius: '4px', overflow: 'hidden' }}>
+                        <button onClick={() => updateQty(item.id, item.cartQty - 1)} disabled={item.cartQty <= 1} style={{ width: '30px', background: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>-</button>
+                        <input type="text" value={item.cartQty} readOnly style={{ width: '35px', border: 'none', textAlign: 'center', fontWeight: 'bold', fontSize: '13px' }} />
+                        <button onClick={() => updateQty(item.id, item.cartQty + 1)} disabled={item.cartQty >= item.maxQty} style={{ width: '30px', background: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>+</button>
+                      </div>
+                    </div>
+                    <div style={{ width: '120px', textAlign: 'right', fontWeight: '800', color: '#e11d48', fontSize: '15px' }}>
+                      {(Number(item.price) * item.cartQty).toLocaleString('vi-VN')} đ
+                    </div>
+                    <div style={{ width: '40px', textAlign: 'right' }}>
+                      <button onClick={() => removeFromCart(item.id)} style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '16px' }}><i className="fas fa-trash-alt"></i></button>
                     </div>
                   </div>
-                  <div style={{ width: '130px', textAlign: 'right', fontWeight: '800', color: '#e11d48', fontSize: '15px' }}>
-                    {(Number(item.price) * item.cartQty).toLocaleString('vi-VN')} đ
-                  </div>
-                  <div style={{ width: '40px', textAlign: 'right' }}>
-                    <button onClick={() => removeFromCart(item.id)} style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '16px' }}><i className="fas fa-trash-alt"></i></button>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
 
-            {/* CỘT PHẢI: FORM GIAO HÀNG & THANH TOÁN */}
-            <div style={{ flex: '1', minWidth: '350px' }}>
+            {/* CỘT PHẢI: FORM GIAO HÀNG */}
+            <div style={{ flex: '1 1 35%', minWidth: '300px', width: '100%' }}>
               <div style={{ background: 'white', borderRadius: '12px', padding: '25px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0' }}>
                 <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#1e293b', textTransform: 'uppercase', marginBottom: '20px' }}>Thông tin giao hàng</h3>
 
                 <div style={{ marginBottom: '15px' }}>
                   <label style={{ display: 'block', fontSize: '13px', color: '#475569', marginBottom: '8px' }}>Họ tên</label>
-                  <input
-                    type="text"
-                    placeholder="Nhập họ và tên người nhận"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    style={{ width: '100%', padding: '12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '14px', outline: 'none' }}
-                  />
+                  <input type="text" placeholder="Nhập họ và tên người nhận" value={name} onChange={(e) => setName(e.target.value)} style={{ width: '100%', padding: '12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '14px', outline: 'none' }} />
                 </div>
 
                 <div style={{ marginBottom: '20px' }}>
                   <label style={{ display: 'block', fontSize: '13px', color: '#475569', marginBottom: '8px' }}>Điện thoại</label>
-                  <input
-                    type="tel"
-                    placeholder="Nhập số điện thoại"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    style={{ width: '100%', padding: '12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '14px', outline: 'none' }}
-                  />
+                  <input type="tel" placeholder="Nhập số điện thoại" value={phone} onChange={(e) => setPhone(e.target.value)} style={{ width: '100%', padding: '12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '14px', outline: 'none' }} />
                 </div>
 
-                {/* KHUNG CHỌN ĐỊA CHỈ API */}
                 <div style={{ border: '1px dashed #cbd5e1', background: '#f8fafc', padding: '20px', borderRadius: '8px', marginBottom: '30px' }}>
                   <label style={{ display: 'block', fontSize: '14px', color: '#e11d48', fontWeight: 'bold', marginBottom: '15px' }}>
                     <i className="fas fa-map-marker-alt"></i> Địa chỉ nhận hàng (*)
                   </label>
-
-                  <select
-                    value={selectedProvince}
-                    onChange={handleProvinceChange}
-                    style={{ width: '100%', padding: '12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '14px', outline: 'none', marginBottom: '10px', background: 'white', cursor: 'pointer' }}
-                  >
+                  <select value={selectedProvince} onChange={handleProvinceChange} style={{ width: '100%', padding: '12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '14px', outline: 'none', marginBottom: '10px', background: 'white', cursor: 'pointer' }}>
                     <option value="" disabled>Chọn Tỉnh/Thành phố</option>
-                    {provinces.map((prov) => (
-                      <option key={prov.code} value={prov.code}>{prov.name}</option>
-                    ))}
+                    {provinces.map((prov) => (<option key={prov.code} value={prov.code}>{prov.name}</option>))}
                   </select>
-
-                  <select
-                    value={selectedDistrict}
-                    onChange={handleDistrictChange}
-                    disabled={!selectedProvince}
-                    style={{ width: '100%', padding: '12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '14px', outline: 'none', marginBottom: '10px', background: selectedProvince ? 'white' : '#f1f5f9', cursor: selectedProvince ? 'pointer' : 'not-allowed' }}
-                  >
+                  <select value={selectedDistrict} onChange={handleDistrictChange} disabled={!selectedProvince} style={{ width: '100%', padding: '12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '14px', outline: 'none', marginBottom: '10px', background: selectedProvince ? 'white' : '#f1f5f9', cursor: selectedProvince ? 'pointer' : 'not-allowed' }}>
                     <option value="" disabled>Chọn Quận/Huyện</option>
-                    {districts.map((dist) => (
-                      <option key={dist.code} value={dist.code}>{dist.name}</option>
-                    ))}
+                    {districts.map((dist) => (<option key={dist.code} value={dist.code}>{dist.name}</option>))}
                   </select>
-
-                  <select
-                    value={selectedWard}
-                    onChange={(e) => setSelectedWard(e.target.value)}
-                    disabled={!selectedDistrict}
-                    style={{ width: '100%', padding: '12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '14px', outline: 'none', marginBottom: '10px', background: selectedDistrict ? 'white' : '#f1f5f9', cursor: selectedDistrict ? 'pointer' : 'not-allowed' }}
-                  >
+                  <select value={selectedWard} onChange={(e) => setSelectedWard(e.target.value)} disabled={!selectedDistrict} style={{ width: '100%', padding: '12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '14px', outline: 'none', marginBottom: '10px', background: selectedDistrict ? 'white' : '#f1f5f9', cursor: selectedDistrict ? 'pointer' : 'not-allowed' }}>
                     <option value="" disabled>Chọn Phường/Xã</option>
-                    {wards.map((ward) => (
-                      <option key={ward.code} value={ward.code}>{ward.name}</option>
-                    ))}
+                    {wards.map((ward) => (<option key={ward.code} value={ward.code}>{ward.name}</option>))}
                   </select>
-
-                  <input
-                    type="text"
-                    placeholder="Nhập số nhà, tên đường, tòa nhà..."
-                    value={addressDetail}
-                    onChange={(e) => setAddressDetail(e.target.value)}
-                    style={{ width: '100%', padding: '12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '14px', outline: 'none' }}
-                  />
+                  <input type="text" placeholder="Nhập số nhà, tên đường, tòa nhà..." value={addressDetail} onChange={(e) => setAddressDetail(e.target.value)} style={{ width: '100%', padding: '12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '14px', outline: 'none' }} />
                 </div>
 
-                {/* =======================================================
-                    PHẦN MỚI: CHỌN PHƯƠNG THỨC THANH TOÁN
-                    ======================================================= */}
                 <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#1e293b', textTransform: 'uppercase', marginBottom: '15px' }}>Phương thức thanh toán</h3>
                 <div style={{ marginBottom: '30px' }}>
-                  
-                  {/* Lựa chọn 1: Thanh toán khi nhận hàng */}
-                  <div 
-                    onClick={() => setPaymentMethod('cod')}
-                    style={{ display: 'flex', alignItems: 'center', gap: '15px', padding: '15px', border: '1px solid', borderColor: paymentMethod === 'cod' ? '#3b82f6' : '#cbd5e1', borderRadius: '8px', marginBottom: '10px', cursor: 'pointer', background: paymentMethod === 'cod' ? '#eff6ff' : 'white', transition: '0.2s' }}
-                  >
+                  <div onClick={() => setPaymentMethod('cod')} style={{ display: 'flex', alignItems: 'center', gap: '15px', padding: '15px', border: '1px solid', borderColor: paymentMethod === 'cod' ? '#3b82f6' : '#cbd5e1', borderRadius: '8px', marginBottom: '10px', cursor: 'pointer', background: paymentMethod === 'cod' ? '#eff6ff' : 'white', transition: '0.2s' }}>
                     <input type="radio" checked={paymentMethod === 'cod'} readOnly style={{ cursor: 'pointer', width: '18px', height: '18px', accentColor: '#3b82f6' }} />
                     <div>
                       <div style={{ fontWeight: '700', color: '#1e293b', fontSize: '14px' }}>Thanh toán khi nhận hàng (COD)</div>
                       <div style={{ fontSize: '12px', color: '#64748b' }}>Giao hàng tận nơi rồi mới thu tiền</div>
                     </div>
                   </div>
-
-                  {/* Lựa chọn 2: Chuyển khoản QR */}
-                  <div 
-                    onClick={() => setPaymentMethod('qr')}
-                    style={{ display: 'flex', alignItems: 'center', gap: '15px', padding: '15px', border: '1px solid', borderColor: paymentMethod === 'qr' ? '#3b82f6' : '#cbd5e1', borderRadius: '8px', cursor: 'pointer', background: paymentMethod === 'qr' ? '#eff6ff' : 'white', transition: '0.2s' }}
-                  >
+                  <div onClick={() => setPaymentMethod('qr')} style={{ display: 'flex', alignItems: 'center', gap: '15px', padding: '15px', border: '1px solid', borderColor: paymentMethod === 'qr' ? '#3b82f6' : '#cbd5e1', borderRadius: '8px', cursor: 'pointer', background: paymentMethod === 'qr' ? '#eff6ff' : 'white', transition: '0.2s' }}>
                     <input type="radio" checked={paymentMethod === 'qr'} readOnly style={{ cursor: 'pointer', width: '18px', height: '18px', accentColor: '#3b82f6' }} />
                     <div>
                       <div style={{ fontWeight: '700', color: '#1e293b', fontSize: '14px' }}>Chuyển khoản / Quét mã QR</div>
                       <div style={{ fontSize: '12px', color: '#64748b' }}>Quét mã QR qua ứng dụng ngân hàng, Momo</div>
                     </div>
                   </div>
-
-                  {/* Vùng hiển thị Mã QR khi khách chọn Thanh toán QR */}
                   {paymentMethod === 'qr' && (
                     <div style={{ marginTop: '15px', background: '#f8fafc', border: '1px dashed #3b82f6', borderRadius: '8px', padding: '20px', textAlign: 'center' }}>
                       <p style={{ fontSize: '13px', color: '#334155', fontWeight: '600', marginBottom: '15px' }}>Quét mã QR bên dưới bằng ứng dụng Ngân hàng hoặc Ví điện tử của bạn để thanh toán:</p>
-                      
-                    {/* ĐÂY CHÍNH LÀ CHỖ GẮN ẢNH qrck.jpg */}
-                      <div style={{ width: '240px', height: '240px', margin: '0 auto', background: 'white', borderRadius: '12px', boxShadow: '0 4px 10px rgba(0,0,0,0.1)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <div style={{ width: '220px', height: '220px', margin: '0 auto', background: 'white', borderRadius: '12px', boxShadow: '0 4px 10px rgba(0,0,0,0.1)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <img 
                           src="/uploads/qrck.jpg" 
                           alt="Mã QR Thanh Toán" 
-                          // Dùng cover và scale để zoom cận cảnh vào mã QR, cắt bỏ viền vàng thừa
-                          style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scale(1.3)' }}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scale(1.2)' }}
                           onError={(e) => { e.currentTarget.src = "https://placehold.co/200x200?text=Ma+QR+Loi" }}
                         />
                       </div>
-                      
                       <div style={{ marginTop: '15px', fontSize: '12px', color: '#ef4444', fontStyle: 'italic' }}>
                         * Vui lòng nhập nội dung chuyển khoản là: <strong>SĐT của bạn</strong>
                       </div>
                     </div>
                   )}
                 </div>
-                {/* ======================================================= */}
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: '#475569', marginBottom: '10px' }}>
                   <span>Tạm tính:</span>
@@ -369,12 +295,7 @@ export default function CartPage() {
                   <span style={{ fontSize: '16px', fontWeight: '800', color: '#1e293b' }}>Tổng cộng:</span>
                   <span style={{ fontSize: '24px', fontWeight: '800', color: '#e11d48' }}>{totalAmount.toLocaleString('vi-VN')} đ</span>
                 </div>
-
-                <button
-                  onClick={handleCheckout}
-                  disabled={isSubmitting}
-                  style={{ width: '100%', padding: '15px', background: isSubmitting ? '#f43f5e' : '#e11d48', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '800', fontSize: '15px', cursor: isSubmitting ? 'not-allowed' : 'pointer', transition: '0.3s' }}
-                >
+                <button onClick={handleCheckout} disabled={isSubmitting} style={{ width: '100%', padding: '15px', background: isSubmitting ? '#f43f5e' : '#e11d48', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '800', fontSize: '15px', cursor: isSubmitting ? 'not-allowed' : 'pointer', transition: '0.3s' }}>
                   {isSubmitting ? 'ĐANG XỬ LÝ...' : 'XÁC NHẬN ĐẶT HÀNG'}
                 </button>
               </div>
