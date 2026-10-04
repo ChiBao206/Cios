@@ -7,22 +7,59 @@ const CartContext = createContext<any>(null);
 export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   const [cartItems, setCartItems] = useState<any[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [user, setUser] = useState<any>(null);
 
-  // 1. KHI VỪA VÀO WEB: Tự động lấy lại giỏ hàng cũ từ bộ nhớ trình duyệt
+  // 1. KHI VỪA VÀO WEB: Tải giỏ hàng từ Máy chủ (nếu đã đăng nhập) hoặc từ bộ nhớ tạm
   useEffect(() => {
-    const savedCart = localStorage.getItem('camera_bn_cart');
-    if (savedCart) {
-      setCartItems(JSON.parse(savedCart));
+    const loggedInUser = localStorage.getItem('currentUser');
+    
+    if (loggedInUser) {
+      const parsedUser = JSON.parse(loggedInUser);
+      setUser(parsedUser);
+      
+      // GỌI API LẤY GIỎ HÀNG TỪ DATABASE ĐỂ ĐỒNG BỘ
+      fetch(`/api/cart?username=${parsedUser.username}`) 
+        .then(res => res.json())
+        .then(data => {
+           if (data && data.cart) {
+             setCartItems(data.cart);
+           } else {
+             loadLocalCart();
+           }
+           setIsLoaded(true);
+        })
+        .catch(() => {
+           // Nếu lỗi kết nối, lấy tạm giỏ hàng ở máy hiện tại
+           loadLocalCart();
+           setIsLoaded(true);
+        });
+    } else {
+      loadLocalCart();
+      setIsLoaded(true);
     }
-    setIsLoaded(true);
   }, []);
 
-  // 2. MỖI KHI GIỎ HÀNG THAY ĐỔI: Tự động lưu ngay vào bộ nhớ trình duyệt
+  const loadLocalCart = () => {
+    const savedCart = localStorage.getItem('camera_bn_cart');
+    if (savedCart) setCartItems(JSON.parse(savedCart));
+  }
+
+  // 2. MỖI KHI GIỎ HÀNG THAY ĐỔI: Lưu vào bộ nhớ máy & Đẩy lên Database
   useEffect(() => {
     if (isLoaded) {
+      // Lưu offline trên thiết bị hiện tại
       localStorage.setItem('camera_bn_cart', JSON.stringify(cartItems));
+      
+      // NẾU ĐÃ ĐĂNG NHẬP -> ĐỒNG BỘ LÊN MÁY CHỦ ĐỂ ĐIỆN THOẠI CŨNG THẤY
+      if (user) {
+        fetch('/api/cart', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: user.username, cart: cartItems })
+        }).catch(err => console.log("Lỗi đồng bộ giỏ hàng lên server:", err));
+      }
     }
-  }, [cartItems, isLoaded]);
+  }, [cartItems, isLoaded, user]);
 
   // THÊM VÀO GIỎ
   const addToCart = (product: any, qty: number = 1) => {
