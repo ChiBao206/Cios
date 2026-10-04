@@ -6,7 +6,6 @@ import { useState, useEffect } from 'react';
 import NotifBadge from '@/app/components/NotifBadge';
 
 export default function CartPage() {
-  // Đã lấy thêm hàm clearCart từ Context
   const { cartItems, removeFromCart, updateQty, toggleCheck, totalItems, clearCart } = useCart();
   const totalAmount = cartItems.reduce((sum: number, item: any) => sum + (item.checked ? Number(item.price) * item.cartQty : 0), 0);
 
@@ -112,10 +111,7 @@ export default function CartPage() {
 
       if (res.ok) {
         alert("🎉 Đặt hàng thành công! Cảm ơn bạn đã mua sắm tại Camera B&N.");
-        
-        // ĐÂY LÀ CHÌA KHÓA: Gọi clearCart để xóa trống giỏ hàng cả ở máy lẫn trên MongoDB!
         clearCart(); 
-        
         window.location.href = '/profile'; 
       } else {
         alert("Có lỗi xảy ra khi lưu đơn hàng vào hệ thống.");
@@ -127,7 +123,7 @@ export default function CartPage() {
   };
 
   return (
-    <div style={{ background: '#f8fafc', minHeight: '100vh', display: 'flex', flexDirection: 'column', overflowX: 'hidden' }}>
+    <div style={{ background: '#f8fafc', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <header style={{ background: '#1e293b', padding: '12px 0', borderBottom: '1px solid #0f172a' }}>
         <div style={{ maxWidth: '1140px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '96%', flexWrap: 'wrap', gap: '10px' }}>
           <div style={{ color: 'white', fontWeight: 'bold', fontSize: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -184,39 +180,48 @@ export default function CartPage() {
         ) : (
           <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
 
-            {/* CỘT TRÁI: SẢN PHẨM (Đã sửa CSS để không bị tràn màn hình điện thoại) */}
-            <div style={{ flex: '1 1 60%', width: '100%', background: 'white', borderRadius: '12px', padding: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0', overflowX: 'auto' }}>
-              <div style={{ minWidth: '550px' }}> {/* Ép danh sách cuộn ngang trên mobile thay vì tràn vỡ form */}
-                {cartItems.map((item: any) => (
-                  <div key={item.id} style={{ display: 'flex', alignItems: 'center', padding: '15px 0', borderBottom: '1px solid #f1f5f9' }}>
-                    <div style={{ width: '40px', textAlign: 'center' }}>
-                      <input type="checkbox" checked={item.checked} onChange={() => toggleCheck(item.id)} style={{ cursor: 'pointer' }} />
-                    </div>
-                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '15px' }}>
-                      <div style={{ width: '70px', height: '70px', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '5px' }}>
-                        <img src={item.image} alt={item.name} style={{ maxWidth: '100%', maxHeight: '100%' }} />
-                      </div>
-                      <Link href={`/product/${item.id}`} style={{ fontWeight: '700', color: '#1e293b', textDecoration: 'none', fontSize: '15px' }}>{item.name}</Link>
-                    </div>
-                    <div style={{ width: '120px', textAlign: 'center', fontWeight: '600', color: '#475569', fontSize: '14px' }}>
-                      {Number(item.price).toLocaleString('vi-VN')} đ
-                    </div>
-                    <div style={{ width: '110px', display: 'flex', justifyContent: 'center' }}>
-                      <div style={{ display: 'flex', border: '1px solid #cbd5e1', borderRadius: '4px', overflow: 'hidden' }}>
-                        <button onClick={() => updateQty(item.id, item.cartQty - 1)} disabled={item.cartQty <= 1} style={{ width: '30px', background: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>-</button>
-                        <input type="text" value={item.cartQty} readOnly style={{ width: '35px', border: 'none', textAlign: 'center', fontWeight: 'bold', fontSize: '13px' }} />
-                        <button onClick={() => updateQty(item.id, item.cartQty + 1)} disabled={item.cartQty >= item.maxQty} style={{ width: '30px', background: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>+</button>
-                      </div>
-                    </div>
-                    <div style={{ width: '120px', textAlign: 'right', fontWeight: '800', color: '#e11d48', fontSize: '15px' }}>
-                      {(Number(item.price) * item.cartQty).toLocaleString('vi-VN')} đ
-                    </div>
-                    <div style={{ width: '40px', textAlign: 'right' }}>
-                      <button onClick={() => removeFromCart(item.id)} style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '16px' }}><i className="fas fa-trash-alt"></i></button>
-                    </div>
+            {/* ĐÃ SỬA THÀNH GIAO DIỆN CHUẨN SHOPEE/TIKTOK - KHÔNG CUỘN NGANG NỮA */}
+            <div style={{ flex: '1 1 60%', width: '100%', background: 'white', borderRadius: '12px', padding: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0' }}>
+              {cartItems.map((item: any) => (
+                <div key={item.id} style={{ display: 'flex', alignItems: 'stretch', padding: '15px 0', borderBottom: '1px solid #f1f5f9', gap: '12px' }}>
+                  
+                  {/* Cột 1: Checkbox */}
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <input type="checkbox" checked={item.checked} onChange={() => toggleCheck(item.id)} style={{ cursor: 'pointer', width: '18px', height: '18px', accentColor: '#e11d48' }} />
                   </div>
-                ))}
-              </div>
+
+                  {/* Cột 2: Hình ảnh */}
+                  <div style={{ width: '80px', height: '80px', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '4px', flexShrink: 0 }}>
+                    <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                  </div>
+
+                  {/* Cột 3: Tên, Giá, và Nút (Xếp chồng) */}
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minWidth: 0 }}>
+                    
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' }}>
+                      <Link href={`/product/${item.id}`} style={{ fontWeight: '600', color: '#1e293b', textDecoration: 'none', fontSize: '14px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                        {item.name}
+                      </Link>
+                      <button onClick={() => removeFromCart(item.id)} style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '15px', marginTop: '2px' }}>
+                        <i className="fas fa-trash-alt"></i>
+                      </button>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
+                      <span style={{ fontWeight: '700', color: '#e11d48', fontSize: '15px' }}>
+                        {Number(item.price).toLocaleString('vi-VN')} đ
+                      </span>
+                      
+                      <div style={{ display: 'flex', border: '1px solid #cbd5e1', borderRadius: '4px', overflow: 'hidden' }}>
+                        <button onClick={() => updateQty(item.id, item.cartQty - 1)} disabled={item.cartQty <= 1} style={{ width: '28px', height: '28px', background: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold', color: '#475569' }}>-</button>
+                        <input type="text" value={item.cartQty} readOnly style={{ width: '35px', height: '28px', border: 'none', borderLeft: '1px solid #cbd5e1', borderRight: '1px solid #cbd5e1', textAlign: 'center', fontWeight: 'bold', fontSize: '13px', color: '#1e293b' }} />
+                        <button onClick={() => updateQty(item.id, item.cartQty + 1)} disabled={item.cartQty >= item.maxQty} style={{ width: '28px', height: '28px', background: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold', color: '#475569' }}>+</button>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              ))}
             </div>
 
             {/* CỘT PHẢI: FORM GIAO HÀNG */}
@@ -269,30 +274,17 @@ export default function CartPage() {
                       <div style={{ fontSize: '12px', color: '#64748b' }}>Quét mã QR qua ứng dụng ngân hàng, Momo</div>
                     </div>
                   </div>
-                {paymentMethod === 'qr' && (
+                  {paymentMethod === 'qr' && (
                     <div style={{ marginTop: '15px', background: '#f8fafc', border: '1px dashed #3b82f6', borderRadius: '8px', padding: '20px', textAlign: 'center' }}>
                       <p style={{ fontSize: '13px', color: '#334155', fontWeight: '600', marginBottom: '15px' }}>Quét mã QR bên dưới bằng ứng dụng Ngân hàng hoặc Ví điện tử của bạn để thanh toán:</p>
-                      
-                      {/* ĐÃ SỬA LẠI KHUNG CHỨA QR: Phóng to và định vị chuẩn xác để cắt viền */}
                       <div style={{ width: '220px', height: '220px', margin: '0 auto', background: 'white', borderRadius: '12px', boxShadow: '0 4px 10px rgba(0,0,0,0.1)', overflow: 'hidden', position: 'relative' }}>
                         <img 
                           src="/uploads/qrck.jpg" 
                           alt="Mã QR Thanh Toán" 
-                          style={{ 
-                            position: 'absolute', 
-                            top: '50%', 
-                            left: '50%', 
-                            // Phóng to mạnh lên 1.7 lần để mất viền, dịch tâm để lấy đúng cái khung trắng
-                            transform: 'translate(-50%, -50%) scale(1.7)', 
-                            width: '100%', 
-                            height: '100%', 
-                            objectFit: 'cover',
-                            objectPosition: 'center 55%'
-                          }}
+                          style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) scale(1.7)', width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 55%' }}
                           onError={(e) => { e.currentTarget.src = "https://placehold.co/200x200?text=Ma+QR+Loi" }}
                         />
                       </div>
-                      
                       <div style={{ marginTop: '15px', fontSize: '12px', color: '#ef4444', fontStyle: 'italic' }}>
                         * Vui lòng nhập nội dung chuyển khoản là: <strong>SĐT của bạn</strong>
                       </div>
