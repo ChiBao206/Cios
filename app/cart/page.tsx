@@ -15,6 +15,11 @@ export default function CartPage() {
   const [isSubmitting, setIsSubmitting] = useState(false); 
   
   // ========================================================
+  // STATE LƯU THÔNG TIN THANH TOÁN
+  // ========================================================
+  const [paymentMethod, setPaymentMethod] = useState('cod'); // Mặc định là COD
+
+  // ========================================================
   // STATE LƯU THÔNG TIN USER ĐĂNG NHẬP
   // ========================================================
   const [user, setUser] = useState<any>(null);
@@ -93,7 +98,9 @@ export default function CartPage() {
     const distName = districts.find(d => String(d.code) === String(selectedDistrict))?.name || '';
     const wardName = wards.find(w => String(w.code) === String(selectedWard))?.name || '';
     
-    const fullAddress = `${addressDetail}, ${wardName}, ${distName}, ${provName}`;
+    // Đã thêm thông tin phương thức thanh toán vào chuỗi địa chỉ để Admin xem tạm (Tối ưu nhất là tạo cột mới trong CSDL)
+    const paymentText = paymentMethod === 'cod' ? '(COD - Thanh toán khi nhận hàng)' : '(Đã thanh toán Chuyển khoản QR)';
+    const fullAddress = `${addressDetail}, ${wardName}, ${distName}, ${provName} ${paymentText}`;
 
     const newOrder = {
       id: Math.floor(Math.random() * 10000), 
@@ -223,7 +230,7 @@ export default function CartPage() {
               ))}
             </div>
 
-            {/* CỘT PHẢI: FORM GIAO HÀNG */}
+            {/* CỘT PHẢI: FORM GIAO HÀNG & THANH TOÁN */}
             <div style={{ flex: '1', minWidth: '350px' }}>
               <div style={{ background: 'white', borderRadius: '12px', padding: '25px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0' }}>
                 <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#1e293b', textTransform: 'uppercase', marginBottom: '20px' }}>Thông tin giao hàng</h3>
@@ -299,6 +306,59 @@ export default function CartPage() {
                     style={{ width: '100%', padding: '12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '14px', outline: 'none' }}
                   />
                 </div>
+
+                {/* =======================================================
+                    PHẦN MỚI: CHỌN PHƯƠNG THỨC THANH TOÁN
+                    ======================================================= */}
+                <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#1e293b', textTransform: 'uppercase', marginBottom: '15px' }}>Phương thức thanh toán</h3>
+                <div style={{ marginBottom: '30px' }}>
+                  
+                  {/* Lựa chọn 1: Thanh toán khi nhận hàng */}
+                  <div 
+                    onClick={() => setPaymentMethod('cod')}
+                    style={{ display: 'flex', alignItems: 'center', gap: '15px', padding: '15px', border: '1px solid', borderColor: paymentMethod === 'cod' ? '#3b82f6' : '#cbd5e1', borderRadius: '8px', marginBottom: '10px', cursor: 'pointer', background: paymentMethod === 'cod' ? '#eff6ff' : 'white', transition: '0.2s' }}
+                  >
+                    <input type="radio" checked={paymentMethod === 'cod'} readOnly style={{ cursor: 'pointer', width: '18px', height: '18px', accentColor: '#3b82f6' }} />
+                    <div>
+                      <div style={{ fontWeight: '700', color: '#1e293b', fontSize: '14px' }}>Thanh toán khi nhận hàng (COD)</div>
+                      <div style={{ fontSize: '12px', color: '#64748b' }}>Giao hàng tận nơi rồi mới thu tiền</div>
+                    </div>
+                  </div>
+
+                  {/* Lựa chọn 2: Chuyển khoản QR */}
+                  <div 
+                    onClick={() => setPaymentMethod('qr')}
+                    style={{ display: 'flex', alignItems: 'center', gap: '15px', padding: '15px', border: '1px solid', borderColor: paymentMethod === 'qr' ? '#3b82f6' : '#cbd5e1', borderRadius: '8px', cursor: 'pointer', background: paymentMethod === 'qr' ? '#eff6ff' : 'white', transition: '0.2s' }}
+                  >
+                    <input type="radio" checked={paymentMethod === 'qr'} readOnly style={{ cursor: 'pointer', width: '18px', height: '18px', accentColor: '#3b82f6' }} />
+                    <div>
+                      <div style={{ fontWeight: '700', color: '#1e293b', fontSize: '14px' }}>Chuyển khoản / Quét mã QR</div>
+                      <div style={{ fontSize: '12px', color: '#64748b' }}>Quét mã QR qua ứng dụng ngân hàng, Momo</div>
+                    </div>
+                  </div>
+
+                  {/* Vùng hiển thị Mã QR khi khách chọn Thanh toán QR */}
+                  {paymentMethod === 'qr' && (
+                    <div style={{ marginTop: '15px', background: '#f8fafc', border: '1px dashed #3b82f6', borderRadius: '8px', padding: '20px', textAlign: 'center' }}>
+                      <p style={{ fontSize: '13px', color: '#334155', fontWeight: '600', marginBottom: '15px' }}>Quét mã QR bên dưới bằng ứng dụng Ngân hàng hoặc Ví điện tử của bạn để thanh toán:</p>
+                      
+                      {/* ĐÂY CHÍNH LÀ CHỖ GẮN ẢNH qrck.jpg */}
+                      <div style={{ width: '200px', height: '200px', margin: '0 auto', background: 'white', padding: '10px', borderRadius: '12px', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }}>
+                        <img 
+                          src="/uploads/qrck.jpg" 
+                          alt="Mã QR Thanh Toán" 
+                          style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                          onError={(e) => { e.currentTarget.src = "https://placehold.co/200x200?text=Ma+QR+Loi" }}
+                        />
+                      </div>
+                      
+                      <div style={{ marginTop: '15px', fontSize: '12px', color: '#ef4444', fontStyle: 'italic' }}>
+                        * Vui lòng nhập nội dung chuyển khoản là: <strong>SĐT của bạn</strong>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                {/* ======================================================= */}
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: '#475569', marginBottom: '10px' }}>
                   <span>Tạm tính:</span>
