@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import db from '../../db.json';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -11,7 +10,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault(); 
     setError('');
 
@@ -19,33 +18,38 @@ const handleLogin = (e: React.FormEvent) => {
     const inputUser = username.trim();
     const inputPass = password; // Mật khẩu thì giữ nguyên
 
-    // 1. Kiểm tra tài khoản trong db.json gốc
-    // Đảm bảo db.users luôn là mảng để không bị lỗi ứng dụng
-    const dbUsers = db.users || []; 
-    let user = dbUsers.find(
-      (u) => (u.username === inputUser || u.email === inputUser) && u.password === inputPass
-    );
+    try {
+      // 1. Gọi API để lấy danh sách người dùng từ cơ sở dữ liệu thực (MongoDB)
+      const res = await fetch('/api/users');
+      
+      if (!res.ok) {
+        setError('Lỗi kết nối máy chủ. Vui lòng thử lại sau!');
+        return;
+      }
 
-    // 2. Nếu db.json không có, tìm tiếp trong bộ nhớ localStorage (các tài khoản mới đăng ký)
-    if (!user) {
-      const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-      user = registeredUsers.find(
+      const dbUsers = await res.json();
+
+      // 2. Kiểm tra xem tài khoản và mật khẩu có khớp trên hệ thống không
+      const user = dbUsers.find(
         (u: any) => (u.username === inputUser || u.email === inputUser) && u.password === inputPass
       );
-    }
 
-    if (user) {
-      // Đăng nhập thành công, lưu phiên đăng nhập
-      localStorage.setItem('currentUser', JSON.stringify(user));
+      if (user) {
+        // Đăng nhập thành công, lưu phiên làm việc vào thiết bị hiện tại
+        localStorage.setItem('currentUser', JSON.stringify(user));
 
-      // Ép kiểu về chuỗi (String) để đảm bảo luôn so sánh đúng role
-      if (String(user.role) === "1") {
-        router.push('/admin');
+        // Ép kiểu về chuỗi (String) để đảm bảo luôn so sánh đúng role
+        if (String(user.role) === "1") {
+          router.push('/admin');
+        } else {
+          router.push('/');
+        }
       } else {
-        router.push('/');
+        setError('Tài khoản hoặc mật khẩu không chính xác!');
       }
-    } else {
-      setError('Tài khoản hoặc mật khẩu không chính xác!');
+    } catch (err) {
+      console.error("Lỗi đăng nhập:", err);
+      setError('Đã xảy ra lỗi mạng. Vui lòng thử lại!');
     }
   };
 
