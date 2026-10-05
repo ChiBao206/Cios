@@ -232,8 +232,13 @@ export default function AdminDashboard() {
         .admin-menu { list-style: none; padding: 15px 0; flex: 1; }
         .admin-menu li { padding: 15px 25px; cursor: pointer; display: flex; align-items: center; gap: 15px; font-weight: 600; color: #cbd5e1; transition: 0.3s; font-size: 14px;}
         .admin-menu li:hover, .admin-menu li.active { background: #0f172a; color: #38bdf8; border-left: 4px solid #38bdf8; }
+        
+        /* Đã cập nhật CSS cho 2 nút ở dưới cùng */
+        .admin-home-link { padding: 15px 25px; background: #0f172a; cursor: pointer; text-align: center; font-weight: bold; color: #94a3b8; display: flex; justify-content: center; align-items: center; gap: 10px; text-decoration: none; border-top: 1px solid #334155; transition: 0.2s; margin-top: auto;}
+        .admin-home-link:hover { color: #38bdf8; background: #1e293b; }
         .admin-logout { padding: 15px 25px; background: #ef4444; border-top: 1px solid #b91c1c; cursor: pointer; text-align: center; font-weight: bold; color: white; display: flex; justify-content: center; align-items: center; gap: 10px; transition: 0.2s;}
         .admin-logout:hover { background: #dc2626; }
+        
         .admin-main { flex: 1; margin-left: 250px; padding: 30px; width: calc(100% - 250px);}
         
         .stat-grid { display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 30px; }
@@ -278,11 +283,11 @@ export default function AdminDashboard() {
         
         .chat-bubble-customer { background: #f1f5f9; color: #1e293b; padding: 12px 18px; border-radius: 18px 18px 18px 0; max-width: 75%; font-size: 14px; align-self: flex-start; border: 1px solid #e2e8f0; }
         .chat-bubble-admin { background: #3b82f6; color: white; padding: 12px 18px; border-radius: 18px 18px 0 18px; max-width: 75%; font-size: 14px; align-self: flex-end; box-shadow: 0 2px 5px rgba(59,130,246,0.2); }
+        
         /* Tự động điều chỉnh giao diện trên điện thoại */
         @media (max-width: 768px) {
-        /* Sửa lỗi giao diện phần Hỗ trợ */
-      .support-box { flex-direction: column !important; height: 85vh !important; }
-      .support-box > div:first-child { width: 100% !important; max-height: 180px !important; border-right: none !important; border-bottom: 2px solid #e2e8f0 !important; }
+          .support-box { flex-direction: column !important; height: 85vh !important; }
+          .support-box > div:first-child { width: 100% !important; max-height: 180px !important; border-right: none !important; border-bottom: 2px solid #e2e8f0 !important; }
           .admin-layout { flex-direction: column; }
           .admin-sidebar { width: 100%; position: relative; height: auto; }
           .admin-menu { display: flex; flex-wrap: wrap; justify-content: center; padding: 10px; gap: 5px; }
@@ -291,7 +296,7 @@ export default function AdminDashboard() {
           .admin-main { margin-left: 0; width: 100%; padding: 15px; }
           .chart-container { flex-direction: column; }
           .chart-box { height: auto; min-height: 300px; }
-          .admin-table { display: block; overflow-x: auto; white-space: nowrap; } /* Cho phép vuốt ngang bảng */
+          .admin-table { display: block; overflow-x: auto; white-space: nowrap; } 
           .stat-card { min-width: 100%; }
         }
       `}</style>
@@ -308,9 +313,13 @@ export default function AdminDashboard() {
             <li className={activeTab === 'customers' ? 'active' : ''} onClick={() => setActiveTab('customers')}><i className="fas fa-users"></i> Khách hàng</li>
             <li className={activeTab === 'support' ? 'active' : ''} onClick={() => setActiveTab('support')}><i className="fas fa-headset"></i> Hỗ trợ</li>
           </ul>
-          {/* NÚT THOÁT ĐÃ ĐƯỢC GẮN HÀM handleLogout VÀ LÀM NỔI BẬT */}
-          <div onClick={handleLogout} className="admin-logout" style={{ marginTop: 'auto' }}>
-            <i className="fas fa-sign-out-alt"></i> Đăng xuất an toàn
+          
+          {/* NÚT VỀ TRANG CHỦ & NÚT ĐĂNG XUẤT NẰM Ở DƯỚI CÙNG */}
+          <Link href="/" className="admin-home-link">
+            <i className="fas fa-arrow-left"></i> Về trang chủ
+          </Link>
+          <div onClick={handleLogout} className="admin-logout">
+            <i className="fas fa-sign-out-alt"></i> Đăng xuất
           </div>
         </aside>
 
