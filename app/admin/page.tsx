@@ -13,6 +13,10 @@ export default function AdminDashboard() {
   const [reviews, setReviews] = useState<any[]>([]);
   const [supports, setSupports] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // THÊM 2 DÒNG NÀY VÀO CHỖ KHAI BÁO STATE
+  const [searchOrderCode, setSearchOrderCode] = useState('');
+  const [selectedOrderDetails, setSelectedOrderDetails] = useState<any>(null);
 
   // STATE ĐỂ CHỌN NĂM XEM BIỂU ĐỒ
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
@@ -455,7 +459,22 @@ export default function AdminDashboard() {
 
               {activeTab === 'orders' && (
                 <div className="admin-card">
-                  <h2 style={{ margin: '0 0 20px 0', color: '#1e293b' }}>QUẢN LÝ ĐƠN HÀNG</h2>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '15px' }}>
+                    <h2 style={{ margin: 0, color: '#1e293b' }}>QUẢN LÝ ĐƠN HÀNG</h2>
+                    
+                    {/* ĐÃ THÊM: THANH TÌM KIẾM MÃ ĐƠN HÀNG */}
+                    <div style={{ display: 'flex', alignItems: 'center', background: '#f1f5f9', borderRadius: '8px', padding: '8px 15px', border: '1px solid #cbd5e1', width: '250px' }}>
+                      <i className="fas fa-search" style={{ color: '#94a3b8', marginRight: '10px' }}></i>
+                      <input 
+                        type="text" 
+                        placeholder="Tìm mã đơn (vd: 67cf)..." 
+                        value={searchOrderCode}
+                        onChange={(e) => setSearchOrderCode(e.target.value)}
+                        style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '14px', width: '100%', color: '#1e293b' }}
+                      />
+                    </div>
+                  </div>
+
                   <table className="admin-table">
                     <thead>
                       <tr>
@@ -469,7 +488,14 @@ export default function AdminDashboard() {
                       </tr>
                     </thead>
                     <tbody>
-                      {orders.map((order: any) => (
+                      {/* ĐÃ THÊM: Lọc (Filter) đơn hàng dựa theo mã tìm kiếm */}
+                      {orders
+                        .filter((order: any) => {
+                          if (!searchOrderCode) return true;
+                          const code = String(order._id || order.id).slice(-4).toLowerCase();
+                          return code.includes(searchOrderCode.toLowerCase().replace('#', ''));
+                        })
+                        .map((order: any) => (
                         <tr key={order._id || order.id}>
                           <td style={{ color: '#64748b' }}>#{String(order._id || order.id).slice(-4)}</td>
                           <td style={{ fontWeight: 'bold', color: '#334155' }}>{order.user_id === 1 ? 'ADMIN' : (order.customer_name || 'Khách vãng lai')}</td>
@@ -491,12 +517,23 @@ export default function AdminDashboard() {
                             </select>
                           </td>
                           <td style={{ textAlign: 'right' }}>
-                            <button className="action-btn" onClick={() => handleDeleteOrder(order._id || order.id)}><i className="fas fa-trash"></i></button>
+                            {/* ĐÃ THÊM: Nút "Xem" chi tiết đơn hàng */}
+                            <button className="action-btn" onClick={() => setSelectedOrderDetails(order)} style={{ color: '#3b82f6', marginRight: '5px' }}>
+                              <i className="fas fa-eye"></i> Xem
+                            </button>
+                            <button className="action-btn" onClick={() => handleDeleteOrder(order._id || order.id)} style={{ color: '#ef4444' }}>
+                              <i className="fas fa-trash"></i>
+                            </button>
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
+                  
+                  {/* Nếu tìm không thấy sẽ hiện dòng này */}
+                  {orders.filter((o: any) => String(o._id || o.id).slice(-4).toLowerCase().includes(searchOrderCode.toLowerCase().replace('#', ''))).length === 0 && (
+                    <div style={{ textAlign: 'center', padding: '30px', color: '#94a3b8', fontStyle: 'italic' }}>Không tìm thấy đơn hàng nào có mã "{searchOrderCode}"</div>
+                  )}
                 </div>
               )}
 
@@ -758,7 +795,54 @@ export default function AdminDashboard() {
               </div>
             </div>
           )}
+{/* MODAL XEM CHI TIẾT ĐƠN HÀNG */}
+          {selectedOrderDetails && (
+            <div className="modal-overlay">
+              <div className="modal-content" style={{ width: '700px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', paddingBottom: '15px', borderBottom: '1px solid #e2e8f0' }}>
+                  <h3 style={{ margin: 0, color: '#1e293b', fontSize: '20px' }}>
+                    <i className="fas fa-file-invoice-dollar" style={{ color: '#3b82f6', marginRight: '10px' }}></i> 
+                    Chi tiết đơn hàng #{String(selectedOrderDetails._id || selectedOrderDetails.id).slice(-4)}
+                  </h3>
+                  <button onClick={() => setSelectedOrderDetails(null)} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#94a3b8' }}>&times;</button>
+                </div>
+                
+                <div style={{ background: '#f8fafc', padding: '15px', borderRadius: '8px', marginBottom: '20px', fontSize: '14px', color: '#334155', lineHeight: '1.8', border: '1px dashed #cbd5e1' }}>
+                  <p style={{ margin: 0 }}><strong>Tên khách hàng:</strong> {selectedOrderDetails.customer_name}</p>
+                  <p style={{ margin: 0 }}><strong>Số điện thoại:</strong> {selectedOrderDetails.customer_phone}</p>
+                  <p style={{ margin: 0 }}><strong>Địa chỉ giao hàng:</strong> {selectedOrderDetails.shipping_address}</p>
+                </div>
 
+                <h4 style={{ color: '#1e293b', marginBottom: '10px', fontSize: '15px' }}>Sản phẩm đã đặt:</h4>
+                <div style={{ maxHeight: '250px', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
+                  <table className="admin-table" style={{ margin: 0 }}>
+                    <thead style={{ position: 'sticky', top: 0, background: '#f1f5f9', zIndex: 1 }}>
+                      <tr>
+                        <th>Sản phẩm</th>
+                        <th>Đơn giá</th>
+                        <th>SL</th>
+                        <th style={{ textAlign: 'right' }}>Thành tiền</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedOrderDetails.items && selectedOrderDetails.items.map((item: any, idx: number) => (
+                        <tr key={idx}>
+                          <td style={{ fontWeight: '500' }}>{item.name}</td>
+                          <td style={{ color: '#64748b' }}>{Number(item.price).toLocaleString('vi-VN')} đ</td>
+                          <td style={{ fontWeight: 'bold' }}>{item.cartQty}</td>
+                          <td style={{ color: '#10b981', fontWeight: 'bold', textAlign: 'right' }}>{(Number(item.price) * item.cartQty).toLocaleString('vi-VN')} đ</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                
+                <div style={{ textAlign: 'right', fontSize: '18px', fontWeight: 'bold', color: '#e11d48', marginTop: '20px', paddingTop: '15px', borderTop: '2px solid #e2e8f0' }}>
+                  Tổng thanh toán: {Number(selectedOrderDetails.total_money || selectedOrderDetails.total || 0).toLocaleString('vi-VN')} đ
+                </div>
+              </div>
+            </div>
+          )}
         </main>
       </div>
     </>
