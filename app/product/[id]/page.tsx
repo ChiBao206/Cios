@@ -50,9 +50,10 @@ export default function ProductDetail() {
       .catch(err => console.error("Lỗi tải đánh giá:", err));
   }, [params?.id]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('currentUser');
-    window.location.reload(); 
+const handleLogout = () => {
+    localStorage.removeItem('camera_bn_cart'); 
+    localStorage.removeItem('currentUser'); 
+    window.location.href = '/'; 
   };
 
   // ==========================================

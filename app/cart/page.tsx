@@ -40,9 +40,10 @@ export default function CartPage() {
   }, []);
 
 const handleLogout = () => {
-    localStorage.removeItem('currentUser'); // Xóa thông tin đăng nhập
-    localStorage.removeItem('camera_bn_cart'); // Bắn bỏ luôn cái giỏ hàng trong bộ nhớ
-    window.location.reload(); // Tải lại trang (Lúc này máy tính đã trống trơn)
+    clearCart(); // 1. Ra lệnh cho React xóa sạch giỏ hàng trước
+    localStorage.removeItem('camera_bn_cart'); // 2. Bắn bỏ giỏ hàng trong bộ nhớ máy
+    localStorage.removeItem('currentUser'); // 3. Xóa thông tin tài khoản đăng nhập
+    window.location.href = '/'; // 4. Đá văng về thẳng Trang chủ (không dùng reload nữa)
   };
 
   const handleProvinceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {

@@ -56,10 +56,10 @@ export default function ProjectsPage() {
     }
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem("currentUser");
-    setUser(null);
-    router.push('/');
+const handleLogout = () => {
+    localStorage.removeItem('camera_bn_cart'); 
+    localStorage.removeItem('currentUser'); 
+    window.location.href = '/'; 
   };
 
   const projectsData = [

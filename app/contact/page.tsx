@@ -20,11 +20,11 @@ export default function ContactPage() {
     }
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem('currentUser');
-    window.location.reload();
+const handleLogout = () => {
+    localStorage.removeItem('camera_bn_cart'); 
+    localStorage.removeItem('currentUser'); 
+    window.location.href = '/'; 
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.phone || !formData.issue) return alert("Vui lòng điền đủ thông tin!");

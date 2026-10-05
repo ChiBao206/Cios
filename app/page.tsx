@@ -27,9 +27,10 @@ export default function Home() {
     }
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem("currentUser");
-    setUser(null);
+const handleLogout = () => {
+    localStorage.removeItem('camera_bn_cart'); 
+    localStorage.removeItem('currentUser'); 
+    window.location.href = '/'; 
   };
 // ==========================================
   // THUẬT TOÁN BỘ LỌC & PHÂN TRANG (PAGINATION LOGIC)

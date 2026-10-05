@@ -26,9 +26,10 @@ export default function NotificationsPage() {
   }, []);
 
   // Thêm hàm Đăng xuất
-  const handleLogout = () => {
-    localStorage.removeItem('currentUser');
-    window.location.reload();
+const handleLogout = () => {
+    localStorage.removeItem('camera_bn_cart'); 
+    localStorage.removeItem('currentUser'); 
+    window.location.href = '/'; 
   };
 
   const fetchNotifications = async (phone: string, username: string) => {

@@ -100,9 +100,10 @@ export default function ProfilePage() {
     } catch (e) { console.log(e); }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('currentUser');
-    router.push('/');
+const handleLogout = () => {
+    localStorage.removeItem('camera_bn_cart'); 
+    localStorage.removeItem('currentUser'); 
+    window.location.href = '/'; 
   };
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
