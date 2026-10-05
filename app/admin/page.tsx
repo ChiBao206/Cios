@@ -467,7 +467,7 @@ export default function AdminDashboard() {
                       <i className="fas fa-search" style={{ color: '#94a3b8', marginRight: '10px' }}></i>
                       <input 
                         type="text" 
-                        placeholder="Tìm mã đơn (vd: 67cf)..." 
+                        placeholder="Tìm mã đơn .... (vd: 67cf)..." 
                         value={searchOrderCode}
                         onChange={(e) => setSearchOrderCode(e.target.value)}
                         style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '14px', width: '100%', color: '#1e293b' }}
@@ -827,7 +827,16 @@ export default function AdminDashboard() {
                     <tbody>
                       {selectedOrderDetails.items && selectedOrderDetails.items.map((item: any, idx: number) => (
                         <tr key={idx}>
-                          <td style={{ fontWeight: '500' }}>{item.name}</td>
+                          {/* ĐÃ THÊM: Hình ảnh nằm kế bên tên sản phẩm */}
+                          <td style={{ fontWeight: '500', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <img 
+                              src={item.image} 
+                              alt={item.name} 
+                              style={{ width: '45px', height: '45px', objectFit: 'contain', borderRadius: '6px', border: '1px solid #e2e8f0', background: 'white', flexShrink: 0 }}
+                              onError={(e) => { e.currentTarget.src = "https://placehold.co/45x45?text=No+Img" }} 
+                            />
+                            <span>{item.name}</span>
+                          </td>
                           <td style={{ color: '#64748b' }}>{Number(item.price).toLocaleString('vi-VN')} đ</td>
                           <td style={{ fontWeight: 'bold' }}>{item.cartQty}</td>
                           <td style={{ color: '#10b981', fontWeight: 'bold', textAlign: 'right' }}>{(Number(item.price) * item.cartQty).toLocaleString('vi-VN')} đ</td>
