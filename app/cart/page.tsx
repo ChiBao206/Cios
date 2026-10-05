@@ -40,7 +40,8 @@ export default function CartPage() {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('currentUser');
+    localStorage.removeItem('currentUser'); // Xóa thông tin đăng nhập
+    clearCart(); // GỌI HÀM NÀY ĐỂ XÓA SẠCH GIỎ HÀNG NGAY LẬP TỨC
     window.location.reload(); 
   };
 
