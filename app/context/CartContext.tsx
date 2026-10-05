@@ -53,29 +53,59 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [cartItems, isLoaded, user]);
 
+  // ========================================================
+  // ĐÃ SỬA: Hàm thêm vào giỏ hàng chuẩn 100% không bị trùng
+  // ========================================================
   const addToCart = (product: any, qty: number = 1) => {
     setCartItems(prev => {
-      const existingItem = prev.find(item => item.id === product.id || item._id === product._id);
-      if (existingItem) {
-        return prev.map(item => (item.id === product.id || item._id === product._id) ? { ...item, cartQty: item.cartQty + qty } : item);
+      // Ép kiểu ID về chuỗi để so sánh cho chính xác (hỗ trợ cả id ảo và _id thật từ MongoDB)
+      const productId = product._id ? String(product._id) : String(product.id);
+
+      const existingItemIndex = prev.findIndex(item => {
+        const itemId = item._id ? String(item._id) : String(item.id);
+        return itemId === productId;
+      });
+
+      if (existingItemIndex !== -1) {
+        const newCart = [...prev];
+        newCart[existingItemIndex].cartQty += qty;
+        return newCart;
       }
-      return [...prev, { ...product, id: product._id || product.id, cartQty: qty, checked: true }];
+
+      return [...prev, { ...product, id: productId, cartQty: qty, checked: true }];
     });
   };
 
+  // ========================================================
+  // ĐÃ SỬA: Hàm xóa sản phẩm
+  // ========================================================
   const removeFromCart = (id: string) => {
-    setCartItems(cartItems.filter(item => item.id !== id));
+    setCartItems(cartItems.filter(item => {
+      const itemId = item._id ? String(item._id) : String(item.id);
+      return itemId !== String(id);
+    }));
   };
 
+  // ========================================================
+  // ĐÃ SỬA: Hàm tăng giảm số lượng
+  // ========================================================
   const updateQty = (id: string, qty: number) => {
-    setCartItems(cartItems.map(item => item.id === id ? { ...item, cartQty: qty } : item));
+    setCartItems(cartItems.map(item => {
+      const itemId = item._id ? String(item._id) : String(item.id);
+      return itemId === String(id) ? { ...item, cartQty: qty } : item;
+    }));
   };
 
+  // ========================================================
+  // ĐÃ SỬA: Hàm tick/bỏ tick sản phẩm
+  // ========================================================
   const toggleCheck = (id: string) => {
-    setCartItems(cartItems.map(item => item.id === id ? { ...item, checked: !item.checked } : item));
+    setCartItems(cartItems.map(item => {
+      const itemId = item._id ? String(item._id) : String(item.id);
+      return itemId === String(id) ? { ...item, checked: !item.checked } : item;
+    }));
   };
 
-  // HÀM MỚI: Dọn sạch giỏ hàng (Sẽ được gọi sau khi thanh toán xong)
   const clearCart = () => {
     setCartItems([]);
   };
@@ -83,7 +113,6 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   const totalItems = cartItems.reduce((sum, item) => sum + item.cartQty, 0);
 
   return (
-    // Nhớ bổ sung clearCart vào value
     <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, updateQty, toggleCheck, totalItems, clearCart }}>
       {children}
     </CartContext.Provider>
