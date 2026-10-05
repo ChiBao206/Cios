@@ -77,7 +77,7 @@ export default function RegisterPage() {
           <h2 style={{ fontSize: '24px', fontWeight: '900', color: '#1e293b', textTransform: 'uppercase', marginBottom: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px' }}>
             <span>🚀</span> TẠO TÀI KHOẢN MỚI
           </h2>
-          <p style={{ color: '#64748b', fontSize: '14px' }}>Trở thành thành viên của Cios ngay hôm nay</p>
+          <p style={{ color: '#64748b', fontSize: '14px' }}>Trở thành thành viên của CIOs-"impossible is nothing" ngay hôm nay</p>
         </div>
 
         <form onSubmit={handleSubmit}>

@@ -147,7 +147,7 @@ const handleLogout = () => {
       <header style={{ background: "#1e293b", padding: "12px 0", borderBottom: "1px solid #0f172a" }}>
         <div style={{ maxWidth: "1140px", margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", width: "96%" }}>
           <div style={{ color: "white", fontWeight: "bold", fontSize: "20px", display: "flex", alignItems: "center", gap: "10px" }}>
-            <i className="fas fa-video"></i> Cios
+            <i className="fas fa-video"></i> CIOs-"impossible is nothing"
           </div>
           <nav style={{ display: "flex", gap: "20px" }}>
             <Link href="/" className="nav-link"><i className="fas fa-home"></i> Trang chủ</Link>
@@ -262,7 +262,7 @@ const handleLogout = () => {
       <footer className="pro-footer">
         <div className="footer-container">
           <div className="footer-col">
-            <h3>Cios</h3>
+            <h3>CIOs-"impossible is nothing"</h3>
             <p>Đối tác tin cậy cung cấp giải pháp an ninh toàn diện. Cam kết sản phẩm chính hãng, dịch vụ tận tâm và hỗ trợ kỹ thuật trọn đời.</p>
             <div className="social-icons">
               <div className="social-btn" style={{ background: "#3b5998" }}><i className="fab fa-facebook-f"></i></div>
@@ -322,7 +322,7 @@ const handleLogout = () => {
           </div>
         </div>
         <div className="footer-bottom">
-          © 2026 Công Ty TNHH Camera CB. Giấy phép KD số: 0123456789.
+          © 2026 Công Ty TNHH CIOs-"impossible is nothing". Giấy phép KD số: 0123456789.
         </div>
       </footer>
     </div>

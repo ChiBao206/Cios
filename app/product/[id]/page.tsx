@@ -232,7 +232,7 @@ const handleBuyNow = (product: any) => {
       <header style={{ background: '#1e293b', padding: '12px 0', borderBottom: '1px solid #0f172a', fontFamily: "'Segoe UI', sans-serif" }}>
         <div style={{ maxWidth: '1140px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '96%' }}>
           <Link href="/" style={{ color: 'white', fontWeight: 'bold', fontSize: '20px', display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
-            <i className="fas fa-video"></i> Cios
+            <i className="fas fa-video"></i> CIOs-"impossible is nothing"
           </Link>
           <nav style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
             <Link href="/" className="nav-link" style={{ color: 'white', textDecoration: 'none', fontSize: '14px', fontWeight: 'bold' }}><i className="fas fa-home"></i> Trang chủ</Link>
@@ -571,7 +571,7 @@ const handleBuyNow = (product: any) => {
       <footer className="pro-footer" style={{ background: '#1e293b', color: '#cbd5e1', paddingTop: '60px' }}>
         <div className="footer-container" style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', flexWrap: 'wrap', gap: '40px', padding: '0 20px', paddingBottom: '40px' }}>
           <div className="footer-col" style={{ flex: 1.5, minWidth: '250px' }}>
-            <h3 style={{ color: 'white', marginBottom: '20px' }}>Cios</h3>
+            <h3 style={{ color: 'white', marginBottom: '20px' }}>CIOs-"impossible is nothing"</h3>
             <p style={{ lineHeight: 1.6, marginBottom: '20px' }}>Đối tác tin cậy cung cấp giải pháp an ninh toàn diện. Cam kết sản phẩm chính hãng, dịch vụ tận tâm và hỗ trợ kỹ thuật trọn đời.</p>
             <div className="social-icons" style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
               <div className="social-btn" style={{ width: '35px', height: '35px', borderRadius: '50%', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: '#3b5998' }}><i className="fab fa-facebook-f"></i></div>
@@ -634,7 +634,7 @@ const handleBuyNow = (product: any) => {
           </div>
           </div>
         <div style={{ background: '#0f172a', textAlign: 'center', padding: '20px', fontSize: '14px', borderTop: '1px solid #334155' }}>
-          © 2026 Công Ty TNHH Camera CB. Giấy phép KD số: 0123456789.
+          © 2026 Công Ty TNHH CIOs-"impossible is nothing". Giấy phép KD số: 0123456789.
         </div>
       </footer>
     </div>
