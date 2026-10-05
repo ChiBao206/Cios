@@ -39,10 +39,10 @@ export default function CartPage() {
       .catch(err => console.error("Lỗi tải tỉnh thành: ", err));
   }, []);
 
-  const handleLogout = () => {
+const handleLogout = () => {
     localStorage.removeItem('currentUser'); // Xóa thông tin đăng nhập
-    clearCart(); // GỌI HÀM NÀY ĐỂ XÓA SẠCH GIỎ HÀNG NGAY LẬP TỨC
-    window.location.reload(); 
+    localStorage.removeItem('camera_bn_cart'); // Bắn bỏ luôn cái giỏ hàng trong bộ nhớ
+    window.location.reload(); // Tải lại trang (Lúc này máy tính đã trống trơn)
   };
 
   const handleProvinceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
