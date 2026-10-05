@@ -13,6 +13,34 @@ export default function AdminDashboard() {
   const [reviews, setReviews] = useState<any[]>([]);
   const [supports, setSupports] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // THÊM 2 DÒNG NÀY ĐỂ QUẢN LÝ CHẾ ĐỘ SỬA
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
+
+  // HÀM MỞ FORM THÊM MỚI
+  const openAddProductModal = () => {
+    setIsEditing(false);
+    setEditingProductId(null);
+    setNewProduct({ name: '', price: '', quantity: '', image: '', category_id: '' });
+    setImagePreview('');
+    setShowProductForm(true);
+  };
+
+  // HÀM MỞ FORM SỬA SẢN PHẨM
+  const openEditProductModal = (product: any) => {
+    setIsEditing(true);
+    setEditingProductId(product._id || product.id);
+    setNewProduct({
+      name: product.name,
+      price: product.price.toString(),
+      quantity: product.quantity.toString(),
+      image: product.image || '',
+      category_id: product.category_id || ''
+    });
+    setImagePreview(product.image || '');
+    setShowProductForm(true);
+  };
   
   // THÊM 2 DÒNG NÀY VÀO CHỖ KHAI BÁO STATE
   const [searchOrderCode, setSearchOrderCode] = useState('');
@@ -537,11 +565,12 @@ export default function AdminDashboard() {
                 </div>
               )}
 
-              {activeTab === 'products' && (
+             {activeTab === 'products' && (
                 <div className="admin-card">
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
                     <h2 style={{ margin: 0, color: '#1e293b' }}>KHO HÀNG SẢN PHẨM</h2>
-                    <button onClick={() => setShowProductForm(true)} style={{ background: '#10b981', color: 'white', border: 'none', padding: '8px 15px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>+ Thêm Sản Phẩm</button>
+                    {/* Đã đổi hàm onClick thành openAddProductModal */}
+                    <button onClick={openAddProductModal} style={{ background: '#10b981', color: 'white', border: 'none', padding: '8px 15px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>+ Thêm Sản Phẩm</button>
                   </div>
                   <table className="admin-table">
                     <thead><tr><th>Hình</th><th>Tên</th><th>Giá</th><th>Tồn kho</th><th style={{ textAlign: 'right' }}>Hành động</th></tr></thead>
@@ -553,7 +582,14 @@ export default function AdminDashboard() {
                           <td style={{ color: '#10b981', fontWeight: 'bold' }}>{Number(product.price).toLocaleString('vi-VN')} đ</td>
                           <td style={{ fontWeight: 'bold' }}>{product.quantity}</td>
                           <td style={{ textAlign: 'right' }}>
-                            <button className="action-btn" onClick={() => handleDeleteProduct(product._id || product.id)}><i className="fas fa-trash"></i></button>
+                            {/* ĐÃ THÊM: Nút Sửa nằm TRƯỚC nút Xóa */}
+                            <button className="action-btn" style={{ color: '#3b82f6', marginRight: '5px' }} onClick={() => openEditProductModal(product)}>
+                              <i className="fas fa-edit"></i>
+                            </button>
+                            {/* Đã tô màu đỏ cho nút xóa */}
+                            <button className="action-btn" style={{ color: '#ef4444' }} onClick={() => handleDeleteProduct(product._id || product.id)}>
+                              <i className="fas fa-trash"></i>
+                            </button>
                           </td>
                         </tr>
                       ))}
@@ -739,7 +775,10 @@ export default function AdminDashboard() {
             <div className="modal-overlay">
               <div className="modal-content">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', paddingBottom: '15px', borderBottom: '1px solid #e2e8f0' }}>
-                  <h3 style={{ margin: 0, color: '#1e293b', fontSize: '20px' }}><i className="fas fa-box-open" style={{ color: '#10b981', marginRight: '10px' }}></i> Thêm Sản Phẩm Mới</h3>
+                 <h3 style={{ margin: 0, color: '#1e293b', fontSize: '20px' }}>
+                    <i className="fas fa-box-open" style={{ color: '#10b981', marginRight: '10px' }}></i> 
+                    {isEditing ? 'Cập nhật Sản Phẩm' : 'Thêm Sản Phẩm Mới'}
+                  </h3>
                   <button onClick={() => setShowProductForm(false)} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#94a3b8' }}>&times;</button>
                 </div>
                 
@@ -788,6 +827,8 @@ export default function AdminDashboard() {
                   <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '25px', paddingTop: '20px', borderTop: '1px solid #e2e8f0' }}>
                     <button type="button" onClick={() => setShowProductForm(false)} style={{ padding: '10px 20px', border: '1px solid #cbd5e1', background: '#f8fafc', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', color: '#475569' }}>Hủy bỏ</button>
                     <button type="submit" style={{ padding: '10px 25px', border: 'none', background: '#10b981', color: 'white', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <i className="fas fa-save"></i> {isEditing ? 'Lưu Cập Nhật' : 'Lưu Sản Phẩm'}
+                    </button>
                       <i className="fas fa-save"></i> Lưu Sản Phẩm
                     </button>
                   </div>
