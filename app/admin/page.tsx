@@ -316,7 +316,7 @@ export default function AdminDashboard() {
 
       <div className="admin-layout">
         <aside className="admin-sidebar">
-          <div className="admin-logo"><h2><i className="fas fa-camera"></i> ADMIN CP</h2></div>
+          <div className="admin-logo"><h2><i className="fas fa-camera"></i> ADMIN </h2></div>
           <ul className="admin-menu">
             <li className={activeTab === 'overview' ? 'active' : ''} onClick={() => setActiveTab('overview')}><i className="fas fa-chart-bar"></i> Tổng quan</li>
             <li className={activeTab === 'categories' ? 'active' : ''} onClick={() => setActiveTab('categories')}><i className="fas fa-folder"></i> Danh mục</li>
