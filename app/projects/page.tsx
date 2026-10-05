@@ -196,11 +196,12 @@ const handleLogout = () => {
           playsInline
           style={{ position: 'absolute', top: '50%', left: '50%', minWidth: '100%', minHeight: '100%', width: 'auto', height: 'auto', objectFit: 'cover', transform: 'translate(-50%, -50%)', zIndex: 0 }}
         >
-          <source src="/video-cong-ty.mp4" type="video/mp4" />
+          {/* ĐÃ SỬA: Khai báo đúng thư mục uploads */}
+          <source src="/uploads/video-cong-ty.mp4" type="video/mp4" />
         </video>
 
         {/* Lớp phủ đen mờ để chữ màu trắng nổi bật, dễ đọc */}
-        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(15, 23, 42, 0.75)', zIndex: 1 }}></div>
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(15, 23, 42, 0.65)', zIndex: 1 }}></div>
 
         {/* Cụm Text Nội Dung */}
         <div style={{ position: 'relative', zIndex: 2 }}>
