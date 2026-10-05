@@ -11,7 +11,7 @@ export const sendEmail = async (to: string, subject: string, html: string) => {
     });
 
     const mailOptions = {
-      from: `"Camera B&N" <${process.env.EMAIL_USER}>`,
+      from: `"Cios" <${process.env.EMAIL_USER}>`,
       to,
       subject,
       html,

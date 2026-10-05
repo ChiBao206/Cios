@@ -3,7 +3,7 @@ import "./globals.css";
 import { CartProvider } from "./context/CartContext"; // <-- Kéo CartProvider vào
 
 export const metadata: Metadata = {
-  title: "Camera B&N",
+  title: "Cios",
   description: "Hệ thống camera an ninh",
 };
 

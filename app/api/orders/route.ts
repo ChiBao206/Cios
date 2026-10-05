@@ -56,17 +56,17 @@ export async function POST(req: Request) {
           </tr>
         `).join('');
 
-        const subject = `🎉 Xác nhận Đơn hàng #${String(newData._id || newData.id).slice(-4)} - Camera B&N`;
+        const subject = `🎉 Xác nhận Đơn hàng #${String(newData._id || newData.id).slice(-4)} - Cios`;
         const html = `
           <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 650px; margin: 0 auto; padding: 25px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #f8fafc;">
             <div style="text-align: center; padding-bottom: 20px; border-bottom: 2px dashed #cbd5e1;">
-              <h1 style="color: #1e293b; margin: 0; font-size: 24px;">🎥 CAMERA B&N</h1>
+              <h1 style="color: #1e293b; margin: 0; font-size: 24px;">🎥 Cios</h1>
               <p style="color: #64748b; margin: 5px 0 0 0; font-size: 14px;">Giải pháp an ninh hàng đầu</p>
             </div>
             
             <h2 style="color: #10b981; text-align: center; margin-top: 25px; font-size: 22px;">ĐẶT HÀNG THÀNH CÔNG!</h2>
             <p style="color: #334155; font-size: 15px;">Xin chào <strong>${body.customer_name}</strong>,</p>
-            <p style="color: #334155; font-size: 15px; line-height: 1.6;">Cảm ơn bạn đã tin tưởng mua sắm tại Camera B&N. Đơn hàng của bạn đã được hệ thống ghi nhận và đang trong quá trình xử lý.</p>
+            <p style="color: #334155; font-size: 15px; line-height: 1.6;">Cảm ơn bạn đã tin tưởng mua sắm tại Cios. Đơn hàng của bạn đã được hệ thống ghi nhận và đang trong quá trình xử lý.</p>
             
             <div style="background-color: white; padding: 20px; border-radius: 8px; margin: 25px 0; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
               <h3 style="margin-top: 0; color: #1e293b; font-size: 16px; text-transform: uppercase;">Thông tin giao hàng</h3>
@@ -97,7 +97,7 @@ export async function POST(req: Request) {
 
             <p style="color: #94a3b8; font-size: 13px; text-align: center; border-top: 1px dashed #cbd5e1; padding-top: 20px; margin-top: 30px;">
               Nếu bạn có bất kỳ thắc mắc nào, vui lòng liên hệ Hotline hỗ trợ: <strong>0972.413.759</strong><br>
-              Một lần nữa, cảm ơn bạn đã đồng hành cùng Camera B&N!
+              Một lần nữa, cảm ơn bạn đã đồng hành cùng Cios!
             </p>
           </div>
         `;

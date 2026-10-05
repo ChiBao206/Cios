@@ -116,7 +116,7 @@ export default function CartPage() {
       });
 
       if (res.ok) {
-        alert("🎉 Đặt hàng thành công! Cảm ơn bạn đã mua sắm tại Camera B&N.");
+        alert("🎉 Đặt hàng thành công! Cảm ơn bạn đã mua sắm tại Cios.");
         clearCart(); 
         window.location.href = '/profile'; 
       } else {
@@ -133,7 +133,7 @@ export default function CartPage() {
       <header style={{ background: '#1e293b', padding: '12px 0', borderBottom: '1px solid #0f172a' }}>
         <div style={{ maxWidth: '1140px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '96%', flexWrap: 'wrap', gap: '10px' }}>
           <div style={{ color: 'white', fontWeight: 'bold', fontSize: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <i className="fas fa-video"></i> CAMERA B&N
+            <i className="fas fa-video"></i> Cios
           </div>
           <nav style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', alignItems: 'center' }}>
             <Link href="/" className="nav-link" style={{ color: 'white', textDecoration: 'none', fontSize: '14px', fontWeight: 'bold' }}><i className="fas fa-home"></i> Trang chủ</Link>
