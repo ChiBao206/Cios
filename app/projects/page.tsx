@@ -185,10 +185,28 @@ const handleLogout = () => {
         </div>
       </header>
 
-      {/* 2. BANNER DỰ ÁN */}
-      <div style={{ background: 'linear-gradient(rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.8)), url("https://images.unsplash.com/photo-1557804506-669a67965ba0?q=80&w=2000")', backgroundSize: 'cover', backgroundPosition: 'center', padding: '80px 20px', textAlign: 'center', color: 'white' }}>
-        <h1 style={{ fontSize: '36px', fontWeight: '900', textTransform: 'uppercase', marginBottom: '15px' }}>Dự Án Đã Thi Công</h1>
-        <p style={{ fontSize: '16px', color: '#cbd5e1', maxWidth: '600px', margin: '0 auto' }}>Tự hào là đối tác triển khai hệ thống an ninh giám sát và mạng hạ tầng cho hàng trăm doanh nghiệp, cơ quan và cửa hàng.</p>
+      {/* 2. BANNER DỰ ÁN KẾT HỢP VIDEO NỀN CHUYÊN NGHIỆP */}
+      <div style={{ position: 'relative', minHeight: '350px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 20px', textAlign: 'center', color: 'white', overflow: 'hidden' }}>
+        
+        {/* Lớp Video Nền AutoPlay Muted */}
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          style={{ position: 'absolute', top: '50%', left: '50%', minWidth: '100%', minHeight: '100%', width: 'auto', height: 'auto', objectFit: 'cover', transform: 'translate(-50%, -50%)', zIndex: 0 }}
+        >
+          <source src="/video-cong-ty.mp4" type="video/mp4" />
+        </video>
+
+        {/* Lớp phủ đen mờ để chữ màu trắng nổi bật, dễ đọc */}
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(15, 23, 42, 0.75)', zIndex: 1 }}></div>
+
+        {/* Cụm Text Nội Dung */}
+        <div style={{ position: 'relative', zIndex: 2 }}>
+          <h1 style={{ fontSize: '36px', fontWeight: '900', textTransform: 'uppercase', marginBottom: '15px', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>Dự Án Đã Thi Công</h1>
+          <p style={{ fontSize: '16px', color: '#cbd5e1', maxWidth: '600px', margin: '0 auto', lineHeight: '1.6' }}>Tự hào là đối tác triển khai hệ thống an ninh giám sát và mạng hạ tầng cho hàng trăm doanh nghiệp, cơ quan và cửa hàng.</p>
+        </div>
       </div>
 
       {/* 3. DANH SÁCH DỰ ÁN */}
