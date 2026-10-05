@@ -93,9 +93,15 @@ const handleLogout = () => {
     const paymentText = paymentMethod === 'cod' ? '(COD - Thanh toán khi nhận hàng)' : '(Đã thanh toán Chuyển khoản QR)';
     const fullAddress = `${addressDetail}, ${wardName}, ${distName}, ${provName} ${paymentText}`;
 
-    const newOrder = {
+  const newOrder = {
       id: Math.floor(Math.random() * 10000), 
-      user_id: user ? user.id : 2, 
+      
+      // SỬA LẠI: Bắt đúng cái _id của MongoDB để hệ thống nhận diện được khách hàng
+      user_id: user ? (user._id || user.id) : 2, 
+      
+      // THÊM MỚI DÒNG NÀY: Gửi kèm địa chỉ email lấy từ tài khoản đang đăng nhập
+      email: user ? user.email : '', 
+      
       total_money: totalAmount,
       status: "Chờ xử lý", 
       customer_name: name,
