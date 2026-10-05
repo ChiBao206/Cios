@@ -53,7 +53,7 @@ const handleLogout = () => {
       <header style={{ background: '#1e293b', padding: '12px 0', borderBottom: '1px solid #0f172a' }}>
         <div style={{ maxWidth: '1140px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '96%' }}>
           <Link href="/" style={{ color: 'white', fontWeight: 'bold', fontSize: '20px', display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
-            <i className="fas fa-video"></i> CIOs-"impossible is nothing"
+            <i className="fas fa-video"></i> CIOs - impossible is nothing
           </Link>
           <nav style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
             <Link href="/" className="nav-link" style={{ color: 'white', textDecoration: 'none', fontSize: '14px', fontWeight: 'bold' }}><i className="fas fa-home"></i> Trang chủ</Link>
@@ -89,7 +89,7 @@ const handleLogout = () => {
       <main style={{ maxWidth: '1140px', width: '95%', margin: '40px auto', flex: 1 }}>
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
           <h1 style={{ fontSize: '32px', color: '#1e293b', fontWeight: '900', textTransform: 'uppercase', marginBottom: '10px' }}>Liên hệ với chúng tôi</h1>
-          <p style={{ color: '#64748b' }}>Đội ngũ CIOs-"impossible is nothing" luôn sẵn sàng hỗ trợ bạn 24/7</p>
+          <p style={{ color: '#64748b' }}>Đội ngũ CIOs - impossible is nothing luôn sẵn sàng hỗ trợ bạn 24/7</p>
         </div>
 
         <div style={{ display: 'flex', gap: '40px', flexWrap: 'wrap' }}>

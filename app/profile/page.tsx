@@ -189,7 +189,7 @@ const handleLogout = () => {
       
       {/* HEADER */}
       <header style={{ background: '#1e293b', padding: '15px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Link href="/" style={{ color: 'white', fontWeight: 'bold', fontSize: '20px', textDecoration: 'none' }}><i className="fas fa-video"></i> CIOs-"impossible is nothing"</Link>
+        <Link href="/" style={{ color: 'white', fontWeight: 'bold', fontSize: '20px', textDecoration: 'none' }}><i className="fas fa-video"></i> CIOs - impossible is nothing</Link>
         <Link href="/" style={{ color: '#cbd5e1', textDecoration: 'none', fontSize: '14px' }}><i className="fas fa-home"></i> Về trang chủ</Link>
       </header>
 
@@ -346,7 +346,7 @@ const handleLogout = () => {
                   <i className="fas fa-headset"></i>
                 </div>
                 <div>
-                  <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b', margin: 0 }}>Trung tâm Hỗ trợ CIOs-"impossible is nothing"</h2>
+                  <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b', margin: 0 }}>Trung tâm Hỗ trợ CIOs - impossible is nothing</h2>
                   <div style={{ fontSize: '12px', color: '#10b981', display: 'flex', alignItems: 'center', gap: '5px' }}>
                     <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981' }}></div> Trực tuyến
                   </div>

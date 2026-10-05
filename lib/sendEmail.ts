@@ -11,7 +11,7 @@ export const sendEmail = async (to: string, subject: string, html: string) => {
     });
 
     const mailOptions = {
-      from: `"CIOs-"impossible is nothing"" <${process.env.EMAIL_USER}>`,
+      from: `"CIOs - impossible is nothing" <${process.env.EMAIL_USER}>`,
       to,
       subject,
       html,
