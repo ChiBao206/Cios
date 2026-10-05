@@ -26,6 +26,15 @@ export default function AdminDashboard() {
   const [selectedSupport, setSelectedSupport] = useState<any>(null);
   const [adminReplyText, setAdminReplyText] = useState('');
 
+  // ==========================================
+  // HÀM ĐĂNG XUẤT SIÊU DIỆT KHUẨN DÀNH CHO ADMIN
+  // ==========================================
+  const handleLogout = () => {
+    localStorage.removeItem('camera_bn_cart'); // Dọn luôn giỏ hàng cho sạch sẽ
+    localStorage.removeItem('currentUser'); // Xóa quyền Admin
+    window.location.href = '/'; // Đá văng ra ngoài trang chủ
+  };
+
   useEffect(() => {
     fetchAllData();
   }, []);
@@ -223,7 +232,8 @@ export default function AdminDashboard() {
         .admin-menu { list-style: none; padding: 15px 0; flex: 1; }
         .admin-menu li { padding: 15px 25px; cursor: pointer; display: flex; align-items: center; gap: 15px; font-weight: 600; color: #cbd5e1; transition: 0.3s; font-size: 14px;}
         .admin-menu li:hover, .admin-menu li.active { background: #0f172a; color: #38bdf8; border-left: 4px solid #38bdf8; }
-        .admin-logout { padding: 15px 25px; background: #0f172a; cursor: pointer; text-align: center; font-weight: bold; color: #94a3b8; display: block; text-decoration: none;}
+        .admin-logout { padding: 15px 25px; background: #ef4444; border-top: 1px solid #b91c1c; cursor: pointer; text-align: center; font-weight: bold; color: white; display: flex; justify-content: center; align-items: center; gap: 10px; transition: 0.2s;}
+        .admin-logout:hover { background: #dc2626; }
         .admin-main { flex: 1; margin-left: 250px; padding: 30px; width: calc(100% - 250px);}
         
         .stat-grid { display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 30px; }
@@ -298,7 +308,10 @@ export default function AdminDashboard() {
             <li className={activeTab === 'customers' ? 'active' : ''} onClick={() => setActiveTab('customers')}><i className="fas fa-users"></i> Khách hàng</li>
             <li className={activeTab === 'support' ? 'active' : ''} onClick={() => setActiveTab('support')}><i className="fas fa-headset"></i> Hỗ trợ</li>
           </ul>
-          <Link href="/" className="admin-logout" style={{ marginTop: 'auto' }}><i className="fas fa-arrow-left"></i> Về Trang chủ</Link>
+          {/* NÚT THOÁT ĐÃ ĐƯỢC GẮN HÀM handleLogout VÀ LÀM NỔI BẬT */}
+          <div onClick={handleLogout} className="admin-logout" style={{ marginTop: 'auto' }}>
+            <i className="fas fa-sign-out-alt"></i> Đăng xuất an toàn
+          </div>
         </aside>
 
         <main className="admin-main">
