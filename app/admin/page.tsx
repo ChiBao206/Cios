@@ -829,8 +829,6 @@ export default function AdminDashboard() {
                     <button type="submit" style={{ padding: '10px 25px', border: 'none', background: '#10b981', color: 'white', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <i className="fas fa-save"></i> {isEditing ? 'Lưu Cập Nhật' : 'Lưu Sản Phẩm'}
                     </button>
-                      <i className="fas fa-save"></i> Lưu Sản Phẩm
-                    </button>
                   </div>
                 </form>
               </div>
