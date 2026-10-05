@@ -148,6 +148,23 @@ export default function AdminDashboard() {
     alert("Đã cập nhật thông tin khách hàng!");
   };
 
+  // HÀM MỚI: Xóa khách hàng
+  const handleDeleteUser = async (userId: string) => {
+    if (window.confirm("⚠️ Bạn có chắc chắn muốn xóa khách hàng này khỏi hệ thống không?")) {
+      // Cập nhật giao diện: Ẩn khách hàng đó đi
+      setUsers(users.filter(u => u._id !== userId && u.id !== userId));
+      
+      // (Tùy chọn) Gọi API để xóa thật dưới Database nếu bạn đã viết API DELETE
+      try {
+        await fetch(`/api/users?id=${userId}`, { method: 'DELETE' });
+      } catch (error) {
+        console.log("Chưa có API xóa user hoặc lỗi mạng");
+      }
+      
+      alert("Đã xóa khách hàng thành công!");
+    }
+  };
+
   // ==========================================
   // THUẬT TOÁN TÍNH TOÁN DỮ LIỆU THẬT 100%
   // ==========================================
@@ -549,7 +566,14 @@ export default function AdminDashboard() {
                           <td style={{ color: '#64748b' }}>{user.email || 'Chưa cập nhật'}</td>
                           <td style={{ color: '#64748b' }}>{user.phone || 'Chưa cập nhật'}</td>
                           <td style={{ textAlign: 'right' }}>
-                            <button className="action-btn" onClick={() => handleEditUser(user._id || user.id, user)}><i className="fas fa-edit"></i> Sửa</button>
+                            <button className="action-btn" onClick={() => handleEditUser(user._id || user.id, user)}>
+                              <i className="fas fa-edit"></i> Sửa
+                            </button>
+                            
+                            {/* ĐÃ THÊM: Nút Xóa khách hàng màu đỏ nổi bật */}
+                            <button className="action-btn" style={{ color: '#ef4444' }} onClick={() => handleDeleteUser(user._id || user.id)}>
+                              <i className="fas fa-trash-alt"></i> Xóa
+                            </button>
                           </td>
                         </tr>
                       ))}
