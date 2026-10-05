@@ -26,13 +26,10 @@ export default function AdminDashboard() {
   const [selectedSupport, setSelectedSupport] = useState<any>(null);
   const [adminReplyText, setAdminReplyText] = useState('');
 
-  // ==========================================
-  // HÀM ĐĂNG XUẤT SIÊU DIỆT KHUẨN DÀNH CHO ADMIN
-  // ==========================================
   const handleLogout = () => {
-    localStorage.removeItem('camera_bn_cart'); // Dọn luôn giỏ hàng cho sạch sẽ
-    localStorage.removeItem('currentUser'); // Xóa quyền Admin
-    window.location.href = '/'; // Đá văng ra ngoài trang chủ
+    localStorage.removeItem('camera_bn_cart'); 
+    localStorage.removeItem('currentUser'); 
+    window.location.href = '/'; 
   };
 
   useEffect(() => {
@@ -164,22 +161,36 @@ export default function AdminDashboard() {
   const totalProducts = products.length;
   const totalInventory = products.reduce((sum, p) => sum + Number(p.quantity || 0), 0);
   
-  // 1. BIỂU ĐỒ TRÒN
-  const categoryCount = products.reduce((acc: any, curr) => {
-    const catName = categories.find(c => String(c.id) === String(curr.category_id) || String(c._id) === String(curr.category_id))?.name || "Chưa phân loại";
-    acc[catName] = (acc[catName] || 0) + 1;
-    return acc;
-  }, {});
-  
-  const catNames = Object.keys(categoryCount).sort(); 
-  const catValues = catNames.map(name => categoryCount[name]);
-  const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#d946ef', '#14b8a6', '#f43f5e'];
+  // =========================================================================
+  // ĐÃ SỬA: BIỂU ĐỒ TRÒN - TOP SẢN PHẨM MUA NHIỀU NHẤT DỰA VÀO ĐƠN HÀNG
+  // =========================================================================
+  const productSalesCount: { [key: string]: number } = {};
+  orders.forEach(order => {
+    if (order.status !== 'Đã hủy' && order.items && Array.isArray(order.items)) {
+      order.items.forEach((item: any) => {
+        // Rút gọn tên sản phẩm nếu quá dài để hiển thị biểu đồ đẹp hơn
+        const shortName = item.name.length > 20 ? item.name.substring(0, 20) + '...' : item.name;
+        productSalesCount[shortName] = (productSalesCount[shortName] || 0) + Number(item.cartQty || 1);
+      });
+    }
+  });
+
+  // Chuyển object thành mảng, sắp xếp giảm dần, và chỉ lấy top 5 sản phẩm bán chạy nhất
+  const topProducts = Object.entries(productSalesCount)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 5);
+
+  const topProductNames = topProducts.map(([name]) => name);
+  const topProductValues = topProducts.map(([, qty]) => qty);
+  const totalItemsSoldForChart = topProductValues.reduce((sum, val) => sum + val, 0);
+
+  const colors = ['#f59e0b', '#3b82f6', '#10b981', '#ef4444', '#8b5cf6'];
   
   let gradientString = "";
   let currentPercentage = 0;
-  if(totalProducts > 0) {
-    catValues.forEach((val, i) => {
-      const percentage = (val / totalProducts) * 100;
+  if(totalItemsSoldForChart > 0) {
+    topProductValues.forEach((val, i) => {
+      const percentage = (val / totalItemsSoldForChart) * 100;
       gradientString += `${colors[i % colors.length]} ${currentPercentage}% ${currentPercentage + percentage}%, `;
       currentPercentage += percentage;
     });
@@ -193,9 +204,8 @@ export default function AdminDashboard() {
       if (!isNaN(d.getTime())) return d.getFullYear();
     }
     return new Date().getFullYear();
-  }))).sort((a, b) => b - a); // Xếp năm mới nhất lên đầu
+  }))).sort((a, b) => b - a); 
 
-  // Nếu mảng năm trống thì mặc định là năm nay
   if (availableYears.length === 0) availableYears.push(new Date().getFullYear());
 
   // 3. TÍNH DOANH THU 12 THÁNG DỰA TRÊN NĂM ĐÃ CHỌN (selectedYear)
@@ -203,7 +213,7 @@ export default function AdminDashboard() {
   orders.forEach(order => {
     if (order.status !== 'Đã hủy') { 
       let orderYear = new Date().getFullYear(); 
-      let orderMonth = 0; // Tháng 1
+      let orderMonth = 0; 
 
       if (order.createdAt) {
         const d = new Date(order.createdAt);
@@ -213,7 +223,6 @@ export default function AdminDashboard() {
         }
       }
 
-      // Chỉ cộng tiền nếu đơn hàng đó thuộc NĂM ĐANG CHỌN
       if (orderYear === selectedYear) {
         monthlyRevenue[orderMonth] += Number(order.total_money || order.total || 0);
       }
@@ -233,7 +242,6 @@ export default function AdminDashboard() {
         .admin-menu li { padding: 15px 25px; cursor: pointer; display: flex; align-items: center; gap: 15px; font-weight: 600; color: #cbd5e1; transition: 0.3s; font-size: 14px;}
         .admin-menu li:hover, .admin-menu li.active { background: #0f172a; color: #38bdf8; border-left: 4px solid #38bdf8; }
         
-        /* Đã cập nhật CSS cho 2 nút ở dưới cùng */
         .admin-home-link { padding: 15px 25px; background: #0f172a; cursor: pointer; text-align: center; font-weight: bold; color: #94a3b8; display: flex; justify-content: center; align-items: center; gap: 10px; text-decoration: none; border-top: 1px solid #334155; transition: 0.2s; margin-top: auto;}
         .admin-home-link:hover { color: #38bdf8; background: #1e293b; }
         .admin-logout { padding: 15px 25px; background: #ef4444; border-top: 1px solid #b91c1c; cursor: pointer; text-align: center; font-weight: bold; color: white; display: flex; justify-content: center; align-items: center; gap: 10px; transition: 0.2s;}
@@ -250,15 +258,16 @@ export default function AdminDashboard() {
         .stat-card .value { font-size: 28px; font-weight: 800; color: #1e293b; }
         
         .chart-container { display: flex; gap: 20px; margin-bottom: 30px; }
-        .chart-box { background: white; padding: 25px; border-radius: 12px; border: 1px solid #e2e8f0; flex: 2; height: 350px; display: flex; flex-direction: column;}
-        .chart-box.small { flex: 1; align-items: center; justify-content: center;}
+        
+        /* ĐÃ SỬA: Set chiều cao cố định cho khung biểu đồ cột để điện thoại không bị bẹp */
+        .chart-box { background: white; padding: 25px; border-radius: 12px; border: 1px solid #e2e8f0; flex: 2; height: 380px; display: flex; flex-direction: column;}
+        .chart-box.small { flex: 1; align-items: center; justify-content: flex-start; height: 380px; overflow-y: auto;}
         
         .bar-chart { flex: 1; display: flex; align-items: flex-end; justify-content: space-around; border-left: 2px solid #e2e8f0; border-bottom: 2px solid #e2e8f0; padding: 20px 10px 0; gap: 10px;}
         .bar { width: 35px; background: #3b82f6; border-radius: 4px 4px 0 0; position: relative; transition: 0.3s; }
         .bar:hover { background: #2563eb; }
         .bar span { position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); font-size: 12px; color: #64748b; font-weight: bold;}
         
-        /* Tooltip hiển thị số tiền */
         .bar::after {
           content: attr(data-tooltip);
           position: absolute; top: -30px; left: 50%; transform: translateX(-50%);
@@ -284,7 +293,7 @@ export default function AdminDashboard() {
         .chat-bubble-customer { background: #f1f5f9; color: #1e293b; padding: 12px 18px; border-radius: 18px 18px 18px 0; max-width: 75%; font-size: 14px; align-self: flex-start; border: 1px solid #e2e8f0; }
         .chat-bubble-admin { background: #3b82f6; color: white; padding: 12px 18px; border-radius: 18px 18px 0 18px; max-width: 75%; font-size: 14px; align-self: flex-end; box-shadow: 0 2px 5px rgba(59,130,246,0.2); }
         
-        /* Tự động điều chỉnh giao diện trên điện thoại */
+        /* ĐÃ SỬA: Responsive cho điện thoại */
         @media (max-width: 768px) {
           .support-box { flex-direction: column !important; height: 85vh !important; }
           .support-box > div:first-child { width: 100% !important; max-height: 180px !important; border-right: none !important; border-bottom: 2px solid #e2e8f0 !important; }
@@ -295,7 +304,7 @@ export default function AdminDashboard() {
           .admin-menu li:hover, .admin-menu li.active { border-left: none; border-bottom-color: #38bdf8; }
           .admin-main { margin-left: 0; width: 100%; padding: 15px; }
           .chart-container { flex-direction: column; }
-          .chart-box { height: auto; min-height: 300px; }
+          .chart-box { min-height: 380px; } /* Đảm bảo biểu đồ cột có chỗ đứng trên mobile */
           .admin-table { display: block; overflow-x: auto; white-space: nowrap; } 
           .stat-card { min-width: 100%; }
         }
@@ -314,7 +323,6 @@ export default function AdminDashboard() {
             <li className={activeTab === 'support' ? 'active' : ''} onClick={() => setActiveTab('support')}><i className="fas fa-headset"></i> Hỗ trợ</li>
           </ul>
           
-          {/* NÚT VỀ TRANG CHỦ & NÚT ĐĂNG XUẤT NẰM Ở DƯỚI CÙNG */}
           <Link href="/" className="admin-home-link">
             <i className="fas fa-arrow-left"></i> Về trang chủ
           </Link>
@@ -342,12 +350,10 @@ export default function AdminDashboard() {
                   </div>
                   <div className="chart-container">
                     
-                    {/* BIỂU ĐỒ CỘT 12 THÁNG KÈM NÚT CHỌN NĂM */}
+                    {/* BIỂU ĐỒ CỘT */}
                     <div className="chart-box">
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                         <h3 style={{ margin: 0, color: '#1e293b' }}>📈 Doanh thu các tháng</h3>
-                        
-                        {/* Thanh Chọn Năm */}
                         <select 
                           value={selectedYear} 
                           onChange={(e) => setSelectedYear(Number(e.target.value))}
@@ -377,14 +383,27 @@ export default function AdminDashboard() {
                       </div>
                     </div>
 
+                    {/* ĐÃ SỬA: BIỂU ĐỒ TRÒN TOP 5 SẢN PHẨM */}
                     <div className="chart-box small">
-                      <h3 style={{ margin: '0 0 30px 0', color: '#1e293b' }}>🏆 Tỉ trọng danh mục</h3>
-                      <div style={{ width: '180px', height: '180px', borderRadius: '50%', background: `conic-gradient(${gradientString})` }}></div>
-                      <div style={{ marginTop: '20px', fontSize: '12px', display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                        {catNames.map((name, i) => (
-                          <span key={name} style={{ color: colors[i % colors.length] }}>■ {name} ({categoryCount[name]})</span>
-                        ))}
-                      </div>
+                      <h3 style={{ margin: '0 0 20px 0', color: '#1e293b' }}>🏆 Top 5 Sản phẩm Hot</h3>
+                      {topProductNames.length > 0 ? (
+                        <>
+                          <div style={{ width: '170px', height: '170px', borderRadius: '50%', background: `conic-gradient(${gradientString})`, flexShrink: 0 }}></div>
+                          <div style={{ marginTop: '20px', width: '100%' }}>
+                            {topProductNames.map((name, i) => (
+                              <div key={name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px dashed #e2e8f0' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                  <span style={{ display: 'inline-block', width: '12px', height: '12px', background: colors[i % colors.length], borderRadius: '3px' }}></span>
+                                  <span style={{ fontSize: '13px', color: '#334155', fontWeight: '500' }}>{name}</span>
+                                </div>
+                                <strong style={{ fontSize: '13px', color: '#1e293b' }}>{topProductValues[i]} cái</strong>
+                              </div>
+                            ))}
+                          </div>
+                        </>
+                      ) : (
+                         <div style={{ color: '#94a3b8', fontStyle: 'italic', marginTop: '50px' }}>Chưa có đơn hàng nào được bán.</div>
+                      )}
                     </div>
                   </div>
                 </>
@@ -432,7 +451,7 @@ export default function AdminDashboard() {
                       {orders.map((order: any) => (
                         <tr key={order._id || order.id}>
                           <td style={{ color: '#64748b' }}>#{String(order._id || order.id).slice(-4)}</td>
-                          <td style={{ fontWeight: 'bold', color: '#334155' }}>{order.user_id === 1 ? 'ADMIN' : 'Khách vãng lai'}</td>
+                          <td style={{ fontWeight: 'bold', color: '#334155' }}>{order.user_id === 1 ? 'ADMIN' : (order.customer_name || 'Khách vãng lai')}</td>
                           <td style={{ color: '#64748b' }}>{order.createdAt ? new Date(order.createdAt).toLocaleDateString('vi-VN') : 'Mới đây'}</td>
                           <td style={{ color: '#10b981' }}>Tiền mặt (COD)</td>
                           <td style={{ color: '#e11d48', fontWeight: 'bold' }}>{Number(order.total_money || order.total || 0).toLocaleString('vi-VN')} đ</td>
@@ -489,13 +508,13 @@ export default function AdminDashboard() {
                 <div className="admin-card">
                   <h2 style={{ margin: '0 0 20px 0', color: '#1e293b' }}>THỐNG KÊ ĐÁNH GIÁ (API)</h2>
                   {reviews.length === 0 ? <p>Chưa có đánh giá nào trong DB.</p> : (
-                    <div style={{ display: 'flex', gap: '30px', alignItems: 'center' }}>
-                      <div style={{ flex: 1, textAlign: 'center' }}>
+                    <div style={{ display: 'flex', gap: '30px', alignItems: 'center', flexWrap: 'wrap' }}>
+                      <div style={{ flex: 1, minWidth: '200px', textAlign: 'center' }}>
                         <h1 style={{ fontSize: '60px', margin: 0, color: '#f59e0b' }}>{Number(reviews.reduce((a,b)=>a+b.rating,0)/reviews.length || 5).toFixed(1)}</h1>
                         <div style={{ color: '#f59e0b', fontSize: '24px' }}>★★★★★</div>
                         <p style={{ color: '#64748b' }}>Dựa trên {reviews.length} lượt đánh giá</p>
                       </div>
-                      <div style={{ flex: 2 }}>
+                      <div style={{ flex: 2, minWidth: '300px' }}>
                          {[5, 4, 3, 2, 1].map((star) => {
                            const count = reviews.filter(r => r.rating === star).length;
                            const percent = reviews.length > 0 ? (count / reviews.length) * 100 : 0;
@@ -660,8 +679,8 @@ export default function AdminDashboard() {
                 </div>
                 
                 <form onSubmit={handleAddProductSubmit}>
-                  <div style={{ display: 'flex', gap: '25px' }}>
-                    <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '25px' }}>
+                    <div style={{ flex: '1 1 300px' }}>
                       <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 'bold', color: '#475569' }}>Tên sản phẩm *</label>
                       <input className="modal-input" required value={newProduct.name} onChange={e => setNewProduct({...newProduct, name: e.target.value})} />
                       
@@ -685,7 +704,7 @@ export default function AdminDashboard() {
                       </div>
                     </div>
 
-                    <div style={{ width: '220px' }}>
+                    <div style={{ flex: '1 1 200px' }}>
                       <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 'bold', color: '#475569' }}>Hình ảnh sản phẩm *</label>
                       <label className="upload-area">
                         {imagePreview ? (
