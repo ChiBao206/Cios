@@ -233,7 +233,7 @@ export default function AdminDashboard() {
 
   return (
     <>
-      <style>{`
+<style>{`
         .admin-layout { display: flex; min-height: 100vh; background: #f8fafc; font-family: 'Segoe UI', sans-serif; }
         .admin-sidebar { width: 250px; background: #1e293b; color: white; display: flex; flex-direction: column; position: fixed; height: 100vh; overflow-y: auto; z-index: 100;}
         .admin-logo { padding: 25px 20px; text-align: center; border-bottom: 1px solid #334155; }
@@ -259,11 +259,11 @@ export default function AdminDashboard() {
         
         .chart-container { display: flex; gap: 20px; margin-bottom: 30px; }
         
-        /* ĐÃ SỬA: Set chiều cao cố định cho khung biểu đồ cột để điện thoại không bị bẹp */
+        /* Set chiều cao cố định cho khung biểu đồ cột để điện thoại không bị bẹp */
         .chart-box { background: white; padding: 25px; border-radius: 12px; border: 1px solid #e2e8f0; flex: 2; height: 380px; display: flex; flex-direction: column;}
         .chart-box.small { flex: 1; align-items: center; justify-content: flex-start; height: 380px; overflow-y: auto;}
         
-        .bar-chart { flex: 1; display: flex; align-items: flex-end; justify-content: space-around; border-left: 2px solid #e2e8f0; border-bottom: 2px solid #e2e8f0; padding: 20px 10px 0; gap: 10px;}
+        .bar-chart { flex: 1; min-height: 250px; height: 100%; display: flex; align-items: flex-end; justify-content: space-around; border-left: 2px solid #e2e8f0; border-bottom: 2px solid #e2e8f0; padding: 20px 10px 0; gap: 10px;}
         .bar { width: 35px; background: #3b82f6; border-radius: 4px 4px 0 0; position: relative; transition: 0.3s; }
         .bar:hover { background: #2563eb; }
         .bar span { position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); font-size: 12px; color: #64748b; font-weight: bold;}
@@ -293,7 +293,7 @@ export default function AdminDashboard() {
         .chat-bubble-customer { background: #f1f5f9; color: #1e293b; padding: 12px 18px; border-radius: 18px 18px 18px 0; max-width: 75%; font-size: 14px; align-self: flex-start; border: 1px solid #e2e8f0; }
         .chat-bubble-admin { background: #3b82f6; color: white; padding: 12px 18px; border-radius: 18px 18px 0 18px; max-width: 75%; font-size: 14px; align-self: flex-end; box-shadow: 0 2px 5px rgba(59,130,246,0.2); }
         
-        /* ĐÃ SỬA: Responsive cho điện thoại */
+        /* ĐÃ SỬA: Responsive cho điện thoại (thêm min-height cho bar-chart) */
         @media (max-width: 768px) {
           .support-box { flex-direction: column !important; height: 85vh !important; }
           .support-box > div:first-child { width: 100% !important; max-height: 180px !important; border-right: none !important; border-bottom: 2px solid #e2e8f0 !important; }
@@ -304,7 +304,8 @@ export default function AdminDashboard() {
           .admin-menu li:hover, .admin-menu li.active { border-left: none; border-bottom-color: #38bdf8; }
           .admin-main { margin-left: 0; width: 100%; padding: 15px; }
           .chart-container { flex-direction: column; }
-          .chart-box { min-height: 380px; } /* Đảm bảo biểu đồ cột có chỗ đứng trên mobile */
+          .chart-box { min-height: 380px; }
+          .bar-chart { min-height: 250px; } /* QUAN TRỌNG: Dòng này cứu biểu đồ trên mobile */
           .admin-table { display: block; overflow-x: auto; white-space: nowrap; } 
           .stat-card { min-width: 100%; }
         }
