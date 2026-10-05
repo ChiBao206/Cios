@@ -185,33 +185,37 @@ const handleLogout = () => {
         </div>
       </header>
 
-      {/* 2. BANNER DỰ ÁN KẾT HỢP VIDEO NỀN CHUYÊN NGHIỆP */}
-      <div style={{ position: 'relative', minHeight: '350px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 20px', textAlign: 'center', color: 'white', overflow: 'hidden' }}>
-        
-        {/* Lớp Video Nền AutoPlay Muted */}
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          style={{ position: 'absolute', top: '50%', left: '50%', minWidth: '100%', minHeight: '100%', width: 'auto', height: 'auto', objectFit: 'cover', transform: 'translate(-50%, -50%)', zIndex: 0 }}
-        >
-          {/* ĐÃ SỬA: Khai báo đúng thư mục uploads */}
-          <source src="/uploads/video-cong-ty.mp4" type="video/mp4" />
-        </video>
+      {/* 2. BANNER DỰ ÁN (Khôi phục lại hình nền tĩnh ban đầu của bạn) */}
+      <div style={{ background: 'linear-gradient(rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.8)), url("https://images.unsplash.com/photo-1557804506-669a67965ba0?q=80&w=2000")', backgroundSize: 'cover', backgroundPosition: 'center', padding: '80px 20px', textAlign: 'center', color: 'white' }}>
+        <h1 style={{ fontSize: '36px', fontWeight: '900', textTransform: 'uppercase', marginBottom: '15px' }}>Dự Án Đã Thi Công</h1>
+        <p style={{ fontSize: '16px', color: '#cbd5e1', maxWidth: '600px', margin: '0 auto', lineHeight: '1.5' }}>Tự hào là đối tác triển khai hệ thống an ninh giám sát và mạng hạ tầng cho hàng trăm doanh nghiệp, cơ quan và cửa hàng.</p>
+      </div>
 
-        {/* Lớp phủ đen mờ để chữ màu trắng nổi bật, dễ đọc */}
-        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(15, 23, 42, 0.65)', zIndex: 1 }}></div>
-
-        {/* Cụm Text Nội Dung */}
-        <div style={{ position: 'relative', zIndex: 2 }}>
-          <h1 style={{ fontSize: '36px', fontWeight: '900', textTransform: 'uppercase', marginBottom: '15px', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>Dự Án Đã Thi Công</h1>
-          <p style={{ fontSize: '16px', color: '#cbd5e1', maxWidth: '600px', margin: '0 auto', lineHeight: '1.6' }}>Tự hào là đối tác triển khai hệ thống an ninh giám sát và mạng hạ tầng cho hàng trăm doanh nghiệp, cơ quan và cửa hàng.</p>
+      {/* 2.5 KHU VỰC VIDEO GIỚI THIỆU (Nằm ngay trên các dự án) */}
+      <div style={{ maxWidth: '1000px', margin: '50px auto 0', padding: '0 20px' }}>
+        <div style={{ background: 'white', padding: '20px', borderRadius: '16px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', textAlign: 'center' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: '800', color: '#1e293b', marginBottom: '20px', textTransform: 'uppercase', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+            <i className="fas fa-play-circle" style={{ color: '#e11d48', fontSize: '24px' }}></i>
+            Video Giới Thiệu Công Ty
+          </h2>
+          <div style={{ position: 'relative', width: '100%', borderRadius: '12px', overflow: 'hidden', background: '#000' }}>
+            <video 
+              src="/uploads/video-cong-ty.mp4" 
+              controls 
+              autoPlay 
+              muted 
+              loop 
+              playsInline
+              style={{ width: '100%', maxHeight: '500px', objectFit: 'contain', display: 'block' }}
+            >
+              Trình duyệt của bạn không hỗ trợ xem video.
+            </video>
+          </div>
         </div>
       </div>
 
       {/* 3. DANH SÁCH DỰ ÁN */}
-      <div style={{ maxWidth: '1000px', margin: '50px auto', padding: '0 20px', display: 'flex', flexDirection: 'column', gap: '60px' }}>
+      <div style={{ maxWidth: '1000px', margin: '40px auto 50px', padding: '0 20px', display: 'flex', flexDirection: 'column', gap: '60px' }}>
         {projectsData.map((project, index) => (
           <div key={project.id} style={{ background: 'white', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', display: 'flex', flexDirection: index % 2 === 0 ? 'row' : 'row-reverse', flexWrap: 'wrap' }}>
             
@@ -237,7 +241,7 @@ const handleLogout = () => {
         ))}
       </div>
 
-      {/* 4. FLOATING BUTTONS (ĐỒNG BỘ TỪ TRANG CHỦ) */}
+      {/* 4. FLOATING BUTTONS */}
       <div className="floating-buttons">
         <a href="https://zalo.me/0971024173" target="_blank" rel="noopener noreferrer" className="float-btn zalo">
           <i className="fas fa-comment-dots"></i> Chat Zalo
@@ -254,7 +258,7 @@ const handleLogout = () => {
         </button>
       </div>
 
-      {/* 5. FOOTER (ĐỒNG BỘ TỪ TRANG CHỦ) */}
+      {/* 5. FOOTER */}
       <footer className="pro-footer">
         <div className="footer-container">
           <div className="footer-col">
