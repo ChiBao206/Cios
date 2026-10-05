@@ -9,7 +9,7 @@ export default function CartPage() {
   const { cartItems, removeFromCart, updateQty, toggleCheck, totalItems, clearCart } = useCart();
   const totalAmount = cartItems.reduce((sum: number, item: any) => sum + (item.checked ? Number(item.price) * item.cartQty : 0), 0);
 
-  // BIẾN MỚI: Kiểm tra xem có sản phẩm nào đang được tick chọn hay không
+  // Kiểm tra xem có sản phẩm nào đang được tick chọn hay không
   const hasCheckedItems = cartItems.some((item: any) => item.checked);
 
   const [name, setName] = useState('');
@@ -186,8 +186,11 @@ export default function CartPage() {
         ) : (
           <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
 
-            {/* CỘT TRÁI: SẢN PHẨM */}
-            <div style={{ flex: '1 1 60%', width: '100%', background: 'white', borderRadius: '12px', padding: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0' }}>
+            {/* CỘT TRÁI: SẢN PHẨM 
+                ĐÃ SỬA LẠI: Nếu không có món nào được tick, nó sẽ phóng to 100% full màn. 
+                Nếu có tick, nó tự thu nhỏ lại 60% nhường chỗ cho Form giao hàng. 
+            */}
+            <div style={{ flex: hasCheckedItems ? '1 1 60%' : '1 1 100%', width: '100%', background: 'white', borderRadius: '12px', padding: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0', transition: 'all 0.3s ease' }}>
               {cartItems.map((item: any) => (
                 <div key={item.id} style={{ display: 'flex', alignItems: 'stretch', padding: '15px 0', borderBottom: '1px solid #f1f5f9', gap: '12px' }}>
                   
@@ -225,10 +228,9 @@ export default function CartPage() {
               ))}
             </div>
 
-            {/* CỘT PHẢI: FORM GIAO HÀNG / HOẶC CẢNH BÁO NẾU CHƯA TICK */}
-            <div style={{ flex: '1 1 35%', minWidth: '300px', width: '100%' }}>
-              {hasCheckedItems ? (
-                /* HIỆN FORM NẾU CÓ ÍT NHẤT 1 MÓN ĐƯỢC TICK */
+            {/* CỘT PHẢI: FORM GIAO HÀNG (CHỈ XUẤT HIỆN KHI CÓ SẢN PHẨM ĐƯỢC TICK) */}
+            {hasCheckedItems && (
+              <div style={{ flex: '1 1 35%', minWidth: '300px', width: '100%', transition: 'all 0.3s ease' }}>
                 <div style={{ background: 'white', borderRadius: '12px', padding: '25px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0' }}>
                   <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#1e293b', textTransform: 'uppercase', marginBottom: '20px' }}>Thông tin giao hàng</h3>
 
@@ -308,14 +310,8 @@ export default function CartPage() {
                     {isSubmitting ? 'ĐANG XỬ LÝ...' : 'XÁC NHẬN ĐẶT HÀNG'}
                   </button>
                 </div>
-              ) : (
-                /* HIỆN THÔNG BÁO NẾU KHÁCH CHƯA TICK MÓN NÀO */
-                <div style={{ background: 'white', borderRadius: '12px', padding: '60px 30px', textAlign: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', border: '1px dashed #cbd5e1', position: 'sticky', top: '20px' }}>
-                  <i className="fas fa-check-square" style={{ fontSize: '60px', color: '#e2e8f0', marginBottom: '20px' }}></i>
-                  <h3 style={{ color: '#475569', fontSize: '16px', lineHeight: '1.6', margin: 0 }}>Vui lòng chọn (tick) vào ít nhất 1 sản phẩm ở danh sách bên trái để tiến hành thanh toán.</h3>
-                </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         )}
       </main>
