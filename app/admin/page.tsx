@@ -159,24 +159,23 @@ export default function AdminDashboard() {
     } catch (e) { alert("Lỗi khi lưu sản phẩm"); }
   };
 
-  // HÀM XÓA SẢN PHẨM THẬT SỰ TỪ DATABASE
   const handleDeleteProduct = async (productId: string) => {
-    if (window.confirm("⚠️ Bạn có chắc chắn muốn xóa vĩnh viễn sản phẩm này khỏi hệ thống không?")) {
+    if (window.confirm("⚠️ Bạn có chắc chắn muốn xóa sản phẩm này khỏi hệ thống không?")) {
       try {
-        // GỌI API DELETE BÁO CHO DATABASE BIẾT ĐỂ XÓA THẬT
-        const res = await fetch(`/api/products?id=${productId}`, { 
-          method: 'DELETE' 
+        const res = await fetch(`/api/products?id=${productId}`, {
+          method: 'DELETE',
         });
-        
-        if(res.ok) {
-           // Nếu xóa Database thành công thì mới xóa trên màn hình
-           setProducts(products.filter(p => p._id !== productId && p.id !== productId));
-           alert("Đã xóa sản phẩm thành công!");
+
+        if (res.ok) {
+          alert("Đã xóa sản phẩm thành công!");
+          // Gọi lại hàm lấy dữ liệu để bảng tự động load lại (mất đi sản phẩm vừa xóa)
+          fetchAllData(); 
         } else {
-           alert("Không thể xóa. Vui lòng kiểm tra lại kết nối Database!");
+          alert("Xóa thất bại! API trả về lỗi hoặc không tìm thấy sản phẩm trên DB.");
         }
       } catch (error) {
-        alert("Lỗi mạng khi xóa sản phẩm!");
+        console.error(error);
+        alert("Lỗi mạng hoặc chưa có API DELETE!");
       }
     }
   };

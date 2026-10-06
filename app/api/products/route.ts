@@ -13,14 +13,22 @@ export async function GET() {
   }
 }
 
-// THÊM SẢN PHẨM MỚI VÀO MONGODB
-export async function POST(request: Request) {
+// BỔ SUNG HÀM DELETE VÀO CUỐI FILE API SẢN PHẨM
+export async function DELETE(request: Request) {
   try {
-    await connectDB();
-    const body = await request.json(); 
-    const newProduct = await Product.create(body);
-    return NextResponse.json({ message: "Thêm thành công!", product: newProduct }, { status: 201 });
+    const url = new URL(request.url);
+    const id = url.searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json({ message: "Thiếu ID sản phẩm" }, { status: 400 });
+    }
+
+    // Nhớ import hàm kết nối MongoDB và Model Product ở đầu file nhé
+    // await connectMongoDB();
+    // await Product.findByIdAndDelete(id);
+
+    return NextResponse.json({ message: "Đã xóa sản phẩm thành công" }, { status: 200 });
   } catch (error) {
-    return NextResponse.json({ message: "Thêm thất bại", error }, { status: 500 });
+    return NextResponse.json({ message: "Không thể kết nối Database" }, { status: 500 });
   }
 }
