@@ -12,6 +12,7 @@ export default function AdminDashboard() {
   const [users, setUsers] = useState<any[]>([]);
   const [reviews, setReviews] = useState<any[]>([]);
   const [supports, setSupports] = useState<any[]>([]);
+  const [projects, setProjects] = useState<any[]>([]); // STATE QUẢN LÝ DỰ ÁN
   const [isLoading, setIsLoading] = useState(true);
 
   const [isEditing, setIsEditing] = useState(false);
@@ -50,6 +51,12 @@ export default function AdminDashboard() {
     name: '', price: '', quantity: '', image: '', category_id: '' 
   });
 
+  // STATE & HÀM CHO MODAL DỰ ÁN
+  const [showProjectForm, setShowProjectForm] = useState(false);
+  const [isEditingProject, setIsEditingProject] = useState(false);
+  const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
+  const [newProject, setNewProject] = useState({ title: '', description: '', details: '', images: '' });
+
   const [selectedSupport, setSelectedSupport] = useState<any>(null);
   const [adminReplyText, setAdminReplyText] = useState('');
 
@@ -67,13 +74,14 @@ export default function AdminDashboard() {
     setIsLoading(true);
     try {
       const timestamp = new Date().getTime();
-      const [prodRes, catRes, ordRes, usrRes, revRes, supRes] = await Promise.all([
+      const [prodRes, catRes, ordRes, usrRes, revRes, supRes, projRes] = await Promise.all([
         fetch(`/api/products?t=${timestamp}`), 
         fetch(`/api/categories?t=${timestamp}`), 
         fetch(`/api/orders?t=${timestamp}`), 
         fetch(`/api/users?t=${timestamp}`), 
         fetch(`/api/reviews?t=${timestamp}`).catch(() => ({ ok: false, json: () => [] })), 
-        fetch(`/api/supports?t=${timestamp}`).catch(() => ({ ok: false, json: () => [] }))
+        fetch(`/api/supports?t=${timestamp}`).catch(() => ({ ok: false, json: () => [] })),
+        fetch(`/api/projects?t=${timestamp}`).catch(() => ({ ok: false, json: () => [] })) // GỌI API DỰ ÁN
       ]);
       
       if(prodRes.ok) setProducts(await prodRes.json());
@@ -82,6 +90,7 @@ export default function AdminDashboard() {
       if(usrRes.ok) setUsers(await usrRes.json());
       if(revRes.ok) setReviews(await revRes.json());
       if(supRes.ok) setSupports(await supRes.json());
+      if(projRes.ok) setProjects(await projRes.json());
     } catch (error) {
       console.log("Lỗi tải dữ liệu");
     }
@@ -122,9 +131,9 @@ export default function AdminDashboard() {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
-             ...newProduct, 
-             price: Number(newProduct.price), 
-             quantity: Number(newProduct.quantity) 
+              ...newProduct, 
+              price: Number(newProduct.price), 
+              quantity: Number(newProduct.quantity) 
           })
         });
         if(res.ok) alert("Cập nhật sản phẩm thành công!");
@@ -133,9 +142,9 @@ export default function AdminDashboard() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
-             ...newProduct, 
-             price: Number(newProduct.price), 
-             quantity: Number(newProduct.quantity) 
+              ...newProduct, 
+              price: Number(newProduct.price), 
+              quantity: Number(newProduct.quantity) 
           })
         });
         if(res.ok) alert("Thêm sản phẩm mới thành công!");
@@ -170,7 +179,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // ĐÃ KẾT NỐI API: Danh mục
   const handleAddCategory = async () => {
     const name = window.prompt("Nhập tên danh mục mới:");
     if (!name) return;
@@ -207,7 +215,6 @@ export default function AdminDashboard() {
     } catch (e) { alert("Lỗi mạng"); }
   };
 
-  // ĐÃ KẾT NỐI API: Đơn hàng
   const handleUpdateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
       const res = await fetch(`/api/orders?id=${orderId}`, {
@@ -233,7 +240,6 @@ export default function AdminDashboard() {
     } catch (e) { alert("Lỗi mạng"); }
   };
 
-  // ĐÃ KẾT NỐI API: Khách hàng
   const handleEditUser = async (userId: string, currentUser: any) => {
     const newName = window.prompt(`Sửa Tên:`, currentUser.username || "");
     if(newName === null) return;
@@ -272,15 +278,67 @@ export default function AdminDashboard() {
   };
 
   // ==========================================
-  // THUẬT TOÁN TÍNH TOÁN DỮ LIỆU
+  // XỬ LÝ LƯU VÀ XÓA DỰ ÁN
   // ==========================================
+  const openAddProjectModal = () => {
+    setIsEditingProject(false); setEditingProjectId(null);
+    setNewProject({ title: '', description: '', details: '', images: '' });
+    setShowProjectForm(true);
+  };
+
+  const openEditProjectModal = (proj: any) => {
+    setIsEditingProject(true); setEditingProjectId(proj._id || proj.id);
+    setNewProject({
+      title: proj.title,
+      description: proj.description,
+      details: Array.isArray(proj.details) ? proj.details.join('\n') : proj.details,
+      images: Array.isArray(proj.images) ? proj.images.join('\n') : proj.images
+    });
+    setShowProjectForm(true);
+  };
+
+  const handleAddProjectSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const payload = {
+      title: newProject.title,
+      description: newProject.description,
+      details: newProject.details.split('\n').map(s => s.trim()).filter(s => s),
+      images: newProject.images.split('\n').map(s => s.trim()).filter(s => s)
+    };
+
+    try {
+      if (isEditingProject && editingProjectId) {
+        const res = await fetch(`/api/projects?id=${editingProjectId}`, {
+          method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+        });
+        if(res.ok) alert("Cập nhật dự án thành công!");
+      } else {
+        const res = await fetch('/api/projects', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+        });
+        if(res.ok) alert("Thêm dự án thành công!");
+      }
+      setShowProjectForm(false);
+      fetchAllData();
+    } catch(e) { alert("Lỗi khi lưu dự án!"); }
+  };
+
+  const handleDeleteProject = async (id: string) => {
+    if (!window.confirm("⚠️ Bạn có chắc chắn muốn xóa dự án này?")) return;
+    try {
+      const res = await fetch(`/api/projects?id=${id}`, { method: 'DELETE' });
+      if(res.ok) {
+        alert("Đã xóa dự án thành công!");
+        fetchAllData();
+      } else alert("Lỗi xóa dự án!");
+    } catch (e) { alert("Lỗi mạng!"); }
+  };
+
   const totalOrders = orders.length;
-  
   const totalRevenue = orders.reduce((sum, order) => {
     if (order.status === 'Đã hủy') return sum;
     return sum + Number(order.total_money || order.total || 0);
   }, 0);
-  
   const totalProducts = products.length;
   const totalInventory = products.reduce((sum, p) => sum + Number(p.quantity || 0), 0);
   
@@ -294,16 +352,12 @@ export default function AdminDashboard() {
     }
   });
 
-  const topProducts = Object.entries(productSalesCount)
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, 5);
-
+  const topProducts = Object.entries(productSalesCount).sort(([, a], [, b]) => b - a).slice(0, 5);
   const topProductNames = topProducts.map(([name]) => name);
   const topProductValues = topProducts.map(([, qty]) => qty);
   const totalItemsSoldForChart = topProductValues.reduce((sum, val) => sum + val, 0);
 
   const colors = ['#f59e0b', '#3b82f6', '#10b981', '#ef4444', '#8b5cf6'];
-  
   let gradientString = "";
   let currentPercentage = 0;
   if(totalItemsSoldForChart > 0) {
@@ -330,15 +384,10 @@ export default function AdminDashboard() {
     if (order.status !== 'Đã hủy') { 
       let orderYear = new Date().getFullYear(); 
       let orderMonth = 0; 
-
       if (order.createdAt) {
         const d = new Date(order.createdAt);
-        if (!isNaN(d.getTime())) {
-          orderYear = d.getFullYear();
-          orderMonth = d.getMonth(); 
-        }
+        if (!isNaN(d.getTime())) { orderYear = d.getFullYear(); orderMonth = d.getMonth(); }
       }
-
       if (orderYear === selectedYear) {
         monthlyRevenue[orderMonth] += Number(order.total_money || order.total || 0);
       }
@@ -401,7 +450,7 @@ export default function AdminDashboard() {
         .status-select { padding: 6px; border-radius: 4px; border: 1px solid #cbd5e1; outline: none; font-weight: bold; font-size: 12px; cursor: pointer; }
         
         .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); display: flex; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(4px);}
-        .modal-content { background: white; padding: 30px; border-radius: 12px; width: 650px; max-width: 95%; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);}
+        .modal-content { background: white; padding: 30px; border-radius: 12px; width: 650px; max-width: 95%; max-height: 95vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);}
         .modal-input { width: 100%; padding: 12px 15px; margin-bottom: 15px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; transition: 0.2s;}
         .modal-input:focus { border-color: #3b82f6; outline: none; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
         .upload-area { border: 2px dashed #cbd5e1; border-radius: 8px; background: #f8fafc; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 215px; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden; }
@@ -436,6 +485,8 @@ export default function AdminDashboard() {
             <li className={activeTab === 'categories' ? 'active' : ''} onClick={() => setActiveTab('categories')}><i className="fas fa-folder"></i> Danh mục</li>
             <li className={activeTab === 'orders' ? 'active' : ''} onClick={() => setActiveTab('orders')}><i className="fas fa-box"></i> Đơn hàng</li>
             <li className={activeTab === 'products' ? 'active' : ''} onClick={() => setActiveTab('products')}><i className="fas fa-camera"></i> Sản phẩm</li>
+            {/* THÊM TAB DỰ ÁN VÀO MENU NÀY */}
+            <li className={activeTab === 'projects' ? 'active' : ''} onClick={() => setActiveTab('projects')}><i className="fas fa-project-diagram"></i> Dự án</li>
             <li className={activeTab === 'reviews' ? 'active' : ''} onClick={() => setActiveTab('reviews')}><i className="fas fa-star"></i> Đánh giá</li>
             <li className={activeTab === 'customers' ? 'active' : ''} onClick={() => setActiveTab('customers')}><i className="fas fa-users"></i> Khách hàng</li>
             <li className={activeTab === 'support' ? 'active' : ''} onClick={() => setActiveTab('support')}><i className="fas fa-headset"></i> Hỗ trợ</li>
@@ -654,6 +705,45 @@ export default function AdminDashboard() {
                 </div>
               )}
 
+              {/* BẢNG QUẢN LÝ DỰ ÁN */}
+              {activeTab === 'projects' && (
+                <div className="admin-card">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
+                    <h2 style={{ margin: 0, color: '#1e293b' }}>QUẢN LÝ DỰ ÁN ĐÃ THI CÔNG</h2>
+                    <button onClick={openAddProjectModal} style={{ background: '#10b981', color: 'white', border: 'none', padding: '8px 15px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>+ Thêm Dự Án</button>
+                  </div>
+                  <table className="admin-table">
+                    <thead><tr><th>Hình đại diện</th><th>Tên dự án</th><th>Mô tả ngắn</th><th style={{ textAlign: 'right' }}>Hành động</th></tr></thead>
+                    <tbody>
+                      {projects.map((project: any) => (
+                        <tr key={project._id || project.id}>
+                          <td>
+                            <img 
+                              src={project.images && project.images.length > 0 ? project.images[0] : "https://placehold.co/80x50?text=No+Image"} 
+                              alt={project.title} 
+                              style={{ width: '80px', height: '50px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #e2e8f0' }} 
+                            />
+                          </td>
+                          <td style={{ color: '#3b82f6', fontWeight: 'bold', maxWidth: '200px' }}>{project.title}</td>
+                          <td style={{ color: '#64748b', fontSize: '13px', maxWidth: '300px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{project.description}</td>
+                          <td style={{ textAlign: 'right' }}>
+                            <button className="action-btn" style={{ color: '#3b82f6', marginRight: '5px' }} onClick={() => openEditProjectModal(project)}>
+                              <i className="fas fa-edit"></i>
+                            </button>
+                            <button className="action-btn" style={{ color: '#ef4444' }} onClick={() => handleDeleteProject(project._id || project.id)}>
+                              <i className="fas fa-trash"></i>
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                      {projects.length === 0 && (
+                        <tr><td colSpan={4} style={{ textAlign: 'center', padding: '30px', color: '#94a3b8' }}>Chưa có dự án nào!</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
               {activeTab === 'reviews' && (
                 <div className="admin-card">
                   <h2 style={{ margin: '0 0 20px 0', color: '#1e293b' }}>THỐNG KÊ ĐÁNH GIÁ (API)</h2>
@@ -822,6 +912,42 @@ export default function AdminDashboard() {
                 </div>
               )}
             </>
+          )}
+
+          {/* MODAL THÊM/SỬA DỰ ÁN */}
+          {showProjectForm && (
+            <div className="modal-overlay">
+              <div className="modal-content">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', paddingBottom: '15px', borderBottom: '1px solid #e2e8f0' }}>
+                 <h3 style={{ margin: 0, color: '#1e293b', fontSize: '20px' }}>
+                    <i className="fas fa-project-diagram" style={{ color: '#10b981', marginRight: '10px' }}></i> 
+                    {isEditingProject ? 'Cập nhật Dự Án' : 'Thêm Dự Án Mới'}
+                  </h3>
+                  <button onClick={() => setShowProjectForm(false)} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#94a3b8' }}>&times;</button>
+                </div>
+                
+                <form onSubmit={handleAddProjectSubmit}>
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 'bold', color: '#475569' }}>Tên dự án *</label>
+                  <input className="modal-input" required value={newProject.title} onChange={e => setNewProject({...newProject, title: e.target.value})} placeholder="VD: Lắp đặt camera tại..." />
+                  
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 'bold', color: '#475569' }}>Mô tả ngắn gọn *</label>
+                  <input className="modal-input" required value={newProject.description} onChange={e => setNewProject({...newProject, description: e.target.value})} placeholder="Mô tả tổng quan về dự án..." />
+                  
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 'bold', color: '#475569' }}>Chi tiết thi công (Mỗi ý một dòng) *</label>
+                  <textarea className="modal-input" required rows={4} value={newProject.details} onChange={e => setNewProject({...newProject, details: e.target.value})} placeholder="VD:&#10;- Thi công lắp đặt 10 camera&#10;- Đi cáp mạng gọn gàng..." style={{ resize: 'vertical' }}></textarea>
+                  
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 'bold', color: '#475569' }}>Link hình ảnh dự án (Mỗi link một dòng) *</label>
+                  <textarea className="modal-input" required rows={4} value={newProject.images} onChange={e => setNewProject({...newProject, images: e.target.value})} placeholder="VD:&#10;/uploads/anh1.jpg&#10;https://link-anh-khac.com/anh2.png" style={{ resize: 'vertical' }}></textarea>
+
+                  <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '15px', paddingTop: '20px', borderTop: '1px solid #e2e8f0' }}>
+                    <button type="button" onClick={() => setShowProjectForm(false)} style={{ padding: '10px 20px', border: '1px solid #cbd5e1', background: '#f8fafc', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', color: '#475569' }}>Hủy bỏ</button>
+                    <button type="submit" style={{ padding: '10px 25px', border: 'none', background: '#10b981', color: 'white', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <i className="fas fa-save"></i> {isEditingProject ? 'Lưu Cập Nhật' : 'Lưu Dự Án'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
           )}
 
           {/* MODAL THÊM SẢN PHẨM */}
