@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { CartProvider } from "./context/CartContext"; // <-- Kéo CartProvider vào
 
-export const metadata: Metadata = {
-  title: "CIOs - impossible is nothing",
-  description: "Hệ thống camera an ninh",
+export const metadata = {
+  title: "CIOs - impossible is nothing | Chuyên thiết bị an ninh",
+  description: "Cung cấp giải pháp an ninh, camera, mạng toàn diện",
 };
 
 export default function RootLayout({
