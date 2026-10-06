@@ -61,7 +61,7 @@ export default function AdminDashboard() {
 
   const [selectedSupport, setSelectedSupport] = useState<any>(null);
   const [adminReplyText, setAdminReplyText] = useState('');
-  // STATE MỚI ĐỂ QUẢN LÝ GIAO DIỆN CHAT TRÊN ĐIỆN THOẠI
+  
   const [showMobileChat, setShowMobileChat] = useState(false);
 
   const handleLogout = () => {
@@ -98,17 +98,6 @@ export default function AdminDashboard() {
     } catch (error) {
       console.log("Lỗi tải dữ liệu");
     }
-    setIsLoading(false);
-  };
-
-  const handleSyncAll = async () => {
-    if (!window.confirm("Đồng bộ toàn bộ dữ liệu từ db.json lên MongoDB? (Sẽ chép đè dữ liệu mới)")) return;
-    setIsLoading(true);
-    try {
-      await fetch('/api/seed');
-      alert("Đã đồng bộ xong TOÀN BỘ!");
-      fetchAllData();
-    } catch (error) { alert("Lỗi đồng bộ!"); }
     setIsLoading(false);
   };
 
@@ -259,7 +248,7 @@ export default function AdminDashboard() {
         body: JSON.stringify({ username: newName, email: newEmail, phone: newPhone })
       });
       if(res.ok) {
-        alert("Đã cập nhật thông tin khách hàng!");
+        alert("Đã cập nhật thông khách hàng!");
         fetchAllData();
       } else alert("Lỗi cập nhật thông tin!");
     } catch (e) { alert("Lỗi mạng"); }
@@ -508,7 +497,6 @@ export default function AdminDashboard() {
           .admin-card { padding: 15px; }
           .modal-content { padding: 15px; }
           
-          /* CHỈNH LẠI GIAO DIỆN CHAT TRÊN MOBILE (GIỐNG SHOPEE) */
           .support-box-container { flex-direction: column; height: 80vh; border: none; }
           
           .support-list-col { 
@@ -553,12 +541,6 @@ export default function AdminDashboard() {
         </aside>
 
         <main className="admin-main">
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '30px' }}>
-            <button onClick={handleSyncAll} style={{ background: '#f59e0b', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '30px', fontWeight: 'bold', cursor: 'pointer' }}>
-              <i className="fas fa-sync-alt"></i> Đồng bộ DB.JSON
-            </button>
-          </div>
-
           {isLoading ? ( <div style={{ textAlign: 'center', padding: '50px', fontSize: '18px', fontWeight: 'bold', color: '#64748b' }}><i className="fas fa-spinner fa-spin"></i> Đang tải dữ liệu thực tế...</div> ) : (
             <>
               {activeTab === 'overview' && (
@@ -864,7 +846,7 @@ export default function AdminDashboard() {
                 <div className="admin-card" style={{ padding: 0 }}>
                   <div className="support-box-container">
                     
-                    {/* CỘT BÊN TRÁI: Danh sách khách hàng (Hiện mặc định trên mobile) */}
+                    {/* CỘT BÊN TRÁI: Danh sách khách hàng */}
                     <div className="support-list-col">
                       <div style={{ padding: '15px 20px', background: '#1e293b', color: 'white', fontWeight: 'bold', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span><i className="fas fa-inbox"></i> Hộp thư</span>
@@ -882,7 +864,7 @@ export default function AdminDashboard() {
                               style={{ padding: '15px 20px', borderBottom: '1px solid #e2e8f0', cursor: 'pointer', background: selectedSupport?.customer === customerName ? '#eff6ff' : hasUnread ? 'white' : 'transparent', borderLeft: hasUnread ? '4px solid #ef4444' : '4px solid transparent', transition: '0.2s' }}
                               onClick={() => {
                                 setSelectedSupport({ customer: customerName, phone: latestTicket.phone, tickets: userTickets });
-                                setShowMobileChat(true); // Bấm vào là hiển thị khung chat trên mobile
+                                setShowMobileChat(true); 
                               }}
                             >
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
@@ -899,7 +881,7 @@ export default function AdminDashboard() {
                       </div>
                     </div>
 
-                    {/* CỘT BÊN PHẢI: Khung chat chi tiết (Chỉ hiện trên mobile khi đã chọn khách) */}
+                    {/* CỘT BÊN PHẢI: Khung chat chi tiết */}
                     <div className="support-chat-col">
                       {!selectedSupport ? (
                         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', color: '#cbd5e1', padding: '20px' }}>
@@ -913,7 +895,7 @@ export default function AdminDashboard() {
                             <button 
                               className="d-md-none" 
                               onClick={() => setShowMobileChat(false)} 
-                              style={{ background: 'none', border: 'none', fontSize: '20px', color: '#64748b', cursor: 'pointer', padding: '0 5px' }}
+                              style={{ background: 'none', border: 'none', fontSize: '20px', color: '#64748b', cursor: 'pointer', padding: '0 5px', display: 'block' }}
                             >
                               <i className="fas fa-arrow-left"></i>
                             </button>
