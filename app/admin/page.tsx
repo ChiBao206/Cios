@@ -51,12 +51,10 @@ export default function AdminDashboard() {
     name: '', price: '', quantity: '', image: '', category_id: '' 
   });
 
-  // STATE & HÀM CHO MODAL DỰ ÁN
   const [showProjectForm, setShowProjectForm] = useState(false);
   const [isEditingProject, setIsEditingProject] = useState(false);
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   
-  // ĐÃ SỬA: Đổi images thành mảng (array) thay vì chuỗi (string)
   const [newProject, setNewProject] = useState<{title: string, description: string, details: string, images: string[]}>({ 
     title: '', description: '', details: '', images: [] 
   });
@@ -266,7 +264,7 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteUser = async (userId: string) => {
-    if (window.confirm("⚠️ Bạn có chắc chắn muốn xóa khách hàng này khỏi hệ thống không?")) {
+    if (window.confirm("⚠️️ Bạn có chắc chắn muốn xóa khách hàng này khỏi hệ thống không?")) {
       try {
         const res = await fetch(`/api/users?id=${userId}`, { method: 'DELETE' });
         if(res.ok) {
@@ -281,9 +279,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // ==========================================
-  // XỬ LÝ LƯU VÀ XÓA DỰ ÁN (CẬP NHẬT ẢNH LOCAL)
-  // ==========================================
   const openAddProjectModal = () => {
     setIsEditingProject(false); setEditingProjectId(null);
     setNewProject({ title: '', description: '', details: '', images: [] });
@@ -301,7 +296,6 @@ export default function AdminDashboard() {
     setShowProjectForm(true);
   };
 
-  // ĐÃ SỬA: Hàm xử lý upload nhiều ảnh cho Dự án
   const handleProjectImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
@@ -333,7 +327,7 @@ export default function AdminDashboard() {
       title: newProject.title,
       description: newProject.description,
       details: newProject.details.split('\n').map(s => s.trim()).filter(s => s),
-      images: newProject.images // Gửi trực tiếp mảng Base64 lên DB
+      images: newProject.images 
     };
 
     try {
@@ -472,15 +466,15 @@ export default function AdminDashboard() {
         }
         .bar:hover::after { opacity: 1; }
 
-        .admin-card { background: white; border-radius: 12px; padding: 30px; border: 1px solid #e2e8f0; margin-bottom: 30px; }
-        .admin-table { width: 100%; border-collapse: collapse; }
-        .admin-table th { padding: 15px; text-align: left; background: #f8fafc; color: #64748b; font-size: 13px; border-bottom: 2px solid #e2e8f0; }
+        .admin-card { background: white; border-radius: 12px; padding: 30px; border: 1px solid #e2e8f0; margin-bottom: 30px; overflow-x: auto;}
+        .admin-table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        .admin-table th { padding: 15px; text-align: left; background: #f8fafc; color: #64748b; font-size: 13px; border-bottom: 2px solid #e2e8f0; white-space: nowrap; }
         .admin-table td { padding: 15px; border-bottom: 1px solid #f1f5f9; color: #334155; font-size: 14px; vertical-align: middle; }
-        .action-btn { padding: 6px 12px; border: 1px solid #cbd5e1; background: white; border-radius: 4px; font-size: 12px; cursor: pointer; margin-right: 5px; color: #64748b; }
+        .action-btn { padding: 6px 12px; border: 1px solid #cbd5e1; background: white; border-radius: 4px; font-size: 12px; cursor: pointer; margin-right: 5px; color: #64748b; white-space: nowrap; }
         .status-select { padding: 6px; border-radius: 4px; border: 1px solid #cbd5e1; outline: none; font-weight: bold; font-size: 12px; cursor: pointer; }
         
-        .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); display: flex; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(4px);}
-        .modal-content { background: white; padding: 30px; border-radius: 12px; width: 650px; max-width: 95%; max-height: 95vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);}
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); display: flex; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(4px); padding: 15px; overflow-y: auto;}
+        .modal-content { background: white; padding: 30px; border-radius: 12px; width: 100%; max-width: 650px; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);}
         .modal-input { width: 100%; padding: 12px 15px; margin-bottom: 15px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; transition: 0.2s;}
         .modal-input:focus { border-color: #3b82f6; outline: none; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
         .upload-area { border: 2px dashed #cbd5e1; border-radius: 8px; background: #f8fafc; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 150px; padding: 20px; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden; }
@@ -488,9 +482,11 @@ export default function AdminDashboard() {
         .chat-bubble-customer { background: #f1f5f9; color: #1e293b; padding: 12px 18px; border-radius: 18px 18px 18px 0; max-width: 75%; font-size: 14px; align-self: flex-start; border: 1px solid #e2e8f0; }
         .chat-bubble-admin { background: #3b82f6; color: white; padding: 12px 18px; border-radius: 18px 18px 0 18px; max-width: 75%; font-size: 14px; align-self: flex-end; box-shadow: 0 2px 5px rgba(59,130,246,0.2); }
         
+        .support-box-container { display: flex; height: calc(100vh - 180px); border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
+        .support-list-col { width: 320px; background: #f8fafc; border-right: 1px solid #e2e8f0; display: flex; flexDirection: column; }
+        .support-chat-col { flex: 1; display: flex; flexDirection: column; background: white; }
+
         @media (max-width: 768px) {
-          .support-box { flex-direction: column !important; height: 85vh !important; }
-          .support-box > div:first-child { width: 100% !important; max-height: 180px !important; border-right: none !important; border-bottom: 2px solid #e2e8f0 !important; }
           .admin-layout { flex-direction: column; }
           .admin-sidebar { width: 100%; position: relative; height: auto; }
           .admin-menu { display: flex; flex-wrap: wrap; justify-content: center; padding: 10px; gap: 5px; }
@@ -498,12 +494,14 @@ export default function AdminDashboard() {
           .admin-menu li:hover, .admin-menu li.active { border-left: none; border-bottom-color: #38bdf8; }
           .admin-main { margin-left: 0; width: 100%; padding: 15px; }
           .chart-container { flex-direction: column; }
-          
           .chart-box { height: auto; min-height: 400px; }
           .bar-chart { height: 250px; } 
-          
-          .admin-table { display: block; overflow-x: auto; white-space: nowrap; } 
           .stat-card { min-width: 100%; }
+
+          .modal-content { padding: 15px; }
+          .support-box-container { flex-direction: column; height: 80vh; }
+          .support-list-col { width: 100%; max-height: 150px; border-right: none; border-bottom: 2px solid #e2e8f0; overflow-y: auto; }
+          .support-chat-col { max-height: calc(100% - 150px); }
         }
       `}</style>
 
@@ -734,7 +732,6 @@ export default function AdminDashboard() {
                 </div>
               )}
 
-              {/* BẢNG QUẢN LÝ DỰ ÁN */}
               {activeTab === 'projects' && (
                 <div className="admin-card">
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
@@ -753,8 +750,8 @@ export default function AdminDashboard() {
                               style={{ width: '80px', height: '50px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #e2e8f0' }} 
                             />
                           </td>
-                          <td style={{ color: '#3b82f6', fontWeight: 'bold', maxWidth: '200px' }}>{project.title}</td>
-                          <td style={{ color: '#64748b', fontSize: '13px', maxWidth: '300px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{project.description}</td>
+                          <td style={{ color: '#3b82f6', fontWeight: 'bold', maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{project.title}</td>
+                          <td style={{ color: '#64748b', fontSize: '13px', maxWidth: '250px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{project.description}</td>
                           <td style={{ textAlign: 'right' }}>
                             <button className="action-btn" style={{ color: '#3b82f6', marginRight: '5px' }} onClick={() => openEditProjectModal(project)}>
                               <i className="fas fa-edit"></i>
@@ -829,114 +826,116 @@ export default function AdminDashboard() {
               )}
 
               {activeTab === 'support' && (
-                <div className="admin-card support-box" style={{ padding: 0, overflow: 'hidden', display: 'flex', height: 'calc(100vh - 180px)', border: '1px solid #e2e8f0' }}>
-                  <div style={{ width: '320px', background: '#f8fafc', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column' }}>
-                    <div style={{ padding: '20px', background: '#1e293b', color: 'white', fontWeight: 'bold', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span><i className="fas fa-inbox"></i> Hộp thư Khách hàng</span>
-                    </div>
-                    
-                    <div style={{ flex: 1, overflowY: 'auto' }}>
-                      {Array.from(new Set(supports.map((s: any) => s.customer))).map((customerName: any) => {
-                        const userTickets = supports.filter((s: any) => s.customer === customerName);
-                        const latestTicket = userTickets[userTickets.length - 1]; 
-                        const hasUnread = userTickets.some((s: any) => s.status === 'Chưa trả lời');
-
-                        return (
-                          <div 
-                            key={customerName} 
-                            style={{ padding: '15px 20px', borderBottom: '1px solid #e2e8f0', cursor: 'pointer', background: selectedSupport?.customer === customerName ? '#eff6ff' : hasUnread ? 'white' : 'transparent', borderLeft: hasUnread ? '4px solid #ef4444' : '4px solid transparent', transition: '0.2s' }}
-                            onClick={() => setSelectedSupport({ customer: customerName, phone: latestTicket.phone, tickets: userTickets })}
-                          >
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
-                              <strong style={{ color: '#1e293b' }}>{customerName}</strong>
-                              <span style={{ fontSize: '11px', color: '#94a3b8' }}>{latestTicket.createdAt ? new Date(latestTicket.createdAt).toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit'}) : ''}</span>
-                            </div>
-                            <div style={{ fontSize: '13px', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: hasUnread ? 'bold' : 'normal' }}>
-                              {latestTicket.issue}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'white' }}>
-                    {!selectedSupport ? (
-                      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', color: '#cbd5e1' }}>
-                         <i className="fas fa-comments" style={{ fontSize: '70px', marginBottom: '20px' }}></i>
-                         <h3 style={{ margin: 0, color: '#94a3b8' }}>Chọn một khách hàng bên trái để xem tin nhắn</h3>
+                <div className="admin-card" style={{ padding: 0 }}>
+                  <div className="support-box-container">
+                    <div className="support-list-col">
+                      <div style={{ padding: '20px', background: '#1e293b', color: 'white', fontWeight: 'bold', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span><i className="fas fa-inbox"></i> Hộp thư</span>
                       </div>
-                    ) : (
-                      <>
-                        <div style={{ padding: '15px 25px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '15px', background: '#f8fafc' }}>
-                          <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#3b82f6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: 'bold' }}>
-                            {selectedSupport.customer.charAt(0).toUpperCase()}
-                          </div>
-                          <div>
-                            <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', color: '#1e293b' }}>{selectedSupport.customer}</h3>
-                            <div style={{ fontSize: '12px', color: '#64748b' }}><i className="fas fa-phone-alt" style={{ fontSize: '10px' }}></i> {selectedSupport.phone}</div>
-                          </div>
-                        </div>
+                      
+                      <div style={{ flex: 1, overflowY: 'auto' }}>
+                        {Array.from(new Set(supports.map((s: any) => s.customer))).map((customerName: any) => {
+                          const userTickets = supports.filter((s: any) => s.customer === customerName);
+                          const latestTicket = userTickets[userTickets.length - 1]; 
+                          const hasUnread = userTickets.some((s: any) => s.status === 'Chưa trả lời');
 
-                        <div style={{ flex: 1, height: '100px', padding: '25px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '20px', background: '#fff' }}>
-                          {selectedSupport.tickets.map((t: any) => (
-                            <div key={t._id} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                              <div style={{ display: 'flex', gap: '10px', alignSelf: 'flex-start', maxWidth: '80%' }}>
-                                <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: '#3b82f6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', flexShrink: 0, fontWeight: 'bold' }}>
-                                  {selectedSupport.customer.charAt(0).toUpperCase()}
-                                </div>
-                                <div className="chat-bubble-customer">
-                                  {t.issue}
-                                </div>
+                          return (
+                            <div 
+                              key={customerName} 
+                              style={{ padding: '15px 20px', borderBottom: '1px solid #e2e8f0', cursor: 'pointer', background: selectedSupport?.customer === customerName ? '#eff6ff' : hasUnread ? 'white' : 'transparent', borderLeft: hasUnread ? '4px solid #ef4444' : '4px solid transparent', transition: '0.2s' }}
+                              onClick={() => setSelectedSupport({ customer: customerName, phone: latestTicket.phone, tickets: userTickets })}
+                            >
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
+                                <strong style={{ color: '#1e293b' }}>{customerName}</strong>
+                                <span style={{ fontSize: '11px', color: '#94a3b8' }}>{latestTicket.createdAt ? new Date(latestTicket.createdAt).toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit'}) : ''}</span>
                               </div>
-
-                              {t.admin_reply && (
-                                <div className="chat-bubble-admin">
-                                  {t.admin_reply}
-                                </div>
-                              )}
+                              <div style={{ fontSize: '13px', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: hasUnread ? 'bold' : 'normal' }}>
+                                {latestTicket.issue}
+                              </div>
                             </div>
-                          ))}
+                          );
+                        })}
+                        {supports.length === 0 && <div style={{ padding: '20px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>Chưa có tin nhắn</div>}
+                      </div>
+                    </div>
+
+                    <div className="support-chat-col">
+                      {!selectedSupport ? (
+                        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', color: '#cbd5e1' }}>
+                           <i className="fas fa-comments" style={{ fontSize: '50px', marginBottom: '15px' }}></i>
+                           <h3 style={{ margin: 0, color: '#94a3b8', fontSize: '15px' }}>Chọn một khách hàng để xem</h3>
                         </div>
+                      ) : (
+                        <>
+                          <div style={{ padding: '15px 25px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '15px', background: '#f8fafc' }}>
+                            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#3b82f6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: 'bold' }}>
+                              {selectedSupport.customer.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', color: '#1e293b' }}>{selectedSupport.customer}</h3>
+                              <div style={{ fontSize: '12px', color: '#64748b' }}><i className="fas fa-phone-alt" style={{ fontSize: '10px' }}></i> {selectedSupport.phone}</div>
+                            </div>
+                          </div>
 
-                        <form 
-                          onSubmit={async (e) => {
-                            e.preventDefault();
-                            if(!adminReplyText.trim()) return;
-                            const latestT = selectedSupport.tickets[selectedSupport.tickets.length - 1];
+                          <div style={{ flex: 1, padding: '20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '15px', background: '#fff' }}>
+                            {selectedSupport.tickets.map((t: any) => (
+                              <div key={t._id} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                <div style={{ display: 'flex', gap: '10px', alignSelf: 'flex-start', maxWidth: '85%' }}>
+                                  <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#3b82f6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', flexShrink: 0, fontWeight: 'bold', marginTop: '5px' }}>
+                                    {selectedSupport.customer.charAt(0).toUpperCase()}
+                                  </div>
+                                  <div className="chat-bubble-customer">
+                                    {t.issue}
+                                  </div>
+                                </div>
 
-                            const res = await fetch('/api/supports', {
-                              method: 'PUT',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ id: latestT._id, admin_reply: adminReplyText })
-                            });
+                                {t.admin_reply && (
+                                  <div className="chat-bubble-admin">
+                                    {t.admin_reply}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
 
-                            if(res.ok) {
-                              const updatedTickets = selectedSupport.tickets.map((item: any) => 
-                                item._id === latestT._id ? { ...item, status: 'Đã trả lời', admin_reply: adminReplyText } : item
-                              );
-                              setSelectedSupport({ ...selectedSupport, tickets: updatedTickets });
-                              setSupports(supports.map((s: any) => s._id === latestT._id ? { ...s, status: 'Đã trả lời', admin_reply: adminReplyText } : s));
-                              setAdminReplyText('');
-                              alert("Đã gửi tin nhắn cho khách thành công!");
-                            }
-                          }} 
-                          style={{ padding: '20px', background: '#f8fafc', borderTop: '1px solid #e2e8f0', display: 'flex', gap: '15px' }}
-                        >
-                          <input 
-                            type="text" 
-                            placeholder="Nhập tin nhắn trả lời khách hàng..." 
-                            value={adminReplyText}
-                            onChange={e => setAdminReplyText(e.target.value)}
-                            style={{ flex: 1, padding: '15px', border: '1px solid #cbd5e1', borderRadius: '30px', outline: 'none', fontSize: '14px', background: 'white' }}
-                            required
-                          />
-                          <button type="submit" style={{ width: '50px', height: '50px', borderRadius: '50%', background: '#10b981', color: 'white', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', boxShadow: '0 4px 6px rgba(16,185,129,0.3)' }}>
-                            <i className="fas fa-paper-plane"></i>
-                          </button>
-                        </form>
-                      </>
-                    )}
+                          <form 
+                            onSubmit={async (e) => {
+                              e.preventDefault();
+                              if(!adminReplyText.trim()) return;
+                              const latestT = selectedSupport.tickets[selectedSupport.tickets.length - 1];
+
+                              const res = await fetch('/api/supports', {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ id: latestT._id, admin_reply: adminReplyText })
+                              });
+
+                              if(res.ok) {
+                                const updatedTickets = selectedSupport.tickets.map((item: any) => 
+                                  item._id === latestT._id ? { ...item, status: 'Đã trả lời', admin_reply: adminReplyText } : item
+                                );
+                                setSelectedSupport({ ...selectedSupport, tickets: updatedTickets });
+                                setSupports(supports.map((s: any) => s._id === latestT._id ? { ...s, status: 'Đã trả lời', admin_reply: adminReplyText } : s));
+                                setAdminReplyText('');
+                              }
+                            }} 
+                            style={{ padding: '15px', background: '#f8fafc', borderTop: '1px solid #e2e8f0', display: 'flex', gap: '10px' }}
+                          >
+                            <input 
+                              type="text" 
+                              placeholder="Nhập tin nhắn..." 
+                              value={adminReplyText}
+                              onChange={e => setAdminReplyText(e.target.value)}
+                              style={{ flex: 1, padding: '12px 15px', border: '1px solid #cbd5e1', borderRadius: '25px', outline: 'none', fontSize: '14px', background: 'white' }}
+                              required
+                            />
+                            <button type="submit" style={{ width: '45px', height: '45px', borderRadius: '50%', background: '#10b981', color: 'white', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', flexShrink: 0 }}>
+                              <i className="fas fa-paper-plane"></i>
+                            </button>
+                          </form>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
@@ -965,27 +964,24 @@ export default function AdminDashboard() {
                   <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 'bold', color: '#475569' }}>Chi tiết thi công (Mỗi ý một dòng) *</label>
                   <textarea className="modal-input" required rows={4} value={newProject.details} onChange={e => setNewProject({...newProject, details: e.target.value})} placeholder="VD:&#10;- Thi công lắp đặt 10 camera&#10;- Đi cáp mạng gọn gàng..." style={{ resize: 'vertical' }}></textarea>
                   
-                  {/* ĐÃ SỬA: Thay thế ô nhập Link bằng nút Tải Ảnh (Có thể tải nhiều ảnh cùng lúc) */}
                   <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 'bold', color: '#475569' }}>Hình ảnh dự án (Có thể chọn nhiều ảnh) *</label>
                   <label className="upload-area" style={{ height: 'auto', minHeight: '120px', padding: '20px', marginBottom: '15px' }}>
                     <div style={{ textAlign: 'center' }}>
                       <i className="fas fa-images" style={{ fontSize: '30px', color: '#3b82f6', marginBottom: '10px' }}></i>
                       <p style={{ margin: 0, fontSize: '13px', color: '#64748b', fontWeight: 'bold' }}>Nhấp để chọn ảnh từ máy tính/điện thoại</p>
                     </div>
-                    {/* multiple giúp chọn nhiều ảnh một lúc */}
                     <input type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={handleProjectImageUpload} />
                   </label>
 
-                  {/* Khu vực hiển thị ảnh đã chọn */}
                   {newProject.images.length > 0 && (
                     <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '20px' }}>
                       {newProject.images.map((imgBase64, idx) => (
-                        <div key={idx} style={{ position: 'relative', width: '80px', height: '80px', borderRadius: '6px', border: '1px solid #cbd5e1', overflow: 'hidden' }}>
+                        <div key={idx} style={{ position: 'relative', width: '60px', height: '60px', borderRadius: '6px', border: '1px solid #cbd5e1', overflow: 'hidden' }}>
                           <img src={imgBase64} alt={`preview-${idx}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                           <button 
                             type="button" 
                             onClick={() => removeProjectImage(idx)} 
-                            style={{ position: 'absolute', top: '2px', right: '2px', background: 'rgba(225, 29, 72, 0.9)', color: 'white', border: 'none', width: '20px', height: '20px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px' }}
+                            style={{ position: 'absolute', top: '2px', right: '2px', background: 'rgba(225, 29, 72, 0.9)', color: 'white', border: 'none', width: '18px', height: '18px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px' }}
                           >
                             <i className="fas fa-times"></i>
                           </button>
@@ -1018,8 +1014,8 @@ export default function AdminDashboard() {
                 </div>
                 
                 <form onSubmit={handleAddProductSubmit}>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '25px' }}>
-                    <div style={{ flex: '1 1 300px' }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
+                    <div style={{ flex: '1 1 100%' }}>
                       <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 'bold', color: '#475569' }}>Tên sản phẩm *</label>
                       <input className="modal-input" required value={newProduct.name} onChange={e => setNewProduct({...newProduct, name: e.target.value})} />
                       
@@ -1043,14 +1039,14 @@ export default function AdminDashboard() {
                       </div>
                     </div>
 
-                    <div style={{ flex: '1 1 200px' }}>
+                    <div style={{ flex: '1 1 100%' }}>
                       <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 'bold', color: '#475569' }}>Hình ảnh sản phẩm *</label>
-                      <label className="upload-area">
+                      <label className="upload-area" style={{ minHeight: '120px' }}>
                         {imagePreview ? (
-                          <img src={imagePreview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          <img src={imagePreview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                         ) : (
-                          <div style={{ textAlign: 'center', padding: '20px' }}>
-                            <i className="fas fa-cloud-upload-alt" style={{ fontSize: '36px', color: '#94a3b8', marginBottom: '10px' }}></i>
+                          <div style={{ textAlign: 'center', padding: '10px' }}>
+                            <i className="fas fa-cloud-upload-alt" style={{ fontSize: '30px', color: '#94a3b8', marginBottom: '5px' }}></i>
                             <p style={{ margin: 0, fontSize: '12px', color: '#64748b', fontWeight: 'bold' }}>Nhấp để chọn file</p>
                           </div>
                         )}
@@ -1059,9 +1055,9 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                   
-                  <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '25px', paddingTop: '20px', borderTop: '1px solid #e2e8f0' }}>
-                    <button type="button" onClick={() => setShowProductForm(false)} style={{ padding: '10px 20px', border: '1px solid #cbd5e1', background: '#f8fafc', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', color: '#475569' }}>Hủy bỏ</button>
-                    <button type="submit" style={{ padding: '10px 25px', border: 'none', background: '#10b981', color: 'white', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '20px', paddingTop: '15px', borderTop: '1px solid #e2e8f0' }}>
+                    <button type="button" onClick={() => setShowProductForm(false)} style={{ padding: '10px 15px', border: '1px solid #cbd5e1', background: '#f8fafc', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', color: '#475569', fontSize: '13px' }}>Hủy bỏ</button>
+                    <button type="submit" style={{ padding: '10px 20px', border: 'none', background: '#10b981', color: 'white', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}>
                       <i className="fas fa-save"></i> {isEditing ? 'Lưu Cập Nhật' : 'Lưu Sản Phẩm'}
                     </button>
                   </div>
@@ -1073,54 +1069,54 @@ export default function AdminDashboard() {
           {/* MODAL XEM CHI TIẾT ĐƠN HÀNG */}
           {selectedOrderDetails && (
             <div className="modal-overlay">
-              <div className="modal-content" style={{ width: '700px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', paddingBottom: '15px', borderBottom: '1px solid #e2e8f0' }}>
-                  <h3 style={{ margin: 0, color: '#1e293b', fontSize: '20px' }}>
-                    <i className="fas fa-file-invoice-dollar" style={{ color: '#3b82f6', marginRight: '10px' }}></i> 
+              <div className="modal-content">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', paddingBottom: '10px', borderBottom: '1px solid #e2e8f0' }}>
+                  <h3 style={{ margin: 0, color: '#1e293b', fontSize: '18px' }}>
+                    <i className="fas fa-file-invoice-dollar" style={{ color: '#3b82f6', marginRight: '8px' }}></i> 
                     Chi tiết đơn hàng #{String(selectedOrderDetails._id || selectedOrderDetails.id).slice(-4)}
                   </h3>
                   <button onClick={() => setSelectedOrderDetails(null)} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#94a3b8' }}>&times;</button>
                 </div>
                 
-                <div style={{ background: '#f8fafc', padding: '15px', borderRadius: '8px', marginBottom: '20px', fontSize: '14px', color: '#334155', lineHeight: '1.8', border: '1px dashed #cbd5e1' }}>
-                  <p style={{ margin: 0 }}><strong>Tên khách hàng:</strong> {selectedOrderDetails.customer_name}</p>
-                  <p style={{ margin: 0 }}><strong>Số điện thoại:</strong> {selectedOrderDetails.customer_phone}</p>
-                  <p style={{ margin: 0 }}><strong>Địa chỉ giao hàng:</strong> {selectedOrderDetails.shipping_address}</p>
+                <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '8px', marginBottom: '15px', fontSize: '13px', color: '#334155', lineHeight: '1.6', border: '1px dashed #cbd5e1' }}>
+                  <p style={{ margin: 0 }}><strong>Tên KH:</strong> {selectedOrderDetails.customer_name}</p>
+                  <p style={{ margin: 0 }}><strong>SĐT:</strong> {selectedOrderDetails.customer_phone}</p>
+                  <p style={{ margin: 0 }}><strong>Địa chỉ:</strong> {selectedOrderDetails.shipping_address}</p>
                 </div>
 
-                <h4 style={{ color: '#1e293b', marginBottom: '10px', fontSize: '15px' }}>Sản phẩm đã đặt:</h4>
-                <div style={{ maxHeight: '250px', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
-                  <table className="admin-table" style={{ margin: 0 }}>
+                <h4 style={{ color: '#1e293b', marginBottom: '10px', fontSize: '14px' }}>Sản phẩm đã đặt:</h4>
+                <div style={{ maxHeight: '200px', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
+                  <table className="admin-table" style={{ margin: 0, minWidth: '400px' }}>
                     <thead style={{ position: 'sticky', top: 0, background: '#f1f5f9', zIndex: 1 }}>
                       <tr>
-                        <th>Sản phẩm</th>
-                        <th>Đơn giá</th>
-                        <th>SL</th>
-                        <th style={{ textAlign: 'right' }}>Thành tiền</th>
+                        <th style={{ padding: '10px' }}>Sản phẩm</th>
+                        <th style={{ padding: '10px' }}>Đơn giá</th>
+                        <th style={{ padding: '10px' }}>SL</th>
+                        <th style={{ textAlign: 'right', padding: '10px' }}>Thành tiền</th>
                       </tr>
                     </thead>
                     <tbody>
                       {selectedOrderDetails.items && selectedOrderDetails.items.map((item: any, idx: number) => (
                         <tr key={idx}>
-                          <td style={{ fontWeight: '500', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <td style={{ fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px' }}>
                             <img 
                               src={item.image} 
                               alt={item.name} 
-                              style={{ width: '45px', height: '45px', objectFit: 'contain', borderRadius: '6px', border: '1px solid #e2e8f0', background: 'white', flexShrink: 0 }}
-                              onError={(e) => { e.currentTarget.src = "https://placehold.co/45x45?text=No+Img" }} 
+                              style={{ width: '35px', height: '35px', objectFit: 'contain', borderRadius: '4px', border: '1px solid #e2e8f0', background: 'white', flexShrink: 0 }}
+                              onError={(e) => { e.currentTarget.src = "https://placehold.co/35x35?text=Img" }} 
                             />
-                            <span>{item.name}</span>
+                            <span style={{ fontSize: '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '150px' }}>{item.name}</span>
                           </td>
-                          <td style={{ color: '#64748b' }}>{Number(item.price).toLocaleString('vi-VN')} đ</td>
-                          <td style={{ fontWeight: 'bold' }}>{item.cartQty}</td>
-                          <td style={{ color: '#10b981', fontWeight: 'bold', textAlign: 'right' }}>{(Number(item.price) * item.cartQty).toLocaleString('vi-VN')} đ</td>
+                          <td style={{ color: '#64748b', fontSize: '13px', padding: '10px' }}>{Number(item.price).toLocaleString('vi-VN')} đ</td>
+                          <td style={{ fontWeight: 'bold', fontSize: '13px', padding: '10px' }}>{item.cartQty}</td>
+                          <td style={{ color: '#10b981', fontWeight: 'bold', textAlign: 'right', fontSize: '13px', padding: '10px' }}>{(Number(item.price) * item.cartQty).toLocaleString('vi-VN')} đ</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
                 
-                <div style={{ textAlign: 'right', fontSize: '18px', fontWeight: 'bold', color: '#e11d48', marginTop: '20px', paddingTop: '15px', borderTop: '2px solid #e2e8f0' }}>
+                <div style={{ textAlign: 'right', fontSize: '16px', fontWeight: 'bold', color: '#e11d48', marginTop: '15px', paddingTop: '15px', borderTop: '2px solid #e2e8f0' }}>
                   Tổng thanh toán: {Number(selectedOrderDetails.total_money || selectedOrderDetails.total || 0).toLocaleString('vi-VN')} đ
                 </div>
               </div>
