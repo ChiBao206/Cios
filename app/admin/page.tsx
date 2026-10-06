@@ -117,29 +117,68 @@ export default function AdminDashboard() {
     }
   };
 
+  // HÀM LƯU SẢN PHẨM ĐÃ SỬA LỖI NHÂN BẢN
   const handleAddProductSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newProduct.image) return alert("Vui lòng tải lên hình ảnh sản phẩm!");
+    
     try {
-      const res = await fetch('/api/products', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...newProduct, price: Number(newProduct.price), quantity: Number(newProduct.quantity) })
-      });
-      if(res.ok) {
-        alert("Thêm sản phẩm thành công!");
-        setShowProductForm(false);
-        setNewProduct({ name: '', price: '', quantity: '', image: '', category_id: '' });
-        setImagePreview('');
-        fetchAllData();
+      if (isEditing && editingProductId) {
+        // [CẬP NHẬT] GỌI API ĐỂ CẬP NHẬT SẢN PHẨM ĐÃ CÓ (PUT)
+        const res = await fetch(`/api/products?id=${editingProductId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+             ...newProduct, 
+             price: Number(newProduct.price), 
+             quantity: Number(newProduct.quantity) 
+          })
+        });
+        if(res.ok) alert("Cập nhật sản phẩm thành công!");
+      } else {
+        // [THÊM MỚI] GỌI API ĐỂ THÊM SẢN PHẨM HOÀN TOÀN MỚI (POST)
+        const res = await fetch('/api/products', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+             ...newProduct, 
+             price: Number(newProduct.price), 
+             quantity: Number(newProduct.quantity) 
+          })
+        });
+        if(res.ok) alert("Thêm sản phẩm mới thành công!");
       }
-    } catch (e) { alert("Lỗi khi thêm sản phẩm"); }
+
+      // Xóa trắng form và cập nhật lại danh sách ngay lập tức
+      setShowProductForm(false);
+      setNewProduct({ name: '', price: '', quantity: '', image: '', category_id: '' });
+      setImagePreview('');
+      setIsEditing(false);
+      setEditingProductId(null);
+      fetchAllData(); 
+    } catch (e) { alert("Lỗi khi lưu sản phẩm"); }
   };
 
-  const handleDeleteProduct = (id: string) => {
-    if(!window.confirm("Xóa sản phẩm này?")) return;
-    setProducts(products.filter(p => p._id !== id && p.id !== id));
-    alert("Đã xóa! (Cần API DELETE)");
+  // HÀM XÓA SẢN PHẨM THẬT SỰ TỪ DATABASE
+  const handleDeleteProduct = async (productId: string) => {
+    if (window.confirm("⚠️ Bạn có chắc chắn muốn xóa vĩnh viễn sản phẩm này khỏi hệ thống không?")) {
+      try {
+        // GỌI API DELETE BÁO CHO DATABASE BIẾT ĐỂ XÓA THẬT
+        const res = await fetch(`/api/products?id=${productId}`, { 
+          method: 'DELETE' 
+        });
+        
+        if(res.ok) {
+           // Nếu xóa Database thành công thì mới xóa trên màn hình
+           setProducts(products.filter(p => p._id !== productId && p.id !== productId));
+           alert("Đã xóa sản phẩm thành công!");
+        } else {
+           alert("Không thể xóa. Vui lòng kiểm tra lại kết nối Database!");
+        }
+      } catch (error) {
+        alert("Lỗi mạng khi xóa sản phẩm!");
+      }
+    }
   };
 
   const handleAddCategory = async () => {
