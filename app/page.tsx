@@ -432,18 +432,24 @@ const handleLogout = () => {
                     {Number(product.price).toLocaleString("vi-VN")} đ
                   </div>
 
-               {/* GẮN HÀM MUA NGAY TRỰC TIẾP VÀO NÚT */}
-                  <button className="btn-hot-add" onClick={() => {
-                    if (!user) {
-                      alert("Vui lòng đăng nhập để mua hàng!");
-                      router.push('/login');
-                    } else {
-                      addToCart(product);
-                      router.push('/cart');
-                    }
-                  }}>
-                    Mua Ngay
-                  </button>
+              {/* SỬA LỖI HẾT HÀNG Ở MỤC BÁN CHẠY NHẤT */}
+                  {Number(product.quantity) > 0 ? (
+                    <button className="btn-hot-add" onClick={() => {
+                      if (!user) {
+                        alert("Vui lòng đăng nhập để mua hàng!");
+                        router.push('/login');
+                      } else {
+                        addToCart(product);
+                        router.push('/cart');
+                      }
+                    }}>
+                      Mua Ngay
+                    </button>
+                  ) : (
+                    <button className="btn-hot-add" disabled style={{ background: '#cbd5e1', color: '#64748b', cursor: 'not-allowed' }}>
+                      Tạm hết hàng
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
@@ -486,19 +492,30 @@ const handleLogout = () => {
                     <i className="fas fa-tag"></i> Chỉ còn: {product.quantity}{" "}
                     cái
                   </div>
-                  <button
-                    className="btn-hot-add"
-                    onClick={() => {
-                      if (!user) {
-                        alert("Vui lòng đăng nhập để thêm vào giỏ hàng!");
-                        router.push('/login');
-                      } else {
-                        addToCart(product);
-                      }
-                    }}
-                  >
-                    Thêm vào giỏ hàng
-                  </button>
+                  {/* SỬA LỖI HẾT HÀNG Ở MỤC TẤT CẢ SẢN PHẨM */}
+                  {Number(product.quantity) > 0 ? (
+                    <button
+                      className="btn-hot-add"
+                      onClick={() => {
+                        if (!user) {
+                          alert("Vui lòng đăng nhập để thêm vào giỏ hàng!");
+                          router.push('/login');
+                        } else {
+                          addToCart(product);
+                        }
+                      }}
+                    >
+                      Thêm vào giỏ hàng
+                    </button>
+                  ) : (
+                    <button
+                      className="btn-hot-add"
+                      disabled
+                      style={{ background: '#cbd5e1', color: '#64748b', cursor: 'not-allowed' }}
+                    >
+                      Tạm hết hàng
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
