@@ -61,6 +61,8 @@ export default function AdminDashboard() {
 
   const [selectedSupport, setSelectedSupport] = useState<any>(null);
   const [adminReplyText, setAdminReplyText] = useState('');
+  // STATE MỚI ĐỂ QUẢN LÝ GIAO DIỆN CHAT TRÊN ĐIỆN THOẠI
+  const [showMobileChat, setShowMobileChat] = useState(false);
 
   const handleLogout = () => {
     localStorage.removeItem('camera_bn_cart'); 
@@ -488,8 +490,8 @@ export default function AdminDashboard() {
         .chat-bubble-admin { background: #3b82f6; color: white; padding: 12px 18px; border-radius: 18px 18px 0 18px; max-width: 75%; font-size: 14px; align-self: flex-end; box-shadow: 0 2px 5px rgba(59,130,246,0.2); }
         
         .support-box-container { display: flex; height: calc(100vh - 180px); border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
-        .support-list-col { width: 320px; background: #f8fafc; border-right: 1px solid #e2e8f0; display: flex; flexDirection: column; }
-        .support-chat-col { flex: 1; display: flex; flexDirection: column; background: white; }
+        .support-list-col { width: 320px; background: #f8fafc; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; }
+        .support-chat-col { flex: 1; display: flex; flex-direction: column; background: white; }
 
         @media (max-width: 768px) {
           .admin-layout { flex-direction: column; }
@@ -505,9 +507,26 @@ export default function AdminDashboard() {
 
           .admin-card { padding: 15px; }
           .modal-content { padding: 15px; }
-          .support-box-container { flex-direction: column; height: 80vh; }
-          .support-list-col { width: 100%; max-height: 250px; border-right: none; border-bottom: 2px solid #e2e8f0; overflow-y: auto; }
-          .support-chat-col { max-height: calc(100% - 250px); }
+          
+          /* CHỈNH LẠI GIAO DIỆN CHAT TRÊN MOBILE (GIỐNG SHOPEE) */
+          .support-box-container { flex-direction: column; height: 80vh; border: none; }
+          
+          .support-list-col { 
+            width: 100%; 
+            height: 100%; 
+            border-right: none; 
+            border-bottom: none; 
+            display: ${showMobileChat ? 'none' : 'flex'}; 
+          }
+          
+          .support-chat-col { 
+            width: 100%; 
+            height: 100%; 
+            display: ${showMobileChat ? 'flex' : 'none'}; 
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            overflow: hidden;
+          }
         }
       `}</style>
 
@@ -522,7 +541,7 @@ export default function AdminDashboard() {
             <li className={activeTab === 'projects' ? 'active' : ''} onClick={() => setActiveTab('projects')}><i className="fas fa-project-diagram"></i> Dự án</li>
             <li className={activeTab === 'reviews' ? 'active' : ''} onClick={() => setActiveTab('reviews')}><i className="fas fa-star"></i> Đánh giá</li>
             <li className={activeTab === 'customers' ? 'active' : ''} onClick={() => setActiveTab('customers')}><i className="fas fa-users"></i> Khách hàng</li>
-            <li className={activeTab === 'support' ? 'active' : ''} onClick={() => setActiveTab('support')}><i className="fas fa-headset"></i> Hỗ trợ</li>
+            <li className={activeTab === 'support' ? 'active' : ''} onClick={() => { setActiveTab('support'); setShowMobileChat(false); }}><i className="fas fa-headset"></i> Hỗ trợ</li>
           </ul>
           
           <Link href="/" className="admin-home-link">
@@ -844,6 +863,8 @@ export default function AdminDashboard() {
               {activeTab === 'support' && (
                 <div className="admin-card" style={{ padding: 0 }}>
                   <div className="support-box-container">
+                    
+                    {/* CỘT BÊN TRÁI: Danh sách khách hàng (Hiện mặc định trên mobile) */}
                     <div className="support-list-col">
                       <div style={{ padding: '15px 20px', background: '#1e293b', color: 'white', fontWeight: 'bold', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span><i className="fas fa-inbox"></i> Hộp thư</span>
@@ -858,55 +879,68 @@ export default function AdminDashboard() {
                           return (
                             <div 
                               key={customerName} 
-                              style={{ padding: '12px 15px', borderBottom: '1px solid #e2e8f0', cursor: 'pointer', background: selectedSupport?.customer === customerName ? '#eff6ff' : hasUnread ? 'white' : 'transparent', borderLeft: hasUnread ? '4px solid #ef4444' : '4px solid transparent', transition: '0.2s' }}
-                              onClick={() => setSelectedSupport({ customer: customerName, phone: latestTicket.phone, tickets: userTickets })}
+                              style={{ padding: '15px 20px', borderBottom: '1px solid #e2e8f0', cursor: 'pointer', background: selectedSupport?.customer === customerName ? '#eff6ff' : hasUnread ? 'white' : 'transparent', borderLeft: hasUnread ? '4px solid #ef4444' : '4px solid transparent', transition: '0.2s' }}
+                              onClick={() => {
+                                setSelectedSupport({ customer: customerName, phone: latestTicket.phone, tickets: userTickets });
+                                setShowMobileChat(true); // Bấm vào là hiển thị khung chat trên mobile
+                              }}
                             >
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
-                                <strong style={{ color: '#1e293b', fontSize: '14px' }}>{customerName}</strong>
+                                <strong style={{ color: '#1e293b', fontSize: '15px' }}>{customerName}</strong>
                                 <span style={{ fontSize: '11px', color: '#94a3b8' }}>{latestTicket.createdAt ? new Date(latestTicket.createdAt).toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit'}) : ''}</span>
                               </div>
-                              <div style={{ fontSize: '12px', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: hasUnread ? 'bold' : 'normal' }}>
+                              <div style={{ fontSize: '13px', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: hasUnread ? 'bold' : 'normal' }}>
                                 {latestTicket.issue}
                               </div>
                             </div>
                           );
                         })}
-                        {supports.length === 0 && <div style={{ padding: '20px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>Chưa có tin nhắn</div>}
+                        {supports.length === 0 && <div style={{ padding: '30px', textAlign: 'center', color: '#94a3b8', fontSize: '14px' }}>Chưa có tin nhắn</div>}
                       </div>
                     </div>
 
+                    {/* CỘT BÊN PHẢI: Khung chat chi tiết (Chỉ hiện trên mobile khi đã chọn khách) */}
                     <div className="support-chat-col">
                       {!selectedSupport ? (
                         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', color: '#cbd5e1', padding: '20px' }}>
-                           <i className="fas fa-comments" style={{ fontSize: '40px', marginBottom: '15px' }}></i>
-                           <h3 style={{ margin: 0, color: '#94a3b8', fontSize: '14px', textAlign: 'center' }}>Chọn một khách hàng để xem</h3>
+                           <i className="fas fa-comments" style={{ fontSize: '60px', marginBottom: '15px' }}></i>
+                           <h3 style={{ margin: 0, color: '#94a3b8', fontSize: '16px', textAlign: 'center' }}>Chọn một khách hàng để xem</h3>
                         </div>
                       ) : (
                         <>
-                          <div style={{ padding: '12px 15px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '10px', background: '#f8fafc' }}>
-                            <div style={{ width: '35px', height: '35px', borderRadius: '50%', background: '#3b82f6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: 'bold' }}>
+                          <div style={{ padding: '12px 15px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '15px', background: '#f8fafc' }}>
+                            {/* NÚT QUAY LẠI CHỈ HIỆN TRÊN MOBILE */}
+                            <button 
+                              className="d-md-none" 
+                              onClick={() => setShowMobileChat(false)} 
+                              style={{ background: 'none', border: 'none', fontSize: '20px', color: '#64748b', cursor: 'pointer', padding: '0 5px' }}
+                            >
+                              <i className="fas fa-arrow-left"></i>
+                            </button>
+
+                            <div style={{ width: '45px', height: '45px', borderRadius: '50%', background: '#3b82f6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: 'bold' }}>
                               {selectedSupport.customer.charAt(0).toUpperCase()}
                             </div>
                             <div>
-                              <h3 style={{ margin: '0 0 2px 0', fontSize: '14px', color: '#1e293b' }}>{selectedSupport.customer}</h3>
-                              <div style={{ fontSize: '11px', color: '#64748b' }}><i className="fas fa-phone-alt" style={{ fontSize: '10px' }}></i> {selectedSupport.phone}</div>
+                              <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', color: '#1e293b' }}>{selectedSupport.customer}</h3>
+                              <div style={{ fontSize: '12px', color: '#64748b' }}><i className="fas fa-phone-alt" style={{ fontSize: '10px' }}></i> {selectedSupport.phone}</div>
                             </div>
                           </div>
 
-                          <div style={{ flex: 1, padding: '15px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '15px', background: '#fff' }}>
+                          <div style={{ flex: 1, padding: '20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '15px', background: '#fff' }}>
                             {selectedSupport.tickets.map((t: any) => (
                               <div key={t._id} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                <div style={{ display: 'flex', gap: '8px', alignSelf: 'flex-start', maxWidth: '85%' }}>
-                                  <div style={{ width: '25px', height: '25px', borderRadius: '50%', background: '#3b82f6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', flexShrink: 0, fontWeight: 'bold', marginTop: '5px' }}>
+                                <div style={{ display: 'flex', gap: '10px', alignSelf: 'flex-start', maxWidth: '85%' }}>
+                                  <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: '#3b82f6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', flexShrink: 0, fontWeight: 'bold', marginTop: '5px' }}>
                                     {selectedSupport.customer.charAt(0).toUpperCase()}
                                   </div>
-                                  <div className="chat-bubble-customer" style={{ fontSize: '13px', padding: '10px 15px' }}>
+                                  <div className="chat-bubble-customer" style={{ fontSize: '14px', padding: '12px 18px' }}>
                                     {t.issue}
                                   </div>
                                 </div>
 
                                 {t.admin_reply && (
-                                  <div className="chat-bubble-admin" style={{ fontSize: '13px', padding: '10px 15px' }}>
+                                  <div className="chat-bubble-admin" style={{ fontSize: '14px', padding: '12px 18px' }}>
                                     {t.admin_reply}
                                   </div>
                                 )}
@@ -935,17 +969,17 @@ export default function AdminDashboard() {
                                 setAdminReplyText('');
                               }
                             }} 
-                            style={{ padding: '10px 15px', background: '#f8fafc', borderTop: '1px solid #e2e8f0', display: 'flex', gap: '10px' }}
+                            style={{ padding: '15px', background: '#f8fafc', borderTop: '1px solid #e2e8f0', display: 'flex', gap: '10px' }}
                           >
                             <input 
                               type="text" 
                               placeholder="Nhập tin nhắn..." 
                               value={adminReplyText}
                               onChange={e => setAdminReplyText(e.target.value)}
-                              style={{ flex: 1, padding: '10px 15px', border: '1px solid #cbd5e1', borderRadius: '25px', outline: 'none', fontSize: '13px', background: 'white' }}
+                              style={{ flex: 1, padding: '12px 20px', border: '1px solid #cbd5e1', borderRadius: '25px', outline: 'none', fontSize: '14px', background: 'white' }}
                               required
                             />
-                            <button type="submit" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#10b981', color: 'white', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', flexShrink: 0 }}>
+                            <button type="submit" style={{ width: '45px', height: '45px', borderRadius: '50%', background: '#10b981', color: 'white', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', flexShrink: 0 }}>
                               <i className="fas fa-paper-plane"></i>
                             </button>
                           </form>
