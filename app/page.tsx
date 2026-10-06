@@ -1,93 +1,101 @@
-"use client"; // Bắt buộc phải có dòng này ở đầu file để dùng useState trong Next.js
+"use client";
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation"; // 1. Khai báo công cụ chuyển trang
-import db from "../db.json";
+import { useRouter } from "next/navigation";
 import { useCart } from "./context/CartContext";
 import NotifBadge from "@/app/components/NotifBadge";
 
 export default function Home() {
-  const categories = db.categories;
-  const router = useRouter(); // 2. Khởi tạo router
-  // 1. Lấy 4 sản phẩm đầu làm "Bán chạy nhất"
-  const hotProducts = db.products.slice(0, 4);
-
-  // 2. Lấy 35 sản phẩm còn lại
-  const remainingProducts = db.products.slice(4);
-  //công cụ giỏ hàng
+  const router = useRouter(); 
   const { addToCart, totalItems } = useCart();
-  // KIỂM TRA ĐĂNG NHẬP
+  
+  // 1. STATE LƯU DỮ LIỆU TỪ MONGODB THẬT
   const [user, setUser] = useState<any>(null);
+  const [products, setProducts] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
+  // 2. TỰ ĐỘNG GỌI API ĐỂ LẤY DỮ LIỆU TỪ DATABASE
   useEffect(() => {
     const loggedInUser = localStorage.getItem("currentUser");
     if (loggedInUser) {
       setUser(JSON.parse(loggedInUser));
     }
+
+    const fetchRealData = async () => {
+      try {
+        const timestamp = new Date().getTime();
+        const [prodRes, catRes] = await Promise.all([
+          fetch(`/api/products?t=${timestamp}`),
+          fetch(`/api/categories?t=${timestamp}`)
+        ]);
+        
+        if (prodRes.ok) setProducts(await prodRes.json());
+        if (catRes.ok) setCategories(await catRes.json());
+      } catch (error) {
+        console.error("Lỗi tải dữ liệu", error);
+      }
+      setIsLoading(false);
+    };
+
+    fetchRealData();
   }, []);
 
-const handleLogout = () => {
+  const handleLogout = () => {
     localStorage.removeItem('camera_bn_cart'); 
     localStorage.removeItem('currentUser'); 
     window.location.href = '/'; 
   };
-// ==========================================
+
+  // 3. CHIA SẢN PHẨM DỰA TRÊN DỮ LIỆU THẬT (Sau khi đã tải xong)
+  const hotProducts = products.slice(0, 4);
+  const baseProducts = products.slice(4);
+
+  // ==========================================
   // THUẬT TOÁN BỘ LỌC & PHÂN TRANG (PAGINATION LOGIC)
   // ==========================================
   const [currentPage, setCurrentPage] = useState(1);
   const [isCategoryOpen, setIsCategoryOpen] = useState(false); 
   const productsPerPage = 8; 
 
-// 1. CÁC STATE CHO BỘ LỌC
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [minPrice, setMinPrice] = useState(0); // Thêm giá tối thiểu
+  const [minPrice, setMinPrice] = useState(0); 
   const [maxPrice, setMaxPrice] = useState(5000000); 
   const [searchTerm, setSearchTerm] = useState("");
 
-  // 2. TỰ ĐỘNG VỀ TRANG 1 KHI ĐỔI BỘ LỌC
   useEffect(() => {
     setCurrentPage(1);
   }, [selectedCategory, minPrice, maxPrice, searchTerm]);
 
-  // 3. THUẬT TOÁN LỌC SẢN PHẨM TỔNG HỢP
-  const baseProducts = db.products.slice(4); 
   const filteredProducts = baseProducts.filter(product => {
     const matchCat = selectedCategory === "all" || String(product.category_id) === String(selectedCategory);
-    // Tính toán khoảng giá (từ minPrice đến maxPrice)
     const matchPrice = Number(product.price) >= minPrice && Number(product.price) <= maxPrice;
     const matchSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
     return matchCat && matchPrice && matchSearch;
   });
 
-  // 4. CẮT DỮ LIỆU SẢN PHẨM ĐÃ LỌC ĐỂ HIỂN THỊ TRÊN TRANG HIỆN TẠI
   const indexOfLastProduct = currentPage * productsPerPage;
   const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
   const currentProducts = filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
   const totalPages = Math.ceil(filteredProducts.length / productsPerPage) || 1;
 
-  // 3. TẠO HÀM XỬ LÝ NÚT MUA NGAY
-  const handleBuyNow = (product: any) => {
-    if (!user) {
-      alert("Vui lòng đăng nhập để mua hàng!");
-      router.push("/login"); // Chuyển hướng sang trang đăng nhập
-      return;
-    }
-    addToCart(product);
-    router.push("/cart");
-  };
-
-
-  // Hàm xử lý nút Tới/Lùi có tính năng vòng lặp
   const handlePrev = () => {
-    // Nếu đang ở trang 1 mà bấm Lùi thì nhảy tới trang cuối (totalPages)
     setCurrentPage(currentPage === 1 ? totalPages : currentPage - 1);
   };
   
   const handleNext = () => {
-    // Nếu đang ở trang cuối mà bấm Tới thì quay về trang 1
     setCurrentPage(currentPage === totalPages ? 1 : currentPage + 1);
   };
+
+  // 4. MÀN HÌNH CHỜ TRONG LÚC TẢI DỮ LIỆU TỪ MONGODB
+  if (isLoading) {
+    return (
+      <div style={{ height: "100vh", display: "flex", justifyContent: "center", alignItems: "center", fontSize: "20px", fontWeight: "bold", color: "#64748b" }}>
+        <i className="fas fa-spinner fa-spin" style={{ marginRight: "10px" }}></i> Đang tải dữ liệu cửa hàng...
+      </div>
+    );
+  }
 
   return (
     <>
@@ -129,8 +137,8 @@ const handleLogout = () => {
               <i className="fas fa-phone-alt"></i> Liên hệ
             </Link>
             <Link href="/projects" className="nav-link">
-  <i className="fas fa-project-diagram"></i> Dự án
-</Link>
+              <i className="fas fa-project-diagram"></i> Dự án
+            </Link>
             <Link
               href="/notifications"
               className="nav-link"
@@ -163,7 +171,6 @@ const handleLogout = () => {
               )}
             </Link>
             {user ? (
-              /* NẾU ĐÃ ĐĂNG NHẬP */
               <div
                 style={{
                   display: "flex",
@@ -213,7 +220,6 @@ const handleLogout = () => {
                 </button>
               </div>
             ) : (
-              /* NẾU CHƯA ĐĂNG NHẬP: HIỂN THỊ ĐĂNG NHẬP / ĐĂNG KÝ */
               <>
                 <Link href="/login" className="nav-link">
                   <i className="fas fa-user"></i> Đăng nhập
@@ -255,7 +261,7 @@ const handleLogout = () => {
       <div className="main-container">
         {/* CỘT TRÁI (SIDEBAR) */}
         <aside className="sidebar-left">
-          {/* DANH MỤC (ĐÃ SỬA LỖI ĐÓNG MỞ) */}
+          {/* DANH MỤC */}
           <div
             className="sidebar-box category-dropdown"
             onMouseEnter={() => setIsCategoryOpen(true)}
@@ -306,9 +312,9 @@ const handleLogout = () => {
               </li>
               {categories.map((cat) => (
                 <li 
-                  key={cat.id}
-                  className={selectedCategory === String(cat.id) ? "active" : ""} 
-                  onClick={() => setSelectedCategory(String(cat.id))}
+                  key={cat.id || cat._id}
+                  className={selectedCategory === String(cat.id || cat._id) ? "active" : ""} 
+                  onClick={() => setSelectedCategory(String(cat.id || cat._id))}
                   style={{ cursor: 'pointer' }}
                 >
                   {cat.name} <i className="fas fa-arrow-right" style={{ fontSize: '10px' }}></i>
@@ -322,7 +328,6 @@ const handleLogout = () => {
               <i className="fas fa-money-bill-wave" style={{ color: "#eab308" }}></i> KHOẢNG GIÁ
             </h3>
             
-            {/* THANH KÉO GIÁ */}
             <div style={{ paddingBottom: '15px', borderBottom: '1px solid #e2e8f0', marginBottom: '15px' }}>
               <input
                 type="range"
@@ -331,7 +336,7 @@ const handleLogout = () => {
                 step="100000"
                 value={maxPrice}
                 onChange={(e) => {
-                  setMinPrice(0); // Về 0 khi dùng thanh kéo
+                  setMinPrice(0);
                   setMaxPrice(Number(e.target.value));
                 }}
                 style={{ width: '100%', cursor: 'pointer', accentColor: '#e11d48' }}
@@ -342,7 +347,6 @@ const handleLogout = () => {
               </div>
             </div>
 
-            {/* CÁC Ô CHỌN GIÁ NHANH */}
             <ul className="price-filter-list" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
               <li style={{ cursor: 'pointer', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: minPrice === 0 && maxPrice === 500000 ? '#e11d48' : '#334155', fontWeight: minPrice === 0 && maxPrice === 500000 ? 'bold' : 'normal' }} onClick={() => { setMinPrice(0); setMaxPrice(500000); }}>
                 <div style={{ width: '16px', height: '16px', borderRadius: '4px', border: '1px solid', borderColor: minPrice === 0 && maxPrice === 500000 ? '#e11d48' : '#cbd5e1', background: minPrice === 0 && maxPrice === 500000 ? '#e11d48' : 'white' }}></div> Dưới 500k
@@ -409,21 +413,20 @@ const handleLogout = () => {
 
           {/* BÁN CHẠY NHẤT */}
           <h2 className="section-title">
-            <i className="fas fa-fire" style={{ color: "#e11d48" }}></i> BÁN
-            CHẠY NHẤT
+            <i className="fas fa-fire" style={{ color: "#e11d48" }}></i> BÁN CHẠY NHẤT
           </h2>
           <div className="hot-grid" style={{ marginBottom: "40px" }}>
             {hotProducts.map((product) => (
-              <div className="hot-card" key={product.id}>
-                <div className="hot-badge">TOP 1</div>
+              <div className="hot-card" key={product.id || product._id}>
+                <div className="hot-badge">TOP</div>
                 <div className="hot-img">
-                  <Link href={`/product/${product.id}`}>
+                  <Link href={`/product/${product.id || product._id}`}>
                     <img src={product.image} alt={product.name} />
                   </Link>
                 </div>
                 <div className="hot-info">
                   <Link
-                    href={`/product/${product.id}`}
+                    href={`/product/${product.id || product._id}`}
                     style={{ textDecoration: "none" }}
                   >
                     <h3>{product.name}</h3>
@@ -432,7 +435,6 @@ const handleLogout = () => {
                     {Number(product.price).toLocaleString("vi-VN")} đ
                   </div>
 
-              {/* SỬA LỖI HẾT HÀNG Ở MỤC BÁN CHẠY NHẤT */}
                   {Number(product.quantity) > 0 ? (
                     <button className="btn-hot-add" onClick={() => {
                       if (!user) {
@@ -454,26 +456,25 @@ const handleLogout = () => {
               </div>
             ))}
           </div>
-          {/* TẤT CẢ SẢN PHẨM (ĐÃ ÁP DỤNG PHÂN TRANG) */}
+
+          {/* TẤT CẢ SẢN PHẨM */}
           <h2 className="section-title">
-            <i className="fas fa-box-open" style={{ color: "#b45309" }}></i> TẤT
-            CẢ SẢN PHẨM
+            <i className="fas fa-box-open" style={{ color: "#b45309" }}></i> TẤT CẢ SẢN PHẨM
           </h2>
           <div className="product-grid">
-            {/* DUYỆT QUA BIẾN currentProducts THAY VÌ allProducts */}
             {currentProducts.map((product) => (
-              <div className="product-card" key={product.id}>
+              <div className="product-card" key={product.id || product._id}>
                 <div className="favorite-btn">
                   <i className="fas fa-heart"></i>
                 </div>
                 <div className="card-img">
-                  <Link href={`/product/${product.id}`}>
+                  <Link href={`/product/${product.id || product._id}`}>
                     <img src={product.image} alt={product.name} />
                   </Link>
                 </div>
                 <div className="card-body">
                   <Link
-                    href={`/product/${product.id}`}
+                    href={`/product/${product.id || product._id}`}
                     style={{ textDecoration: "none" }}
                   >
                     <h3>{product.name}</h3>
@@ -489,30 +490,22 @@ const handleLogout = () => {
                       fontWeight: "bold",
                     }}
                   >
-                    <i className="fas fa-tag"></i> Chỉ còn: {product.quantity}{" "}
-                    cái
+                    <i className="fas fa-tag"></i> Chỉ còn: {product.quantity} cái
                   </div>
-                  {/* SỬA LỖI HẾT HÀNG Ở MỤC TẤT CẢ SẢN PHẨM */}
+                  
                   {Number(product.quantity) > 0 ? (
-                    <button
-                      className="btn-hot-add"
-                      onClick={() => {
-                        if (!user) {
-                          alert("Vui lòng đăng nhập để thêm vào giỏ hàng!");
-                          router.push('/login');
-                        } else {
-                          addToCart(product);
-                        }
-                      }}
-                    >
+                    <button className="btn-hot-add" onClick={() => {
+                      if (!user) {
+                        alert("Vui lòng đăng nhập để thêm vào giỏ hàng!");
+                        router.push('/login');
+                      } else {
+                        addToCart(product);
+                      }
+                    }}>
                       Thêm vào giỏ hàng
                     </button>
                   ) : (
-                    <button
-                      className="btn-hot-add"
-                      disabled
-                      style={{ background: '#cbd5e1', color: '#64748b', cursor: 'not-allowed' }}
-                    >
+                    <button className="btn-hot-add" disabled style={{ background: '#cbd5e1', color: '#64748b', cursor: 'not-allowed' }}>
                       Tạm hết hàng
                     </button>
                   )}
@@ -521,15 +514,13 @@ const handleLogout = () => {
             ))}
           </div>
 
-          {/* THANH PHÂN TRANG HOẠT ĐỘNG THỰC TẾ */}
+          {/* THANH PHÂN TRANG */}
           <div className="pagination-container">
             <div className="pagination">
-              {/* Nút Lùi: Đã bỏ thuộc tính disabled */}
               <button className="page-btn prev" onClick={handlePrev}>
                 <i className="fas fa-chevron-left"></i>
               </button>
 
-              {/* Các nút số trang */}
               {Array.from({ length: totalPages }, (_, i) => i + 1).map(
                 (number) => (
                   <button
@@ -539,10 +530,9 @@ const handleLogout = () => {
                   >
                     {number}
                   </button>
-                ),
+                )
               )}
 
-              {/* Nút Tới: Đã bỏ thuộc tính disabled */}
               <button className="page-btn next" onClick={handleNext}>
                 <i className="fas fa-chevron-right"></i>
               </button>
@@ -551,19 +541,14 @@ const handleLogout = () => {
         </main>
       </div>
 
-     {/* 4. FLOATING BUTTONS */}
+      {/* 4. FLOATING BUTTONS */}
       <div className="floating-buttons">
-        {/* Mở Zalo ở tab mới */}
         <a href="https://zalo.me/0971024173" target="_blank" rel="noopener noreferrer" className="float-btn zalo">
           <i className="fas fa-comment-dots"></i> Chat Zalo
         </a>
-        
-        {/* Kích hoạt cuộc gọi */}
         <a href="tel:0971024173" className="float-btn phone">
           <i className="fas fa-phone-alt"></i> 0971.024.173
         </a>
-        
-        {/* Cuộn lên đầu trang mượt mà */}
         <button 
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} 
           className="float-btn up-top" 
@@ -605,21 +590,11 @@ const handleLogout = () => {
           <div className="footer-col">
             <h3>CHÍNH SÁCH HỖ TRỢ</h3>
             <ul className="footer-links">
-              <li>
-                <span className="bullet">›</span> Chính sách bảo hành 24 tháng
-              </li>
-              <li>
-                <span className="bullet">›</span> Đổi trả 1-1 trong 30 ngày
-              </li>
-              <li>
-                <span className="bullet">›</span> Chính sách bảo mật thông tin
-              </li>
-              <li>
-                <span className="bullet">›</span> Hướng dẫn mua hàng online
-              </li>
-              <li>
-                <span className="bullet">›</span> Hướng dẫn thanh toán
-              </li>
+              <li><span className="bullet">›</span> Chính sách bảo hành 24 tháng</li>
+              <li><span className="bullet">›</span> Đổi trả 1-1 trong 30 ngày</li>
+              <li><span className="bullet">›</span> Chính sách bảo mật thông tin</li>
+              <li><span className="bullet">›</span> Hướng dẫn mua hàng online</li>
+              <li><span className="bullet">›</span> Hướng dẫn thanh toán</li>
             </ul>
           </div>
 
@@ -631,9 +606,7 @@ const handleLogout = () => {
               </div>
               <div>
                 <strong>Trụ sở chính:</strong>
-                <p>
-                  12 Trịnh Đình Thảo, P. Hòa Thạnh, Q. Tân Phú, TP. Hồ Chí Minh
-                </p>
+                <p>12 Trịnh Đình Thảo, P. Hòa Thạnh, Q. Tân Phú, TP. Hồ Chí Minh</p>
               </div>
             </div>
             <div className="contact-row">
