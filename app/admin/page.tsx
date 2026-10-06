@@ -14,11 +14,9 @@ export default function AdminDashboard() {
   const [supports, setSupports] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // THÊM 2 DÒNG NÀY ĐỂ QUẢN LÝ CHẾ ĐỘ SỬA
   const [isEditing, setIsEditing] = useState(false);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
 
-  // HÀM MỞ FORM THÊM MỚI
   const openAddProductModal = () => {
     setIsEditing(false);
     setEditingProductId(null);
@@ -27,7 +25,6 @@ export default function AdminDashboard() {
     setShowProductForm(true);
   };
 
-  // HÀM MỞ FORM SỬA SẢN PHẨM
   const openEditProductModal = (product: any) => {
     setIsEditing(true);
     setEditingProductId(product._id || product.id);
@@ -42,11 +39,9 @@ export default function AdminDashboard() {
     setShowProductForm(true);
   };
   
-  // THÊM 2 DÒNG NÀY VÀO CHỖ KHAI BÁO STATE
   const [searchOrderCode, setSearchOrderCode] = useState('');
   const [selectedOrderDetails, setSelectedOrderDetails] = useState<any>(null);
 
-  // STATE ĐỂ CHỌN NĂM XEM BIỂU ĐỒ
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
 
   const [showProductForm, setShowProductForm] = useState(false);
@@ -117,14 +112,12 @@ export default function AdminDashboard() {
     }
   };
 
-  // HÀM LƯU SẢN PHẨM ĐÃ SỬA LỖI NHÂN BẢN
   const handleAddProductSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newProduct.image) return alert("Vui lòng tải lên hình ảnh sản phẩm!");
     
     try {
       if (isEditing && editingProductId) {
-        // [CẬP NHẬT] GỌI API ĐỂ CẬP NHẬT SẢN PHẨM ĐÃ CÓ (PUT)
         const res = await fetch(`/api/products?id=${editingProductId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -136,7 +129,6 @@ export default function AdminDashboard() {
         });
         if(res.ok) alert("Cập nhật sản phẩm thành công!");
       } else {
-        // [THÊM MỚI] GỌI API ĐỂ THÊM SẢN PHẨM HOÀN TOÀN MỚI (POST)
         const res = await fetch('/api/products', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -149,7 +141,6 @@ export default function AdminDashboard() {
         if(res.ok) alert("Thêm sản phẩm mới thành công!");
       }
 
-      // Xóa trắng form và cập nhật lại danh sách ngay lập tức
       setShowProductForm(false);
       setNewProduct({ name: '', price: '', quantity: '', image: '', category_id: '' });
       setImagePreview('');
@@ -168,7 +159,6 @@ export default function AdminDashboard() {
 
         if (res.ok) {
           alert("Đã xóa sản phẩm thành công!");
-          // Gọi lại hàm lấy dữ liệu để bảng tự động load lại (mất đi sản phẩm vừa xóa)
           fetchAllData(); 
         } else {
           alert("Xóa thất bại! API trả về lỗi hoặc không tìm thấy sản phẩm trên DB.");
@@ -180,63 +170,109 @@ export default function AdminDashboard() {
     }
   };
 
+  // ĐÃ KẾT NỐI API: Danh mục
   const handleAddCategory = async () => {
     const name = window.prompt("Nhập tên danh mục mới:");
     if (!name) return;
     try {
-      await fetch('/api/categories', { method: 'POST', body: JSON.stringify({ name }) });
+      await fetch('/api/categories', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) });
       fetchAllData();
     } catch (e) { alert("Lỗi thêm danh mục"); }
   };
 
-  const handleEditCategory = (cat: any) => {
+  const handleEditCategory = async (cat: any) => {
     const newName = window.prompt("Sửa tên danh mục:", cat.name);
-    if (newName) alert(`Đã ghi nhận sửa "${cat.name}" thành "${newName}".`);
+    if (!newName || newName === cat.name) return;
+    try {
+      const res = await fetch(`/api/categories?id=${cat._id || cat.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newName })
+      });
+      if(res.ok) {
+        alert("Cập nhật danh mục thành công!");
+        fetchAllData();
+      } else alert("Lỗi cập nhật!");
+    } catch (e) { alert("Lỗi mạng"); }
   };
 
-  const handleDeleteCategory = (id: string) => {
-    if (window.confirm("Bạn có chắc muốn xóa danh mục này?")) alert(`Đã xóa!`);
+  const handleDeleteCategory = async (id: string) => {
+    if (!window.confirm("Bạn có chắc muốn xóa danh mục này? Các sản phẩm thuộc danh mục có thể bị ảnh hưởng!")) return;
+    try {
+      const res = await fetch(`/api/categories?id=${id}`, { method: 'DELETE' });
+      if(res.ok) {
+        alert("Đã xóa danh mục!");
+        fetchAllData();
+      } else alert("Lỗi khi xóa!");
+    } catch (e) { alert("Lỗi mạng"); }
   };
 
-  const handleUpdateOrderStatus = (orderId: string, newStatus: string) => {
-    setOrders(orders.map(o => (o._id === orderId || o.id === orderId) ? { ...o, status: newStatus } : o));
-    alert(`Đã chuyển trạng thái thành: ${newStatus}.`);
+  // ĐÃ KẾT NỐI API: Đơn hàng
+  const handleUpdateOrderStatus = async (orderId: string, newStatus: string) => {
+    try {
+      const res = await fetch(`/api/orders?id=${orderId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      });
+      if(res.ok) {
+        alert(`Đã chuyển trạng thái thành: ${newStatus}.`);
+        fetchAllData();
+      } else alert("Lỗi cập nhật trạng thái");
+    } catch (e) { alert("Lỗi mạng"); }
   };
 
-  const handleDeleteOrder = (id: string) => {
-    if (window.confirm("Hủy và xóa đơn hàng này?")) alert("Đã xóa đơn hàng!");
+  const handleDeleteOrder = async (id: string) => {
+    if (!window.confirm("CẢNH BÁO: Bạn có chắc chắn muốn hủy và xóa vĩnh viễn đơn hàng này?")) return;
+    try {
+      const res = await fetch(`/api/orders?id=${id}`, { method: 'DELETE' });
+      if(res.ok) {
+        alert("Đã xóa đơn hàng!");
+        fetchAllData();
+      } else alert("Lỗi khi xóa đơn hàng!");
+    } catch (e) { alert("Lỗi mạng"); }
   };
 
-  const handleEditUser = (userId: string, currentUser: any) => {
+  // ĐÃ KẾT NỐI API: Khách hàng
+  const handleEditUser = async (userId: string, currentUser: any) => {
     const newName = window.prompt(`Sửa Tên:`, currentUser.username || "");
     if(newName === null) return;
     const newEmail = window.prompt(`Sửa Email:`, currentUser.email || "");
     if(newEmail === null) return;
     const newPhone = window.prompt(`Sửa SĐT:`, currentUser.phone || "");
     if(newPhone === null) return;
-    setUsers(users.map(u => (u._id === userId || u.id === userId) ? { ...u, username: newName, email: newEmail, phone: newPhone } : u));
-    alert("Đã cập nhật thông tin khách hàng!");
+
+    try {
+      const res = await fetch(`/api/users?id=${userId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: newName, email: newEmail, phone: newPhone })
+      });
+      if(res.ok) {
+        alert("Đã cập nhật thông tin khách hàng!");
+        fetchAllData();
+      } else alert("Lỗi cập nhật thông tin!");
+    } catch (e) { alert("Lỗi mạng"); }
   };
 
-  // HÀM MỚI: Xóa khách hàng
   const handleDeleteUser = async (userId: string) => {
     if (window.confirm("⚠️ Bạn có chắc chắn muốn xóa khách hàng này khỏi hệ thống không?")) {
-      // Cập nhật giao diện: Ẩn khách hàng đó đi
-      setUsers(users.filter(u => u._id !== userId && u.id !== userId));
-      
-      // (Tùy chọn) Gọi API để xóa thật dưới Database nếu bạn đã viết API DELETE
       try {
-        await fetch(`/api/users?id=${userId}`, { method: 'DELETE' });
+        const res = await fetch(`/api/users?id=${userId}`, { method: 'DELETE' });
+        if(res.ok) {
+          alert("Đã xóa khách hàng thành công!");
+          fetchAllData();
+        } else {
+          alert("Xóa thất bại! API trả về lỗi.");
+        }
       } catch (error) {
-        console.log("Chưa có API xóa user hoặc lỗi mạng");
+        console.log("Lỗi kết nối");
       }
-      
-      alert("Đã xóa khách hàng thành công!");
     }
   };
 
   // ==========================================
-  // THUẬT TOÁN TÍNH TOÁN DỮ LIỆU THẬT 100%
+  // THUẬT TOÁN TÍNH TOÁN DỮ LIỆU
   // ==========================================
   const totalOrders = orders.length;
   
@@ -248,21 +284,16 @@ export default function AdminDashboard() {
   const totalProducts = products.length;
   const totalInventory = products.reduce((sum, p) => sum + Number(p.quantity || 0), 0);
   
-  // =========================================================================
-  // ĐÃ SỬA: BIỂU ĐỒ TRÒN - TOP SẢN PHẨM MUA NHIỀU NHẤT DỰA VÀO ĐƠN HÀNG
-  // =========================================================================
   const productSalesCount: { [key: string]: number } = {};
   orders.forEach(order => {
     if (order.status !== 'Đã hủy' && order.items && Array.isArray(order.items)) {
       order.items.forEach((item: any) => {
-        // Rút gọn tên sản phẩm nếu quá dài để hiển thị biểu đồ đẹp hơn
         const shortName = item.name.length > 20 ? item.name.substring(0, 20) + '...' : item.name;
         productSalesCount[shortName] = (productSalesCount[shortName] || 0) + Number(item.cartQty || 1);
       });
     }
   });
 
-  // Chuyển object thành mảng, sắp xếp giảm dần, và chỉ lấy top 5 sản phẩm bán chạy nhất
   const topProducts = Object.entries(productSalesCount)
     .sort(([, a], [, b]) => b - a)
     .slice(0, 5);
@@ -284,7 +315,6 @@ export default function AdminDashboard() {
     gradientString = gradientString.slice(0, -2);
   } else { gradientString = "#e2e8f0 0% 100%"; }
 
-  // 2. TÌM TẤT CẢ CÁC NĂM HIỆN CÓ TRONG DATA ĐỂ LÀM MENU CHỌN NĂM
   const availableYears = Array.from(new Set(orders.map(order => {
     if (order.createdAt) {
       const d = new Date(order.createdAt);
@@ -295,7 +325,6 @@ export default function AdminDashboard() {
 
   if (availableYears.length === 0) availableYears.push(new Date().getFullYear());
 
-  // 3. TÍNH DOANH THU 12 THÁNG DỰA TRÊN NĂM ĐÃ CHỌN (selectedYear)
   const monthlyRevenue = Array(12).fill(0);
   orders.forEach(order => {
     if (order.status !== 'Đã hủy') { 
@@ -349,7 +378,6 @@ export default function AdminDashboard() {
         .chart-box { background: white; padding: 25px; border-radius: 12px; border: 1px solid #e2e8f0; flex: 2; height: 400px; display: flex; flex-direction: column; justify-content: space-between;}
         .chart-box.small { flex: 1; align-items: center; justify-content: flex-start; height: 400px; overflow-y: auto;}
         
-        /* ĐÃ SỬA: Gán height cứng 260px và gỡ bỏ flex: 1 để tương thích hoàn toàn với iPhone */
         .bar-chart { height: 260px; width: 100%; display: flex; align-items: flex-end; justify-content: space-around; border-left: 2px solid #e2e8f0; border-bottom: 2px solid #e2e8f0; padding: 20px 10px 0; gap: 10px;}
         
         .bar { width: 35px; background: #3b82f6; border-radius: 4px 4px 0 0; position: relative; transition: 0.3s; }
@@ -392,7 +420,6 @@ export default function AdminDashboard() {
           .admin-main { margin-left: 0; width: 100%; padding: 15px; }
           .chart-container { flex-direction: column; }
           
-          /* Gán cứng chiều cao cho khung biểu đồ trên điện thoại */
           .chart-box { height: auto; min-height: 400px; }
           .bar-chart { height: 250px; } 
           
@@ -441,7 +468,6 @@ export default function AdminDashboard() {
                   </div>
                   <div className="chart-container">
                     
-                    {/* BIỂU ĐỒ CỘT */}
                     <div className="chart-box">
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                         <h3 style={{ margin: 0, color: '#1e293b' }}>📈 Doanh thu các tháng</h3>
@@ -474,7 +500,6 @@ export default function AdminDashboard() {
                       </div>
                     </div>
 
-                    {/* ĐÃ SỬA: BIỂU ĐỒ TRÒN TOP 5 SẢN PHẨM */}
                     <div className="chart-box small">
                       <h3 style={{ margin: '0 0 20px 0', color: '#1e293b' }}>🏆 Top 5 Sản phẩm Hot</h3>
                       {topProductNames.length > 0 ? (
@@ -493,7 +518,7 @@ export default function AdminDashboard() {
                           </div>
                         </>
                       ) : (
-                         <div style={{ color: '#94a3b8', fontStyle: 'italic', marginTop: '50px' }}>Chưa có đơn hàng nào được bán.</div>
+                          <div style={{ color: '#94a3b8', fontStyle: 'italic', marginTop: '50px' }}>Chưa có đơn hàng nào được bán.</div>
                       )}
                     </div>
                   </div>
@@ -514,7 +539,7 @@ export default function AdminDashboard() {
                           <td style={{ color: '#3b82f6', fontWeight: 'bold' }}>{cat.name}</td>
                           <td style={{ textAlign: 'right' }}>
                             <button className="action-btn" onClick={() => handleEditCategory(cat)}><i className="fas fa-edit"></i> Sửa</button>
-                            <button className="action-btn" onClick={() => handleDeleteCategory(cat._id || cat.id)}><i className="fas fa-trash"></i> Xóa</button>
+                            <button className="action-btn" style={{ color: '#ef4444' }} onClick={() => handleDeleteCategory(cat._id || cat.id)}><i className="fas fa-trash"></i> Xóa</button>
                           </td>
                         </tr>
                       ))}
@@ -528,12 +553,11 @@ export default function AdminDashboard() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '15px' }}>
                     <h2 style={{ margin: 0, color: '#1e293b' }}>QUẢN LÝ ĐƠN HÀNG</h2>
                     
-                    {/* ĐÃ THÊM: THANH TÌM KIẾM MÃ ĐƠN HÀNG */}
                     <div style={{ display: 'flex', alignItems: 'center', background: '#f1f5f9', borderRadius: '8px', padding: '8px 15px', border: '1px solid #cbd5e1', width: '250px' }}>
                       <i className="fas fa-search" style={{ color: '#94a3b8', marginRight: '10px' }}></i>
                       <input 
                         type="text" 
-                        placeholder="Tìm mã đơn .... (vd: 67cf)..." 
+                        placeholder="Tìm mã đơn (vd: 67cf)..." 
                         value={searchOrderCode}
                         onChange={(e) => setSearchOrderCode(e.target.value)}
                         style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '14px', width: '100%', color: '#1e293b' }}
@@ -554,7 +578,6 @@ export default function AdminDashboard() {
                       </tr>
                     </thead>
                     <tbody>
-                      {/* ĐÃ THÊM: Lọc (Filter) đơn hàng dựa theo mã tìm kiếm */}
                       {orders
                         .filter((order: any) => {
                           if (!searchOrderCode) return true;
@@ -583,7 +606,6 @@ export default function AdminDashboard() {
                             </select>
                           </td>
                           <td style={{ textAlign: 'right' }}>
-                            {/* ĐÃ THÊM: Nút "Xem" chi tiết đơn hàng */}
                             <button className="action-btn" onClick={() => setSelectedOrderDetails(order)} style={{ color: '#3b82f6', marginRight: '5px' }}>
                               <i className="fas fa-eye"></i> Xem
                             </button>
@@ -596,7 +618,6 @@ export default function AdminDashboard() {
                     </tbody>
                   </table>
                   
-                  {/* Nếu tìm không thấy sẽ hiện dòng này */}
                   {orders.filter((o: any) => String(o._id || o.id).slice(-4).toLowerCase().includes(searchOrderCode.toLowerCase().replace('#', ''))).length === 0 && (
                     <div style={{ textAlign: 'center', padding: '30px', color: '#94a3b8', fontStyle: 'italic' }}>Không tìm thấy đơn hàng nào có mã "{searchOrderCode}"</div>
                   )}
@@ -607,7 +628,6 @@ export default function AdminDashboard() {
                 <div className="admin-card">
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
                     <h2 style={{ margin: 0, color: '#1e293b' }}>KHO HÀNG SẢN PHẨM</h2>
-                    {/* Đã đổi hàm onClick thành openAddProductModal */}
                     <button onClick={openAddProductModal} style={{ background: '#10b981', color: 'white', border: 'none', padding: '8px 15px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>+ Thêm Sản Phẩm</button>
                   </div>
                   <table className="admin-table">
@@ -620,11 +640,9 @@ export default function AdminDashboard() {
                           <td style={{ color: '#10b981', fontWeight: 'bold' }}>{Number(product.price).toLocaleString('vi-VN')} đ</td>
                           <td style={{ fontWeight: 'bold' }}>{product.quantity}</td>
                           <td style={{ textAlign: 'right' }}>
-                            {/* ĐÃ THÊM: Nút Sửa nằm TRƯỚC nút Xóa */}
                             <button className="action-btn" style={{ color: '#3b82f6', marginRight: '5px' }} onClick={() => openEditProductModal(product)}>
                               <i className="fas fa-edit"></i>
                             </button>
-                            {/* Đã tô màu đỏ cho nút xóa */}
                             <button className="action-btn" style={{ color: '#ef4444' }} onClick={() => handleDeleteProduct(product._id || product.id)}>
                               <i className="fas fa-trash"></i>
                             </button>
@@ -680,8 +698,6 @@ export default function AdminDashboard() {
                             <button className="action-btn" onClick={() => handleEditUser(user._id || user.id, user)}>
                               <i className="fas fa-edit"></i> Sửa
                             </button>
-                            
-                            {/* ĐÃ THÊM: Nút Xóa khách hàng màu đỏ nổi bật */}
                             <button className="action-btn" style={{ color: '#ef4444' }} onClick={() => handleDeleteUser(user._id || user.id)}>
                               <i className="fas fa-trash-alt"></i> Xóa
                             </button>
@@ -872,7 +888,8 @@ export default function AdminDashboard() {
               </div>
             </div>
           )}
-{/* MODAL XEM CHI TIẾT ĐƠN HÀNG */}
+
+          {/* MODAL XEM CHI TIẾT ĐƠN HÀNG */}
           {selectedOrderDetails && (
             <div className="modal-overlay">
               <div className="modal-content" style={{ width: '700px' }}>
@@ -904,7 +921,6 @@ export default function AdminDashboard() {
                     <tbody>
                       {selectedOrderDetails.items && selectedOrderDetails.items.map((item: any, idx: number) => (
                         <tr key={idx}>
-                          {/* ĐÃ THÊM: Hình ảnh nằm kế bên tên sản phẩm */}
                           <td style={{ fontWeight: '500', display: 'flex', alignItems: 'center', gap: '12px' }}>
                             <img 
                               src={item.image} 
