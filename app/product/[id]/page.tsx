@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import db from '../../../db.json'; 
 import { useCart } from '../../context/CartContext';
 import NotifBadge from '@/app/components/NotifBadge';
 
@@ -16,49 +15,75 @@ export default function ProductDetail() {
   const [activeTab, setActiveTab] = useState('desc'); 
   
   // ==========================================
-  // STATE LẤY DỮ LIỆU & ĐÁNH GIÁ THẬT
+  // STATE LẤY DỮ LIỆU TỪ MONGODB
   // ==========================================
   const [user, setUser] = useState<any>(null);
+  const [product, setProduct] = useState<any>(null);
+  const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
   const [reviews, setReviews] = useState<any[]>([]); 
+  const [isLoading, setIsLoading] = useState(true);
 
   // State cho Form Đánh giá mới
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [newRating, setNewRating] = useState(0); 
   const [hoverRating, setHoverRating] = useState(0); 
   const [newComment, setNewComment] = useState('');
-  const [reviewImage, setReviewImage] = useState(''); // State lưu ảnh đính kèm
+  const [reviewImage, setReviewImage] = useState('');
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
- useEffect(() => {
+  useEffect(() => {
     const loggedInUser = localStorage.getItem('currentUser');
     if (loggedInUser) setUser(JSON.parse(loggedInUser));
 
-    // Đánh lừa trình duyệt bằng cách gắn thời gian thực vào link API
-    fetch(`/api/reviews?t=${new Date().getTime()}`, { 
-      cache: 'no-store',
-      headers: {
-        'Cache-Control': 'no-cache'
-      }
-    })
-      .then(res => res.ok ? res.json() : [])
-      .then(data => {
-        if(Array.isArray(data)) {
-          const productReviews = data.filter((r: any) => String(r.product_id) === String(params?.id));
-          setReviews(productReviews); 
+    const fetchData = async () => {
+      try {
+        const timestamp = new Date().getTime();
+        
+        // 1. GỌI API LẤY SẢN PHẨM & ĐÁNH GIÁ TỪ MONGODB
+        const [prodRes, reviewRes] = await Promise.all([
+          fetch(`/api/products?t=${timestamp}`),
+          fetch(`/api/reviews?t=${timestamp}`)
+        ]);
+
+        if (prodRes.ok) {
+          const allProducts = await prodRes.json();
+          // Tìm sản phẩm hiện tại bằng MongoDB ID
+          const currentProduct = allProducts.find((p: any) => String(p._id || p.id) === String(params?.id));
+          setProduct(currentProduct);
+
+          // Tìm sản phẩm liên quan cùng danh mục
+          if (currentProduct) {
+            const related = allProducts
+              .filter((p: any) => String(p.category_id) === String(currentProduct.category_id) && String(p._id || p.id) !== String(params?.id))
+              .slice(0, 4);
+            setRelatedProducts(related);
+          }
         }
-      })
-      .catch(err => console.error("Lỗi tải đánh giá:", err));
+
+        if (reviewRes.ok) {
+          const allReviews = await reviewRes.json();
+          const currentReviews = allReviews.filter((r: any) => String(r.product_id) === String(params?.id));
+          setReviews(currentReviews);
+        }
+
+      } catch (error) {
+        console.error("Lỗi tải dữ liệu MongoDB:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (params?.id) {
+      fetchData();
+    }
   }, [params?.id]);
 
-const handleLogout = () => {
+  const handleLogout = () => {
     localStorage.removeItem('camera_bn_cart'); 
     localStorage.removeItem('currentUser'); 
     window.location.href = '/'; 
   };
 
-  // ==========================================
-  // HÀM XỬ LÝ UPLOAD ẢNH ĐÁNH GIÁ
-  // ==========================================
   const handleReviewImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -70,9 +95,6 @@ const handleLogout = () => {
     }
   };
 
-  // ==========================================
-  // HÀM GỬI ĐÁNH GIÁ LÊN API
-  // ==========================================
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return alert("Vui lòng đăng nhập để gửi đánh giá!");
@@ -81,9 +103,9 @@ const handleLogout = () => {
 
     setIsSubmittingReview(true);
     
-  const reviewData = {
+    const reviewData = {
       product_id: params?.id,
-      username: user.username, // Gửi đúng tên tài khoản đăng nhập
+      username: user.username,
       customer_name: user.username,
       rating: newRating,
       comment: newComment,
@@ -104,7 +126,7 @@ const handleLogout = () => {
         setShowReviewForm(false);
         setNewComment('');
         setNewRating(0); 
-        setReviewImage(''); // Reset ảnh sau khi gửi
+        setReviewImage(''); 
         alert("🎉 Cảm ơn bạn đã đánh giá sản phẩm!");
       } else {
         alert("Có lỗi xảy ra khi lưu đánh giá.");
@@ -120,7 +142,13 @@ const handleLogout = () => {
     ? (reviews.reduce((sum, r) => sum + Number(r.rating || 5), 0) / totalReviews).toFixed(1) 
     : '0.0';
 
-  const product = db.products.find((p) => String(p.id) === String(params?.id));
+  if (isLoading) {
+    return (
+      <div style={{ height: "100vh", display: "flex", justifyContent: "center", alignItems: "center", fontSize: "20px", fontWeight: "bold", color: "#64748b" }}>
+        <i className="fas fa-spinner fa-spin" style={{ marginRight: "10px" }}></i> Đang tải thông tin sản phẩm...
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -133,20 +161,10 @@ const handleLogout = () => {
     );
   }
 
-const handleBuyNow = (product: any) => {
-    if (!user) {
-      alert("Vui lòng đăng nhập để mua hàng!");
-      router.push('/login');
-      return;
-    }
-    addToCart(product, quantity, false); 
-    router.push('/cart'); 
-  };
-
   const addToFavorite = (productData: any) => {
     const saved = localStorage.getItem('camera_bn_favs');
     let favList = saved ? JSON.parse(saved) : [];
-    const exists = favList.find((item: any) => String(item.id) === String(productData.id));
+    const exists = favList.find((item: any) => String(item._id || item.id) === String(productData._id || productData.id));
     
     if(!exists) {
       favList.push(productData);
@@ -155,7 +173,6 @@ const handleBuyNow = (product: any) => {
     } else { alert("Sản phẩm này đã nằm trong mục Yêu thích rồi!"); }
   };
   
-  const relatedProducts = db.products.filter((p) => p.category_id === product.category_id && p.id !== product.id).slice(0, 4);
   const handleDecrease = () => { if (quantity > 1) setQuantity(quantity - 1); };
   const handleIncrease = () => { if (quantity < Number(product.quantity)) setQuantity(quantity + 1); };
 
@@ -274,7 +291,7 @@ const handleBuyNow = (product: any) => {
           </div>
 
           <div className="pd-info-col">
-            <div className="pd-sku">SKU: {product.id}</div>
+            <div className="pd-sku">SKU: {String(product._id || product.id).slice(-6).toUpperCase()}</div>
             <div className="pd-heart" onClick={() => addToFavorite(product)}><i className="fas fa-heart"></i></div>
             
             <h1 className="pd-title">{product.name}</h1>
@@ -307,27 +324,35 @@ const handleBuyNow = (product: any) => {
             </div>
 
             <div className="pd-buttons">
-              <button className="btn-add" onClick={() => {
-    if (!user) {
-      alert("Vui lòng đăng nhập để thêm vào giỏ hàng!");
-      router.push('/login');
-    } else {
-      addToCart(product, quantity, true);
-    }
-  }}>
-    <i className="fas fa-cart-plus"></i> THÊM VÀO GIỎ
-  </button>
-             <button className="btn-buy" onClick={() => {
-                if (!user) {
-                  alert("Vui lòng đăng nhập để mua hàng!");
-                  router.push('/login');
-                } else {
-                  addToCart(product, quantity, false);
-                  router.push('/cart');
-                }
-              }}>
-                MUA NGAY
-              </button>
+              {Number(product.quantity) > 0 ? (
+                <>
+                  <button className="btn-add" onClick={() => {
+                    if (!user) {
+                      alert("Vui lòng đăng nhập để thêm vào giỏ hàng!");
+                      router.push('/login');
+                    } else {
+                      addToCart(product, quantity, true);
+                    }
+                  }}>
+                    <i className="fas fa-cart-plus"></i> THÊM VÀO GIỎ
+                  </button>
+                  <button className="btn-buy" onClick={() => {
+                    if (!user) {
+                      alert("Vui lòng đăng nhập để mua hàng!");
+                      router.push('/login');
+                    } else {
+                      addToCart(product, quantity, false);
+                      router.push('/cart');
+                    }
+                  }}>
+                    MUA NGAY
+                  </button>
+                </>
+              ) : (
+                <button className="btn-buy" disabled style={{ background: '#cbd5e1', cursor: 'not-allowed', width: '100%', color: '#64748b', boxShadow: 'none' }}>
+                  SẢN PHẨM TẠM HẾT HÀNG
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -346,7 +371,7 @@ const handleBuyNow = (product: any) => {
             
             {activeTab === 'desc' && (
               <div>
-                <p style={{ marginBottom: '20px' }}>{product.description}</p>
+                <p style={{ marginBottom: '20px' }}>{product.description || 'Chưa có mô tả chi tiết cho sản phẩm này.'}</p>
                 <p style={{ marginBottom: '30px' }}>Sản phẩm được thiết kế với công nghệ mới nhất, đảm bảo hiệu suất hoạt động ổn định trong thời gian dài. Vỏ ngoài làm từ chất liệu cao cấp chống va đập, tản nhiệt tốt. Phù hợp cho cả nhu cầu gia đình và doanh nghiệp nhỏ.</p>
                 <div style={{ textAlign: 'center' }}>
                   <img src={product.image} alt={product.name} style={{ maxWidth: '100%', width: '400px', borderRadius: '8px' }} />
@@ -387,7 +412,6 @@ const handleBuyNow = (product: any) => {
               </div>
             )}
 
-            {/* TAB ĐÁNH GIÁ (CÓ CHỨC NĂNG UP ẢNH) */}
             {activeTab === 'reviews' && (
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '40px', marginBottom: '40px', paddingBottom: '30px', borderBottom: '1px solid #e2e8f0', flexWrap: 'wrap' }}>
@@ -430,7 +454,6 @@ const handleBuyNow = (product: any) => {
                   </div>
                 </div>
 
-                {/* FORM GỬI ĐÁNH GIÁ (KÈM NÚT UP ẢNH) */}
                 {showReviewForm && (
                   <form onSubmit={handleSubmitReview} style={{ background: '#f8fafc', padding: '25px', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '40px' }}>
                     <h4 style={{ margin: '0 0 15px 0', color: '#1e293b', fontSize: '16px' }}>Đánh giá sản phẩm</h4>
@@ -460,7 +483,6 @@ const handleBuyNow = (product: any) => {
                       style={{ width: '100%', height: '100px', padding: '15px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '14px', resize: 'vertical', marginBottom: '15px' }}
                     ></textarea>
 
-                    {/* KHU VỰC THÊM ẢNH ĐÍNH KÈM */}
                     <div style={{ marginBottom: '20px' }}>
                       <label style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 15px', background: 'white', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '13px', color: '#475569', fontWeight: 'bold', transition: '0.2s' }}>
                         <i className="fas fa-camera" style={{ color: '#3b82f6' }}></i> Thêm ảnh
@@ -487,7 +509,7 @@ const handleBuyNow = (product: any) => {
                   <div style={{ color: '#64748b', fontStyle: 'italic', textAlign: 'center', padding: '20px' }}>Chưa có đánh giá nào cho sản phẩm này. Hãy là người đầu tiên đánh giá nhé!</div>
                 ) : (
                   reviews.map((r, index) => {
-                    const rName = r.customer_name || r.customer || 'Khách hàng';
+                    const rName = r.customer_name || r.customer || r.username || 'Khách hàng';
                     const rRating = Number(r.rating || 5);
                     const rDate = r.createdAt ? new Date(r.createdAt).toLocaleDateString('vi-VN') : 'Mới đây';
 
@@ -508,7 +530,6 @@ const handleBuyNow = (product: any) => {
                           
                           <p style={{ fontSize: '14px', color: '#334155', lineHeight: '1.6', margin: '8px 0' }}>{r.comment || r.content}</p>
                           
-                          {/* HIỂN THỊ ẢNH ĐÍNH KÈM CỦA KHÁCH HÀNG (Nếu có) */}
                           {r.image && (
                             <div style={{ marginTop: '10px' }}>
                               <img src={r.image} alt="Review attachment" style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #cbd5e1', cursor: 'pointer' }} onClick={() => window.open(r.image, '_blank')} />
@@ -537,16 +558,16 @@ const handleBuyNow = (product: any) => {
                   : 0;
 
                 return (
-                  <div className="related-card" key={p.id} style={{ flex: 1, minWidth: '250px' }}>
+                  <div className="related-card" key={p._id || p.id} style={{ flex: 1, minWidth: '250px' }}>
                     {discount > 0 && <div className="badge-discount">-{discount}%</div>}
                     
                     <div className="rc-img">
-                      <Link href={`/product/${p.id}`} style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Link href={`/product/${p._id || p.id}`} style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <img src={p.image} alt={p.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
                       </Link>
                     </div>
                     
-                    <Link href={`/product/${p.id}`} style={{ textDecoration: 'none' }}>
+                    <Link href={`/product/${p._id || p.id}`} style={{ textDecoration: 'none' }}>
                       <div className="rc-title">{p.name}</div>
                     </Link>
                     
@@ -607,7 +628,6 @@ const handleBuyNow = (product: any) => {
             </div>
           </div>
 
-          {/* CỘT BẢN ĐỒ ĐÃ ĐƯỢC TÁCH RIÊNG */}
           <div className="footer-col" style={{ flex: 1.5, minWidth: '250px' }}>
             <h3 style={{ color: 'white', marginBottom: '20px' }}>BẢN ĐỒ CỬA HÀNG</h3>
             <div
