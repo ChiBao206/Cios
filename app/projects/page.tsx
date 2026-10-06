@@ -24,7 +24,7 @@ const ProjectSlider = ({ images }: { images: string[] }) => {
       <img 
         src={displayImages[currentIndex]} 
         alt="Hình ảnh dự án" 
-        style={{ width: '100%', height: '100%', objectFit: 'contain', transition: '0.3s' }} 
+        style={{ width: '100%', height: '100%', objectFit: 'cover', transition: '0.3s' }} 
         onError={(e) => { e.currentTarget.src = "https://placehold.co/800x400?text=Loi+Anh" }}
       />
       
@@ -60,7 +60,6 @@ export default function ProjectsPage() {
       setUser(JSON.parse(loggedInUser));
     }
 
-    // ĐÃ SỬA: Lấy dữ liệu dự án thật từ MongoDB
     fetch(`/api/projects?t=${new Date().getTime()}`, { cache: 'no-store' })
       .then(res => res.json())
       .then(data => {
@@ -80,7 +79,7 @@ export default function ProjectsPage() {
   };
 
   return (
-    <div style={{ background: '#f8fafc', minHeight: '100vh', fontFamily: "'Segoe UI', sans-serif" }}>
+    <div style={{ background: '#f8fafc', minHeight: '100vh', fontFamily: "'Segoe UI', sans-serif", display: 'flex', flexDirection: 'column' }}>
       
       {/* 1. HEADER */}
       <header style={{ background: "#1e293b", padding: "12px 0", borderBottom: "1px solid #0f172a" }}>
@@ -150,7 +149,7 @@ export default function ProjectsPage() {
       </div>
 
       {/* 3. DANH SÁCH DỰ ÁN */}
-      <div style={{ maxWidth: '1000px', margin: '40px auto 50px', padding: '0 20px', display: 'flex', flexDirection: 'column', gap: '60px' }}>
+      <div style={{ maxWidth: '1000px', margin: '40px auto 50px', padding: '0 20px', display: 'flex', flexDirection: 'column', gap: '60px', flex: 1 }}>
         {isLoading ? (
           <div style={{ textAlign: 'center', padding: '50px', color: '#64748b' }}>Đang tải dữ liệu dự án...</div>
         ) : projectsData.length === 0 ? (
@@ -195,10 +194,70 @@ export default function ProjectsPage() {
         </button>
       </div>
 
-      {/* 5. FOOTER */}
+      {/* 5. FOOTER (ĐÃ KHÔI PHỤC FULL GIAO DIỆN) */}
       <footer className="pro-footer">
-        {/* ... (Giữ nguyên nội dung footer của bạn, không đổi) */}
-        <div className="footer-bottom" style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>
+        <div className="footer-container">
+          <div className="footer-col">
+            <h3>CIOs - impossible is nothing</h3>
+            <p>Đối tác tin cậy cung cấp giải pháp an ninh toàn diện. Cam kết sản phẩm chính hãng, dịch vụ tận tâm và hỗ trợ kỹ thuật trọn đời.</p>
+            <div className="social-icons">
+              <div className="social-btn" style={{ background: "#3b5998" }}><i className="fab fa-facebook-f"></i></div>
+              <div className="social-btn" style={{ background: "#e1306c" }}><i className="fab fa-instagram"></i></div>
+              <div className="social-btn" style={{ background: "#ff0000" }}><i className="fab fa-youtube"></i></div>
+            </div>
+            <div className="newsletter-box">
+              <span>Đăng ký nhận khuyến mãi:</span>
+              <div className="input-group">
+                <input type="email" placeholder="Email của bạn..." />
+                <button>GỬI</button>
+              </div>
+            </div>
+          </div>
+
+          <div className="footer-col">
+            <h3>CHÍNH SÁCH HỖ TRỢ</h3>
+            <ul className="footer-links">
+              <li><span className="bullet">›</span> Chính sách bảo hành 24 tháng</li>
+              <li><span className="bullet">›</span> Đổi trả 1-1 trong 30 ngày</li>
+              <li><span className="bullet">›</span> Chính sách bảo mật thông tin</li>
+              <li><span className="bullet">›</span> Hướng dẫn mua hàng online</li>
+              <li><span className="bullet">›</span> Hướng dẫn thanh toán</li>
+            </ul>
+          </div>
+
+          <div className="footer-col">
+            <h3>LIÊN HỆ VỚI CHÚNG TÔI</h3>
+            <div className="contact-row">
+              <div className="icon-box"><i className="fas fa-map-marker-alt"></i></div>
+              <div>
+                <strong>Trụ sở chính:</strong>
+                <p>12 Trịnh Đình Thảo, P. Hòa Thạnh, Q. Tân Phú, TP. Hồ Chí Minh</p>
+              </div>
+            </div>
+            <div className="contact-row">
+              <div className="icon-box"><i className="fas fa-phone-alt"></i></div>
+              <div>
+                <strong>Hotline 24/7:</strong>
+                <span className="hotline-text">0971.024.173</span>
+              </div>
+            </div>
+            <div className="contact-row">
+              <div className="icon-box"><i className="fas fa-envelope"></i></div>
+              <div>
+                <strong>Email hỗ trợ:</strong>
+                <p>hotro@cameracb.com</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="footer-col">
+            <h3>BẢN ĐỒ CỬA HÀNG</h3>
+            <div className="map-frame" style={{ background: "#ccc", height: "150px", borderRadius: "8px", display: "flex", alignItems: "center", justifyItems: "center" }}>
+              <iframe src="https://maps.google.com/maps?q=12%20Tr%E1%BB%8Bnh%20%C4%90%C3%ACnh%20Th%E1%BA%A3o%2C%20Ho%C3%A0%20Th%E1%BA%A1nh%2C%20T%C3%A2n%20Ph%C3%BA%2C%20H%E1%BB%93%20Ch%C3%AD%20Minh&t=&z=16&ie=UTF8&iwloc=&output=embed" width="100%" height="200" style={{ border: 0 }} allowFullScreen={true} loading="lazy"></iframe>
+            </div>
+          </div>
+        </div>
+        <div className="footer-bottom">
           © 2026 Công Ty TNHH CIOs - impossible is nothing. Giấy phép KD số: 0123456789.
         </div>
       </footer>

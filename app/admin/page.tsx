@@ -12,7 +12,7 @@ export default function AdminDashboard() {
   const [users, setUsers] = useState<any[]>([]);
   const [reviews, setReviews] = useState<any[]>([]);
   const [supports, setSupports] = useState<any[]>([]);
-  const [projects, setProjects] = useState<any[]>([]); // STATE QUẢN LÝ DỰ ÁN
+  const [projects, setProjects] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const [isEditing, setIsEditing] = useState(false);
@@ -55,7 +55,11 @@ export default function AdminDashboard() {
   const [showProjectForm, setShowProjectForm] = useState(false);
   const [isEditingProject, setIsEditingProject] = useState(false);
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
-  const [newProject, setNewProject] = useState({ title: '', description: '', details: '', images: '' });
+  
+  // ĐÃ SỬA: Đổi images thành mảng (array) thay vì chuỗi (string)
+  const [newProject, setNewProject] = useState<{title: string, description: string, details: string, images: string[]}>({ 
+    title: '', description: '', details: '', images: [] 
+  });
 
   const [selectedSupport, setSelectedSupport] = useState<any>(null);
   const [adminReplyText, setAdminReplyText] = useState('');
@@ -81,7 +85,7 @@ export default function AdminDashboard() {
         fetch(`/api/users?t=${timestamp}`), 
         fetch(`/api/reviews?t=${timestamp}`).catch(() => ({ ok: false, json: () => [] })), 
         fetch(`/api/supports?t=${timestamp}`).catch(() => ({ ok: false, json: () => [] })),
-        fetch(`/api/projects?t=${timestamp}`).catch(() => ({ ok: false, json: () => [] })) // GỌI API DỰ ÁN
+        fetch(`/api/projects?t=${timestamp}`).catch(() => ({ ok: false, json: () => [] })) 
       ]);
       
       if(prodRes.ok) setProducts(await prodRes.json());
@@ -278,11 +282,11 @@ export default function AdminDashboard() {
   };
 
   // ==========================================
-  // XỬ LÝ LƯU VÀ XÓA DỰ ÁN
+  // XỬ LÝ LƯU VÀ XÓA DỰ ÁN (CẬP NHẬT ẢNH LOCAL)
   // ==========================================
   const openAddProjectModal = () => {
     setIsEditingProject(false); setEditingProjectId(null);
-    setNewProject({ title: '', description: '', details: '', images: '' });
+    setNewProject({ title: '', description: '', details: '', images: [] });
     setShowProjectForm(true);
   };
 
@@ -292,18 +296,44 @@ export default function AdminDashboard() {
       title: proj.title,
       description: proj.description,
       details: Array.isArray(proj.details) ? proj.details.join('\n') : proj.details,
-      images: Array.isArray(proj.images) ? proj.images.join('\n') : proj.images
+      images: Array.isArray(proj.images) ? proj.images : []
     });
     setShowProjectForm(true);
   };
 
+  // ĐÃ SỬA: Hàm xử lý upload nhiều ảnh cho Dự án
+  const handleProjectImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setNewProject(prev => ({
+            ...prev,
+            images: [...prev.images, reader.result as string]
+          }));
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  };
+
+  const removeProjectImage = (indexToRemove: number) => {
+    setNewProject(prev => ({
+      ...prev,
+      images: prev.images.filter((_, index) => index !== indexToRemove)
+    }));
+  };
+
   const handleAddProjectSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (newProject.images.length === 0) return alert("Vui lòng tải lên ít nhất 1 hình ảnh dự án!");
+
     const payload = {
       title: newProject.title,
       description: newProject.description,
       details: newProject.details.split('\n').map(s => s.trim()).filter(s => s),
-      images: newProject.images.split('\n').map(s => s.trim()).filter(s => s)
+      images: newProject.images // Gửi trực tiếp mảng Base64 lên DB
     };
 
     try {
@@ -453,7 +483,7 @@ export default function AdminDashboard() {
         .modal-content { background: white; padding: 30px; border-radius: 12px; width: 650px; max-width: 95%; max-height: 95vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);}
         .modal-input { width: 100%; padding: 12px 15px; margin-bottom: 15px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; transition: 0.2s;}
         .modal-input:focus { border-color: #3b82f6; outline: none; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
-        .upload-area { border: 2px dashed #cbd5e1; border-radius: 8px; background: #f8fafc; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 215px; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden; }
+        .upload-area { border: 2px dashed #cbd5e1; border-radius: 8px; background: #f8fafc; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 150px; padding: 20px; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden; }
         
         .chat-bubble-customer { background: #f1f5f9; color: #1e293b; padding: 12px 18px; border-radius: 18px 18px 18px 0; max-width: 75%; font-size: 14px; align-self: flex-start; border: 1px solid #e2e8f0; }
         .chat-bubble-admin { background: #3b82f6; color: white; padding: 12px 18px; border-radius: 18px 18px 0 18px; max-width: 75%; font-size: 14px; align-self: flex-end; box-shadow: 0 2px 5px rgba(59,130,246,0.2); }
@@ -485,7 +515,6 @@ export default function AdminDashboard() {
             <li className={activeTab === 'categories' ? 'active' : ''} onClick={() => setActiveTab('categories')}><i className="fas fa-folder"></i> Danh mục</li>
             <li className={activeTab === 'orders' ? 'active' : ''} onClick={() => setActiveTab('orders')}><i className="fas fa-box"></i> Đơn hàng</li>
             <li className={activeTab === 'products' ? 'active' : ''} onClick={() => setActiveTab('products')}><i className="fas fa-camera"></i> Sản phẩm</li>
-            {/* THÊM TAB DỰ ÁN VÀO MENU NÀY */}
             <li className={activeTab === 'projects' ? 'active' : ''} onClick={() => setActiveTab('projects')}><i className="fas fa-project-diagram"></i> Dự án</li>
             <li className={activeTab === 'reviews' ? 'active' : ''} onClick={() => setActiveTab('reviews')}><i className="fas fa-star"></i> Đánh giá</li>
             <li className={activeTab === 'customers' ? 'active' : ''} onClick={() => setActiveTab('customers')}><i className="fas fa-users"></i> Khách hàng</li>
@@ -936,8 +965,34 @@ export default function AdminDashboard() {
                   <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 'bold', color: '#475569' }}>Chi tiết thi công (Mỗi ý một dòng) *</label>
                   <textarea className="modal-input" required rows={4} value={newProject.details} onChange={e => setNewProject({...newProject, details: e.target.value})} placeholder="VD:&#10;- Thi công lắp đặt 10 camera&#10;- Đi cáp mạng gọn gàng..." style={{ resize: 'vertical' }}></textarea>
                   
-                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 'bold', color: '#475569' }}>Link hình ảnh dự án (Mỗi link một dòng) *</label>
-                  <textarea className="modal-input" required rows={4} value={newProject.images} onChange={e => setNewProject({...newProject, images: e.target.value})} placeholder="VD:&#10;/uploads/anh1.jpg&#10;https://link-anh-khac.com/anh2.png" style={{ resize: 'vertical' }}></textarea>
+                  {/* ĐÃ SỬA: Thay thế ô nhập Link bằng nút Tải Ảnh (Có thể tải nhiều ảnh cùng lúc) */}
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 'bold', color: '#475569' }}>Hình ảnh dự án (Có thể chọn nhiều ảnh) *</label>
+                  <label className="upload-area" style={{ height: 'auto', minHeight: '120px', padding: '20px', marginBottom: '15px' }}>
+                    <div style={{ textAlign: 'center' }}>
+                      <i className="fas fa-images" style={{ fontSize: '30px', color: '#3b82f6', marginBottom: '10px' }}></i>
+                      <p style={{ margin: 0, fontSize: '13px', color: '#64748b', fontWeight: 'bold' }}>Nhấp để chọn ảnh từ máy tính/điện thoại</p>
+                    </div>
+                    {/* multiple giúp chọn nhiều ảnh một lúc */}
+                    <input type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={handleProjectImageUpload} />
+                  </label>
+
+                  {/* Khu vực hiển thị ảnh đã chọn */}
+                  {newProject.images.length > 0 && (
+                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '20px' }}>
+                      {newProject.images.map((imgBase64, idx) => (
+                        <div key={idx} style={{ position: 'relative', width: '80px', height: '80px', borderRadius: '6px', border: '1px solid #cbd5e1', overflow: 'hidden' }}>
+                          <img src={imgBase64} alt={`preview-${idx}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          <button 
+                            type="button" 
+                            onClick={() => removeProjectImage(idx)} 
+                            style={{ position: 'absolute', top: '2px', right: '2px', background: 'rgba(225, 29, 72, 0.9)', color: 'white', border: 'none', width: '20px', height: '20px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px' }}
+                          >
+                            <i className="fas fa-times"></i>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
                   <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '15px', paddingTop: '20px', borderTop: '1px solid #e2e8f0' }}>
                     <button type="button" onClick={() => setShowProjectForm(false)} style={{ padding: '10px 20px', border: '1px solid #cbd5e1', background: '#f8fafc', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', color: '#475569' }}>Hủy bỏ</button>
