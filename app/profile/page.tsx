@@ -26,7 +26,6 @@ export default function ProfilePage() {
       const parsedUser = JSON.parse(loggedInUser);
       setUser(parsedUser);
       
-      // ĐÃ SỬA: Lấy ảnh avatar từ localStorage nếu có để hiển thị ngay
       if (parsedUser.avatar || parsedUser.image) {
         setAvatar(parsedUser.avatar || parsedUser.image);
       }
@@ -111,38 +110,92 @@ export default function ProfilePage() {
   };
 
   // =========================================================================
-  // ĐÃ SỬA: Hàm này giờ sẽ Ép ảnh thành Base64 và Lưu thẳng lên MongoDB
+  // BỘ NÉN ẢNH TỰ ĐỘNG CHỐNG TRÀN BỘ NHỚ CHO ĐIỆN THOẠI (CANVAS COMPRESSOR)
   // =========================================================================
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64String = reader.result as string;
-        setAvatar(base64String); // Cập nhật hình ảnh lên màn hình
-        
-        // Cập nhật vào DB ngay lập tức
-        if (user && (user._id || user.id)) {
-          try {
-            const res = await fetch(`/api/users?id=${user._id || user.id}`, {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ avatar: base64String, image: base64String }) // Cập nhật cột avatar
-            });
-            
-            if (res.ok) {
-              // Cập nhật lại bộ nhớ trình duyệt để F5 không bị mất
-              const updatedUser = { ...user, avatar: base64String, image: base64String };
-              localStorage.setItem('currentUser', JSON.stringify(updatedUser));
-              setUser(updatedUser);
-              alert("Đã cập nhật ảnh đại diện!");
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = async () => {
+          // Khởi tạo Canvas để thu nhỏ ảnh
+          const canvas = document.createElement('canvas');
+          const MAX_WIDTH = 300; // Giới hạn kích thước tối đa 300px
+          const MAX_HEIGHT = 300;
+          let width = img.width;
+          let height = img.height;
+
+          // Tính toán tỷ lệ
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
             }
-          } catch (err) {
-            console.error("Lỗi khi lưu avatar:", err);
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
           }
-        }
+          canvas.width = width;
+          canvas.height = height;
+          
+          // Vẽ ảnh mới đã bóp dung lượng
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+          
+          // Xuất file ảnh chất lượng 70% (dung lượng chỉ còn ~20KB)
+          const base64String = canvas.toDataURL('image/jpeg', 0.7); 
+          
+          setAvatar(base64String);
+          
+          if (user && (user._id || user.id)) {
+            try {
+              const res = await fetch(`/api/users?id=${user._id || user.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ avatar: base64String, image: base64String }) 
+              });
+              
+              if (res.ok) {
+                const updatedUser = { ...user, avatar: base64String, image: base64String };
+                localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+                setUser(updatedUser);
+                alert("Đã cập nhật ảnh đại diện!");
+              }
+            } catch (err) { console.error("Lỗi khi lưu avatar:", err); }
+          }
+        };
+        img.src = event.target?.result as string;
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  // =========================================================================
+  // XÓA ẢNH AVATAR QUAY VỀ MẶC ĐỊNH
+  // =========================================================================
+  const handleDeleteAvatar = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // Chặn việc tự động mở khung chọn file khi bấm nút X
+    if (!window.confirm("Bạn có chắc chắn muốn xóa ảnh đại diện và quay về mặc định?")) return;
+    
+    setAvatar('');
+    if (user && (user._id || user.id)) {
+      try {
+        const res = await fetch(`/api/users?id=${user._id || user.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ avatar: '', image: '' }) 
+        });
+        
+        if (res.ok) {
+          const updatedUser = { ...user, avatar: '', image: '' };
+          localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+          setUser(updatedUser);
+          alert("Đã xóa ảnh đại diện thành công!");
+        }
+      } catch (err) { console.error("Lỗi khi xóa avatar:", err); }
     }
   };
 
@@ -248,16 +301,31 @@ export default function ProfilePage() {
         <aside className="profile-sidebar" style={{ width: '280px', background: 'white', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
           
           <div style={{ padding: '30px 20px', textAlign: 'center', borderBottom: '1px solid #f1f5f9' }}>
-            <div 
-              style={{ width: '100px', height: '100px', margin: '0 auto 15px', borderRadius: '50%', background: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', cursor: 'pointer', boxShadow: '0 4px 15px rgba(37, 99, 235, 0.3)' }}
-              onClick={() => fileInputRef.current?.click()}
-              className="avatar-container"
-            >
-              {renderAvatar()}
-              <div className="avatar-overlay" style={{ position: 'absolute', inset: 0, background: 'rgba(15, 23, 42, 0.6)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: '0.3s' }}>
-                <i className="fas fa-camera" style={{ color: 'white', fontSize: '24px' }}></i>
+            
+            {/* VÙNG CHỨA AVATAR CÓ NÚT XÓA */}
+            <div style={{ position: 'relative', width: '100px', height: '100px', margin: '0 auto 15px' }}>
+              <div 
+                style={{ width: '100%', height: '100%', borderRadius: '50%', background: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', cursor: 'pointer', boxShadow: '0 4px 15px rgba(37, 99, 235, 0.3)', overflow: 'hidden' }}
+                onClick={() => fileInputRef.current?.click()}
+                className="avatar-container"
+              >
+                {renderAvatar()}
+                <div className="avatar-overlay" style={{ position: 'absolute', inset: 0, background: 'rgba(15, 23, 42, 0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: '0.3s' }}>
+                  <i className="fas fa-camera" style={{ color: 'white', fontSize: '24px' }}></i>
+                </div>
+                <input type="file" ref={fileInputRef} onChange={handleAvatarChange} accept="image/*" style={{ display: 'none' }} />
               </div>
-              <input type="file" ref={fileInputRef} onChange={handleAvatarChange} accept="image/*" style={{ display: 'none' }} />
+              
+              {/* Nút Xóa hiện ra khi có avatar */}
+              {avatar && (
+                <button 
+                  onClick={handleDeleteAvatar} 
+                  style={{ position: 'absolute', top: '0', right: '0', background: '#ef4444', color: 'white', border: 'none', width: '25px', height: '25px', borderRadius: '50%', cursor: 'pointer', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 5px rgba(0,0,0,0.2)' }}
+                  title="Xóa ảnh đại diện"
+                >
+                  <i className="fas fa-times" style={{ fontSize: '12px' }}></i>
+                </button>
+              )}
             </div>
 
             <h3 style={{ fontSize: '18px', color: '#1e293b', margin: '0 0 5px', fontWeight: '800' }}>{user.username}</h3>
