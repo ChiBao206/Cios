@@ -264,7 +264,7 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteUser = async (userId: string) => {
-    if (window.confirm("⚠️️ Bạn có chắc chắn muốn xóa khách hàng này khỏi hệ thống không?")) {
+    if (window.confirm("⚠ Bạn có chắc chắn muốn xóa khách hàng này khỏi hệ thống không?")) {
       try {
         const res = await fetch(`/api/users?id=${userId}`, { method: 'DELETE' });
         if(res.ok) {
@@ -436,7 +436,7 @@ export default function AdminDashboard() {
         .admin-logout { padding: 15px 25px; background: #ef4444; border-top: 1px solid #b91c1c; cursor: pointer; text-align: center; font-weight: bold; color: white; display: flex; justify-content: center; align-items: center; gap: 10px; transition: 0.2s;}
         .admin-logout:hover { background: #dc2626; }
         
-        .admin-main { flex: 1; margin-left: 250px; padding: 30px; width: calc(100% - 250px);}
+        .admin-main { flex: 1; margin-left: 250px; padding: 30px; width: calc(100% - 250px); overflow-x: hidden; }
         
         .stat-grid { display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 30px; }
         .stat-card { background: white; padding: 25px; border-radius: 12px; border: 1px solid #e2e8f0; flex: 1; min-width: 200px; border-bottom: 4px solid #3b82f6;}
@@ -466,10 +466,15 @@ export default function AdminDashboard() {
         }
         .bar:hover::after { opacity: 1; }
 
-        .admin-card { background: white; border-radius: 12px; padding: 30px; border: 1px solid #e2e8f0; margin-bottom: 30px; overflow-x: auto;}
+        .admin-card { background: white; border-radius: 12px; padding: 30px; border: 1px solid #e2e8f0; margin-bottom: 30px; overflow-x: auto; width: 100%; }
+        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
         .admin-table { width: 100%; border-collapse: collapse; min-width: 600px; }
         .admin-table th { padding: 15px; text-align: left; background: #f8fafc; color: #64748b; font-size: 13px; border-bottom: 2px solid #e2e8f0; white-space: nowrap; }
         .admin-table td { padding: 15px; border-bottom: 1px solid #f1f5f9; color: #334155; font-size: 14px; vertical-align: middle; }
+        
+        .proj-title { color: #3b82f6; font-weight: bold; min-width: 150px; }
+        .proj-desc { color: #64748b; font-size: 13px; min-width: 250px; }
+        
         .action-btn { padding: 6px 12px; border: 1px solid #cbd5e1; background: white; border-radius: 4px; font-size: 12px; cursor: pointer; margin-right: 5px; color: #64748b; white-space: nowrap; }
         .status-select { padding: 6px; border-radius: 4px; border: 1px solid #cbd5e1; outline: none; font-weight: bold; font-size: 12px; cursor: pointer; }
         
@@ -498,10 +503,11 @@ export default function AdminDashboard() {
           .bar-chart { height: 250px; } 
           .stat-card { min-width: 100%; }
 
+          .admin-card { padding: 15px; }
           .modal-content { padding: 15px; }
           .support-box-container { flex-direction: column; height: 80vh; }
-          .support-list-col { width: 100%; max-height: 150px; border-right: none; border-bottom: 2px solid #e2e8f0; overflow-y: auto; }
-          .support-chat-col { max-height: calc(100% - 150px); }
+          .support-list-col { width: 100%; max-height: 250px; border-right: none; border-bottom: 2px solid #e2e8f0; overflow-y: auto; }
+          .support-chat-col { max-height: calc(100% - 250px); }
         }
       `}</style>
 
@@ -609,20 +615,22 @@ export default function AdminDashboard() {
                     <h2 style={{ margin: 0, color: '#1e293b' }}>QUẢN LÝ DANH MỤC</h2>
                     <button onClick={handleAddCategory} style={{ background: '#3b82f6', color: 'white', border: 'none', padding: '8px 15px', borderRadius: '4px', cursor: 'pointer' }}>+ Thêm danh mục</button>
                   </div>
-                  <table className="admin-table">
-                    <thead><tr><th>Tên danh mục</th><th style={{ textAlign: 'right' }}>Hành động</th></tr></thead>
-                    <tbody>
-                      {categories.map((cat: any) => (
-                        <tr key={cat._id || cat.id}>
-                          <td style={{ color: '#3b82f6', fontWeight: 'bold' }}>{cat.name}</td>
-                          <td style={{ textAlign: 'right' }}>
-                            <button className="action-btn" onClick={() => handleEditCategory(cat)}><i className="fas fa-edit"></i> Sửa</button>
-                            <button className="action-btn" style={{ color: '#ef4444' }} onClick={() => handleDeleteCategory(cat._id || cat.id)}><i className="fas fa-trash"></i> Xóa</button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                  <div className="table-responsive">
+                    <table className="admin-table">
+                      <thead><tr><th>Tên danh mục</th><th style={{ textAlign: 'right' }}>Hành động</th></tr></thead>
+                      <tbody>
+                        {categories.map((cat: any) => (
+                          <tr key={cat._id || cat.id}>
+                            <td style={{ color: '#3b82f6', fontWeight: 'bold' }}>{cat.name}</td>
+                            <td style={{ textAlign: 'right' }}>
+                              <button className="action-btn" onClick={() => handleEditCategory(cat)}><i className="fas fa-edit"></i> Sửa</button>
+                              <button className="action-btn" style={{ color: '#ef4444' }} onClick={() => handleDeleteCategory(cat._id || cat.id)}><i className="fas fa-trash"></i> Xóa</button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
 
@@ -643,58 +651,60 @@ export default function AdminDashboard() {
                     </div>
                   </div>
 
-                  <table className="admin-table">
-                    <thead>
-                      <tr>
-                        <th>Mã Đơn</th>
-                        <th>Khách hàng</th>
-                        <th>Ngày đặt</th>
-                        <th>Thanh toán</th>
-                        <th>Tổng tiền</th>
-                        <th>Trạng thái</th>
-                        <th style={{ textAlign: 'right' }}>Hành động</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {orders
-                        .filter((order: any) => {
-                          if (!searchOrderCode) return true;
-                          const code = String(order._id || order.id).slice(-4).toLowerCase();
-                          return code.includes(searchOrderCode.toLowerCase().replace('#', ''));
-                        })
-                        .map((order: any) => (
-                        <tr key={order._id || order.id}>
-                          <td style={{ color: '#64748b' }}>#{String(order._id || order.id).slice(-4)}</td>
-                          <td style={{ fontWeight: 'bold', color: '#334155' }}>{order.user_id === 1 ? 'ADMIN' : (order.customer_name || 'Khách vãng lai')}</td>
-                          <td style={{ color: '#64748b' }}>{order.createdAt ? new Date(order.createdAt).toLocaleDateString('vi-VN') : 'Mới đây'}</td>
-                          <td style={{ color: '#10b981' }}>Tiền mặt (COD)</td>
-                          <td style={{ color: '#e11d48', fontWeight: 'bold' }}>{Number(order.total_money || order.total || 0).toLocaleString('vi-VN')} đ</td>
-                          <td>
-                            <select 
-                              className="status-select" 
-                              value={order.status || "Chờ xử lý"} 
-                              onChange={(e) => handleUpdateOrderStatus(order._id || order.id, e.target.value)}
-                              style={{ color: order.status === 'Thành công' ? '#16a34a' : order.status === 'Đã hủy' ? '#ef4444' : '#d97706' }}
-                            >
-                              <option value="Chờ xử lý">Chờ xử lý</option>
-                              <option value="Đã vận chuyển">Đã vận chuyển</option>
-                              <option value="Đang giao hàng">Đang giao hàng</option>
-                              <option value="Thành công">Thành công</option>
-                              <option value="Đã hủy">Đã hủy</option>
-                            </select>
-                          </td>
-                          <td style={{ textAlign: 'right' }}>
-                            <button className="action-btn" onClick={() => setSelectedOrderDetails(order)} style={{ color: '#3b82f6', marginRight: '5px' }}>
-                              <i className="fas fa-eye"></i> Xem
-                            </button>
-                            <button className="action-btn" onClick={() => handleDeleteOrder(order._id || order.id)} style={{ color: '#ef4444' }}>
-                              <i className="fas fa-trash"></i>
-                            </button>
-                          </td>
+                  <div className="table-responsive">
+                    <table className="admin-table">
+                      <thead>
+                        <tr>
+                          <th>Mã Đơn</th>
+                          <th>Khách hàng</th>
+                          <th>Ngày đặt</th>
+                          <th>Thanh toán</th>
+                          <th>Tổng tiền</th>
+                          <th>Trạng thái</th>
+                          <th style={{ textAlign: 'right' }}>Hành động</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {orders
+                          .filter((order: any) => {
+                            if (!searchOrderCode) return true;
+                            const code = String(order._id || order.id).slice(-4).toLowerCase();
+                            return code.includes(searchOrderCode.toLowerCase().replace('#', ''));
+                          })
+                          .map((order: any) => (
+                          <tr key={order._id || order.id}>
+                            <td style={{ color: '#64748b' }}>#{String(order._id || order.id).slice(-4)}</td>
+                            <td style={{ fontWeight: 'bold', color: '#334155' }}>{order.user_id === 1 ? 'ADMIN' : (order.customer_name || 'Khách vãng lai')}</td>
+                            <td style={{ color: '#64748b' }}>{order.createdAt ? new Date(order.createdAt).toLocaleDateString('vi-VN') : 'Mới đây'}</td>
+                            <td style={{ color: '#10b981' }}>Tiền mặt (COD)</td>
+                            <td style={{ color: '#e11d48', fontWeight: 'bold' }}>{Number(order.total_money || order.total || 0).toLocaleString('vi-VN')} đ</td>
+                            <td>
+                              <select 
+                                className="status-select" 
+                                value={order.status || "Chờ xử lý"} 
+                                onChange={(e) => handleUpdateOrderStatus(order._id || order.id, e.target.value)}
+                                style={{ color: order.status === 'Thành công' ? '#16a34a' : order.status === 'Đã hủy' ? '#ef4444' : '#d97706' }}
+                              >
+                                <option value="Chờ xử lý">Chờ xử lý</option>
+                                <option value="Đã vận chuyển">Đã vận chuyển</option>
+                                <option value="Đang giao hàng">Đang giao hàng</option>
+                                <option value="Thành công">Thành công</option>
+                                <option value="Đã hủy">Đã hủy</option>
+                              </select>
+                            </td>
+                            <td style={{ textAlign: 'right' }}>
+                              <button className="action-btn" onClick={() => setSelectedOrderDetails(order)} style={{ color: '#3b82f6', marginRight: '5px' }}>
+                                <i className="fas fa-eye"></i> Xem
+                              </button>
+                              <button className="action-btn" onClick={() => handleDeleteOrder(order._id || order.id)} style={{ color: '#ef4444' }}>
+                                <i className="fas fa-trash"></i>
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                   
                   {orders.filter((o: any) => String(o._id || o.id).slice(-4).toLowerCase().includes(searchOrderCode.toLowerCase().replace('#', ''))).length === 0 && (
                     <div style={{ textAlign: 'center', padding: '30px', color: '#94a3b8', fontStyle: 'italic' }}>Không tìm thấy đơn hàng nào có mã "{searchOrderCode}"</div>
@@ -708,27 +718,29 @@ export default function AdminDashboard() {
                     <h2 style={{ margin: 0, color: '#1e293b' }}>KHO HÀNG SẢN PHẨM</h2>
                     <button onClick={openAddProductModal} style={{ background: '#10b981', color: 'white', border: 'none', padding: '8px 15px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>+ Thêm Sản Phẩm</button>
                   </div>
-                  <table className="admin-table">
-                    <thead><tr><th>Hình</th><th>Tên</th><th>Giá</th><th>Tồn kho</th><th style={{ textAlign: 'right' }}>Hành động</th></tr></thead>
-                    <tbody>
-                      {products.map((product: any) => (
-                        <tr key={product._id || product.id}>
-                          <td><img src={product.image} alt={product.name} style={{ width: '40px', height: '40px', objectFit: 'contain', borderRadius: '4px', border: '1px solid #e2e8f0' }} /></td>
-                          <td style={{ color: '#334155' }}>{product.name}</td>
-                          <td style={{ color: '#10b981', fontWeight: 'bold' }}>{Number(product.price).toLocaleString('vi-VN')} đ</td>
-                          <td style={{ fontWeight: 'bold' }}>{product.quantity}</td>
-                          <td style={{ textAlign: 'right' }}>
-                            <button className="action-btn" style={{ color: '#3b82f6', marginRight: '5px' }} onClick={() => openEditProductModal(product)}>
-                              <i className="fas fa-edit"></i>
-                            </button>
-                            <button className="action-btn" style={{ color: '#ef4444' }} onClick={() => handleDeleteProduct(product._id || product.id)}>
-                              <i className="fas fa-trash"></i>
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                  <div className="table-responsive">
+                    <table className="admin-table">
+                      <thead><tr><th>Hình</th><th>Tên</th><th>Giá</th><th>Tồn kho</th><th style={{ textAlign: 'right' }}>Hành động</th></tr></thead>
+                      <tbody>
+                        {products.map((product: any) => (
+                          <tr key={product._id || product.id}>
+                            <td><img src={product.image} alt={product.name} style={{ width: '40px', height: '40px', objectFit: 'contain', borderRadius: '4px', border: '1px solid #e2e8f0' }} /></td>
+                            <td style={{ color: '#334155', minWidth: '150px' }}>{product.name}</td>
+                            <td style={{ color: '#10b981', fontWeight: 'bold' }}>{Number(product.price).toLocaleString('vi-VN')} đ</td>
+                            <td style={{ fontWeight: 'bold' }}>{product.quantity}</td>
+                            <td style={{ textAlign: 'right' }}>
+                              <button className="action-btn" style={{ color: '#3b82f6', marginRight: '5px' }} onClick={() => openEditProductModal(product)}>
+                                <i className="fas fa-edit"></i>
+                              </button>
+                              <button className="action-btn" style={{ color: '#ef4444' }} onClick={() => handleDeleteProduct(product._id || product.id)}>
+                                <i className="fas fa-trash"></i>
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
 
@@ -738,35 +750,37 @@ export default function AdminDashboard() {
                     <h2 style={{ margin: 0, color: '#1e293b' }}>QUẢN LÝ DỰ ÁN ĐÃ THI CÔNG</h2>
                     <button onClick={openAddProjectModal} style={{ background: '#10b981', color: 'white', border: 'none', padding: '8px 15px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>+ Thêm Dự Án</button>
                   </div>
-                  <table className="admin-table">
-                    <thead><tr><th>Hình đại diện</th><th>Tên dự án</th><th>Mô tả ngắn</th><th style={{ textAlign: 'right' }}>Hành động</th></tr></thead>
-                    <tbody>
-                      {projects.map((project: any) => (
-                        <tr key={project._id || project.id}>
-                          <td>
-                            <img 
-                              src={project.images && project.images.length > 0 ? project.images[0] : "https://placehold.co/80x50?text=No+Image"} 
-                              alt={project.title} 
-                              style={{ width: '80px', height: '50px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #e2e8f0' }} 
-                            />
-                          </td>
-                          <td style={{ color: '#3b82f6', fontWeight: 'bold', maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{project.title}</td>
-                          <td style={{ color: '#64748b', fontSize: '13px', maxWidth: '250px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{project.description}</td>
-                          <td style={{ textAlign: 'right' }}>
-                            <button className="action-btn" style={{ color: '#3b82f6', marginRight: '5px' }} onClick={() => openEditProjectModal(project)}>
-                              <i className="fas fa-edit"></i>
-                            </button>
-                            <button className="action-btn" style={{ color: '#ef4444' }} onClick={() => handleDeleteProject(project._id || project.id)}>
-                              <i className="fas fa-trash"></i>
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                      {projects.length === 0 && (
-                        <tr><td colSpan={4} style={{ textAlign: 'center', padding: '30px', color: '#94a3b8' }}>Chưa có dự án nào!</td></tr>
-                      )}
-                    </tbody>
-                  </table>
+                  <div className="table-responsive">
+                    <table className="admin-table">
+                      <thead><tr><th>Hình đại diện</th><th>Tên dự án</th><th>Mô tả ngắn</th><th style={{ textAlign: 'right' }}>Hành động</th></tr></thead>
+                      <tbody>
+                        {projects.map((project: any) => (
+                          <tr key={project._id || project.id}>
+                            <td>
+                              <img 
+                                src={project.images && project.images.length > 0 ? project.images[0] : "https://placehold.co/80x50?text=No+Image"} 
+                                alt={project.title} 
+                                style={{ width: '80px', height: '50px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #e2e8f0' }} 
+                              />
+                            </td>
+                            <td className="proj-title">{project.title}</td>
+                            <td className="proj-desc">{project.description}</td>
+                            <td style={{ textAlign: 'right' }}>
+                              <button className="action-btn" style={{ color: '#3b82f6', marginRight: '5px' }} onClick={() => openEditProjectModal(project)}>
+                                <i className="fas fa-edit"></i>
+                              </button>
+                              <button className="action-btn" style={{ color: '#ef4444' }} onClick={() => handleDeleteProject(project._id || project.id)}>
+                                <i className="fas fa-trash"></i>
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                        {projects.length === 0 && (
+                          <tr><td colSpan={4} style={{ textAlign: 'center', padding: '30px', color: '#94a3b8' }}>Chưa có dự án nào!</td></tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
 
@@ -802,26 +816,28 @@ export default function AdminDashboard() {
               {activeTab === 'customers' && (
                 <div className="admin-card">
                   <h2 style={{ margin: '0 0 20px 0', color: '#1e293b' }}>DANH SÁCH KHÁCH HÀNG</h2>
-                  <table className="admin-table">
-                    <thead><tr><th>Họ tên</th><th>Email</th><th>SĐT</th><th style={{ textAlign: 'right' }}>Hành động</th></tr></thead>
-                    <tbody>
-                      {users.map((user: any) => (
-                        <tr key={user._id || user.id}>
-                          <td style={{ fontWeight: 'bold', color: '#1e293b' }}>{user.username}</td>
-                          <td style={{ color: '#64748b' }}>{user.email || 'Chưa cập nhật'}</td>
-                          <td style={{ color: '#64748b' }}>{user.phone || 'Chưa cập nhật'}</td>
-                          <td style={{ textAlign: 'right' }}>
-                            <button className="action-btn" onClick={() => handleEditUser(user._id || user.id, user)}>
-                              <i className="fas fa-edit"></i> Sửa
-                            </button>
-                            <button className="action-btn" style={{ color: '#ef4444' }} onClick={() => handleDeleteUser(user._id || user.id)}>
-                              <i className="fas fa-trash-alt"></i> Xóa
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                  <div className="table-responsive">
+                    <table className="admin-table">
+                      <thead><tr><th>Họ tên</th><th>Email</th><th>SĐT</th><th style={{ textAlign: 'right' }}>Hành động</th></tr></thead>
+                      <tbody>
+                        {users.map((user: any) => (
+                          <tr key={user._id || user.id}>
+                            <td style={{ fontWeight: 'bold', color: '#1e293b' }}>{user.username}</td>
+                            <td style={{ color: '#64748b' }}>{user.email || 'Chưa cập nhật'}</td>
+                            <td style={{ color: '#64748b' }}>{user.phone || 'Chưa cập nhật'}</td>
+                            <td style={{ textAlign: 'right' }}>
+                              <button className="action-btn" onClick={() => handleEditUser(user._id || user.id, user)}>
+                                <i className="fas fa-edit"></i> Sửa
+                              </button>
+                              <button className="action-btn" style={{ color: '#ef4444' }} onClick={() => handleDeleteUser(user._id || user.id)}>
+                                <i className="fas fa-trash-alt"></i> Xóa
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
 
@@ -829,7 +845,7 @@ export default function AdminDashboard() {
                 <div className="admin-card" style={{ padding: 0 }}>
                   <div className="support-box-container">
                     <div className="support-list-col">
-                      <div style={{ padding: '20px', background: '#1e293b', color: 'white', fontWeight: 'bold', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ padding: '15px 20px', background: '#1e293b', color: 'white', fontWeight: 'bold', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span><i className="fas fa-inbox"></i> Hộp thư</span>
                       </div>
                       
@@ -842,14 +858,14 @@ export default function AdminDashboard() {
                           return (
                             <div 
                               key={customerName} 
-                              style={{ padding: '15px 20px', borderBottom: '1px solid #e2e8f0', cursor: 'pointer', background: selectedSupport?.customer === customerName ? '#eff6ff' : hasUnread ? 'white' : 'transparent', borderLeft: hasUnread ? '4px solid #ef4444' : '4px solid transparent', transition: '0.2s' }}
+                              style={{ padding: '12px 15px', borderBottom: '1px solid #e2e8f0', cursor: 'pointer', background: selectedSupport?.customer === customerName ? '#eff6ff' : hasUnread ? 'white' : 'transparent', borderLeft: hasUnread ? '4px solid #ef4444' : '4px solid transparent', transition: '0.2s' }}
                               onClick={() => setSelectedSupport({ customer: customerName, phone: latestTicket.phone, tickets: userTickets })}
                             >
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
-                                <strong style={{ color: '#1e293b' }}>{customerName}</strong>
+                                <strong style={{ color: '#1e293b', fontSize: '14px' }}>{customerName}</strong>
                                 <span style={{ fontSize: '11px', color: '#94a3b8' }}>{latestTicket.createdAt ? new Date(latestTicket.createdAt).toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit'}) : ''}</span>
                               </div>
-                              <div style={{ fontSize: '13px', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: hasUnread ? 'bold' : 'normal' }}>
+                              <div style={{ fontSize: '12px', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: hasUnread ? 'bold' : 'normal' }}>
                                 {latestTicket.issue}
                               </div>
                             </div>
@@ -861,36 +877,36 @@ export default function AdminDashboard() {
 
                     <div className="support-chat-col">
                       {!selectedSupport ? (
-                        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', color: '#cbd5e1' }}>
-                           <i className="fas fa-comments" style={{ fontSize: '50px', marginBottom: '15px' }}></i>
-                           <h3 style={{ margin: 0, color: '#94a3b8', fontSize: '15px' }}>Chọn một khách hàng để xem</h3>
+                        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', color: '#cbd5e1', padding: '20px' }}>
+                           <i className="fas fa-comments" style={{ fontSize: '40px', marginBottom: '15px' }}></i>
+                           <h3 style={{ margin: 0, color: '#94a3b8', fontSize: '14px', textAlign: 'center' }}>Chọn một khách hàng để xem</h3>
                         </div>
                       ) : (
                         <>
-                          <div style={{ padding: '15px 25px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '15px', background: '#f8fafc' }}>
-                            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#3b82f6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: 'bold' }}>
+                          <div style={{ padding: '12px 15px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '10px', background: '#f8fafc' }}>
+                            <div style={{ width: '35px', height: '35px', borderRadius: '50%', background: '#3b82f6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: 'bold' }}>
                               {selectedSupport.customer.charAt(0).toUpperCase()}
                             </div>
                             <div>
-                              <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', color: '#1e293b' }}>{selectedSupport.customer}</h3>
-                              <div style={{ fontSize: '12px', color: '#64748b' }}><i className="fas fa-phone-alt" style={{ fontSize: '10px' }}></i> {selectedSupport.phone}</div>
+                              <h3 style={{ margin: '0 0 2px 0', fontSize: '14px', color: '#1e293b' }}>{selectedSupport.customer}</h3>
+                              <div style={{ fontSize: '11px', color: '#64748b' }}><i className="fas fa-phone-alt" style={{ fontSize: '10px' }}></i> {selectedSupport.phone}</div>
                             </div>
                           </div>
 
-                          <div style={{ flex: 1, padding: '20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '15px', background: '#fff' }}>
+                          <div style={{ flex: 1, padding: '15px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '15px', background: '#fff' }}>
                             {selectedSupport.tickets.map((t: any) => (
-                              <div key={t._id} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                <div style={{ display: 'flex', gap: '10px', alignSelf: 'flex-start', maxWidth: '85%' }}>
-                                  <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#3b82f6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', flexShrink: 0, fontWeight: 'bold', marginTop: '5px' }}>
+                              <div key={t._id} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <div style={{ display: 'flex', gap: '8px', alignSelf: 'flex-start', maxWidth: '85%' }}>
+                                  <div style={{ width: '25px', height: '25px', borderRadius: '50%', background: '#3b82f6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', flexShrink: 0, fontWeight: 'bold', marginTop: '5px' }}>
                                     {selectedSupport.customer.charAt(0).toUpperCase()}
                                   </div>
-                                  <div className="chat-bubble-customer">
+                                  <div className="chat-bubble-customer" style={{ fontSize: '13px', padding: '10px 15px' }}>
                                     {t.issue}
                                   </div>
                                 </div>
 
                                 {t.admin_reply && (
-                                  <div className="chat-bubble-admin">
+                                  <div className="chat-bubble-admin" style={{ fontSize: '13px', padding: '10px 15px' }}>
                                     {t.admin_reply}
                                   </div>
                                 )}
@@ -919,17 +935,17 @@ export default function AdminDashboard() {
                                 setAdminReplyText('');
                               }
                             }} 
-                            style={{ padding: '15px', background: '#f8fafc', borderTop: '1px solid #e2e8f0', display: 'flex', gap: '10px' }}
+                            style={{ padding: '10px 15px', background: '#f8fafc', borderTop: '1px solid #e2e8f0', display: 'flex', gap: '10px' }}
                           >
                             <input 
                               type="text" 
                               placeholder="Nhập tin nhắn..." 
                               value={adminReplyText}
                               onChange={e => setAdminReplyText(e.target.value)}
-                              style={{ flex: 1, padding: '12px 15px', border: '1px solid #cbd5e1', borderRadius: '25px', outline: 'none', fontSize: '14px', background: 'white' }}
+                              style={{ flex: 1, padding: '10px 15px', border: '1px solid #cbd5e1', borderRadius: '25px', outline: 'none', fontSize: '13px', background: 'white' }}
                               required
                             />
-                            <button type="submit" style={{ width: '45px', height: '45px', borderRadius: '50%', background: '#10b981', color: 'white', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', flexShrink: 0 }}>
+                            <button type="submit" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#10b981', color: 'white', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', flexShrink: 0 }}>
                               <i className="fas fa-paper-plane"></i>
                             </button>
                           </form>
@@ -947,7 +963,7 @@ export default function AdminDashboard() {
             <div className="modal-overlay">
               <div className="modal-content">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', paddingBottom: '15px', borderBottom: '1px solid #e2e8f0' }}>
-                 <h3 style={{ margin: 0, color: '#1e293b', fontSize: '20px' }}>
+                 <h3 style={{ margin: 0, color: '#1e293b', fontSize: '18px' }}>
                     <i className="fas fa-project-diagram" style={{ color: '#10b981', marginRight: '10px' }}></i> 
                     {isEditingProject ? 'Cập nhật Dự Án' : 'Thêm Dự Án Mới'}
                   </h3>
@@ -965,10 +981,10 @@ export default function AdminDashboard() {
                   <textarea className="modal-input" required rows={4} value={newProject.details} onChange={e => setNewProject({...newProject, details: e.target.value})} placeholder="VD:&#10;- Thi công lắp đặt 10 camera&#10;- Đi cáp mạng gọn gàng..." style={{ resize: 'vertical' }}></textarea>
                   
                   <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 'bold', color: '#475569' }}>Hình ảnh dự án (Có thể chọn nhiều ảnh) *</label>
-                  <label className="upload-area" style={{ height: 'auto', minHeight: '120px', padding: '20px', marginBottom: '15px' }}>
+                  <label className="upload-area" style={{ height: 'auto', minHeight: '100px', padding: '15px', marginBottom: '15px' }}>
                     <div style={{ textAlign: 'center' }}>
-                      <i className="fas fa-images" style={{ fontSize: '30px', color: '#3b82f6', marginBottom: '10px' }}></i>
-                      <p style={{ margin: 0, fontSize: '13px', color: '#64748b', fontWeight: 'bold' }}>Nhấp để chọn ảnh từ máy tính/điện thoại</p>
+                      <i className="fas fa-images" style={{ fontSize: '24px', color: '#3b82f6', marginBottom: '10px' }}></i>
+                      <p style={{ margin: 0, fontSize: '12px', color: '#64748b', fontWeight: 'bold' }}>Nhấp để chọn ảnh từ máy tính/điện thoại</p>
                     </div>
                     <input type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={handleProjectImageUpload} />
                   </label>
@@ -976,12 +992,12 @@ export default function AdminDashboard() {
                   {newProject.images.length > 0 && (
                     <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '20px' }}>
                       {newProject.images.map((imgBase64, idx) => (
-                        <div key={idx} style={{ position: 'relative', width: '60px', height: '60px', borderRadius: '6px', border: '1px solid #cbd5e1', overflow: 'hidden' }}>
+                        <div key={idx} style={{ position: 'relative', width: '50px', height: '50px', borderRadius: '6px', border: '1px solid #cbd5e1', overflow: 'hidden' }}>
                           <img src={imgBase64} alt={`preview-${idx}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                           <button 
                             type="button" 
                             onClick={() => removeProjectImage(idx)} 
-                            style={{ position: 'absolute', top: '2px', right: '2px', background: 'rgba(225, 29, 72, 0.9)', color: 'white', border: 'none', width: '18px', height: '18px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px' }}
+                            style={{ position: 'absolute', top: '2px', right: '2px', background: 'rgba(225, 29, 72, 0.9)', color: 'white', border: 'none', width: '16px', height: '16px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px' }}
                           >
                             <i className="fas fa-times"></i>
                           </button>
@@ -990,9 +1006,9 @@ export default function AdminDashboard() {
                     </div>
                   )}
 
-                  <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '15px', paddingTop: '20px', borderTop: '1px solid #e2e8f0' }}>
-                    <button type="button" onClick={() => setShowProjectForm(false)} style={{ padding: '10px 20px', border: '1px solid #cbd5e1', background: '#f8fafc', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', color: '#475569' }}>Hủy bỏ</button>
-                    <button type="submit" style={{ padding: '10px 25px', border: 'none', background: '#10b981', color: 'white', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '15px', paddingTop: '15px', borderTop: '1px solid #e2e8f0' }}>
+                    <button type="button" onClick={() => setShowProjectForm(false)} style={{ padding: '8px 15px', border: '1px solid #cbd5e1', background: '#f8fafc', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', color: '#475569', fontSize: '13px' }}>Hủy bỏ</button>
+                    <button type="submit" style={{ padding: '8px 20px', border: 'none', background: '#10b981', color: 'white', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}>
                       <i className="fas fa-save"></i> {isEditingProject ? 'Lưu Cập Nhật' : 'Lưu Dự Án'}
                     </button>
                   </div>
@@ -1006,7 +1022,7 @@ export default function AdminDashboard() {
             <div className="modal-overlay">
               <div className="modal-content">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', paddingBottom: '15px', borderBottom: '1px solid #e2e8f0' }}>
-                 <h3 style={{ margin: 0, color: '#1e293b', fontSize: '20px' }}>
+                 <h3 style={{ margin: 0, color: '#1e293b', fontSize: '18px' }}>
                     <i className="fas fa-box-open" style={{ color: '#10b981', marginRight: '10px' }}></i> 
                     {isEditing ? 'Cập nhật Sản Phẩm' : 'Thêm Sản Phẩm Mới'}
                   </h3>
@@ -1041,12 +1057,12 @@ export default function AdminDashboard() {
 
                     <div style={{ flex: '1 1 100%' }}>
                       <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 'bold', color: '#475569' }}>Hình ảnh sản phẩm *</label>
-                      <label className="upload-area" style={{ minHeight: '120px' }}>
+                      <label className="upload-area" style={{ minHeight: '100px', padding: '10px' }}>
                         {imagePreview ? (
                           <img src={imagePreview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                         ) : (
-                          <div style={{ textAlign: 'center', padding: '10px' }}>
-                            <i className="fas fa-cloud-upload-alt" style={{ fontSize: '30px', color: '#94a3b8', marginBottom: '5px' }}></i>
+                          <div style={{ textAlign: 'center' }}>
+                            <i className="fas fa-cloud-upload-alt" style={{ fontSize: '24px', color: '#94a3b8', marginBottom: '5px' }}></i>
                             <p style={{ margin: 0, fontSize: '12px', color: '#64748b', fontWeight: 'bold' }}>Nhấp để chọn file</p>
                           </div>
                         )}
@@ -1055,9 +1071,9 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                   
-                  <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '20px', paddingTop: '15px', borderTop: '1px solid #e2e8f0' }}>
-                    <button type="button" onClick={() => setShowProductForm(false)} style={{ padding: '10px 15px', border: '1px solid #cbd5e1', background: '#f8fafc', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', color: '#475569', fontSize: '13px' }}>Hủy bỏ</button>
-                    <button type="submit" style={{ padding: '10px 20px', border: 'none', background: '#10b981', color: 'white', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}>
+                  <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '15px', paddingTop: '15px', borderTop: '1px solid #e2e8f0' }}>
+                    <button type="button" onClick={() => setShowProductForm(false)} style={{ padding: '8px 15px', border: '1px solid #cbd5e1', background: '#f8fafc', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', color: '#475569', fontSize: '13px' }}>Hủy bỏ</button>
+                    <button type="submit" style={{ padding: '8px 20px', border: 'none', background: '#10b981', color: 'white', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}>
                       <i className="fas fa-save"></i> {isEditing ? 'Lưu Cập Nhật' : 'Lưu Sản Phẩm'}
                     </button>
                   </div>
@@ -1071,7 +1087,7 @@ export default function AdminDashboard() {
             <div className="modal-overlay">
               <div className="modal-content">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', paddingBottom: '10px', borderBottom: '1px solid #e2e8f0' }}>
-                  <h3 style={{ margin: 0, color: '#1e293b', fontSize: '18px' }}>
+                  <h3 style={{ margin: 0, color: '#1e293b', fontSize: '16px' }}>
                     <i className="fas fa-file-invoice-dollar" style={{ color: '#3b82f6', marginRight: '8px' }}></i> 
                     Chi tiết đơn hàng #{String(selectedOrderDetails._id || selectedOrderDetails.id).slice(-4)}
                   </h3>
@@ -1084,39 +1100,39 @@ export default function AdminDashboard() {
                   <p style={{ margin: 0 }}><strong>Địa chỉ:</strong> {selectedOrderDetails.shipping_address}</p>
                 </div>
 
-                <h4 style={{ color: '#1e293b', marginBottom: '10px', fontSize: '14px' }}>Sản phẩm đã đặt:</h4>
-                <div style={{ maxHeight: '200px', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
+                <h4 style={{ color: '#1e293b', marginBottom: '10px', fontSize: '13px' }}>Sản phẩm đã đặt:</h4>
+                <div className="table-responsive" style={{ border: '1px solid #e2e8f0', borderRadius: '8px' }}>
                   <table className="admin-table" style={{ margin: 0, minWidth: '400px' }}>
-                    <thead style={{ position: 'sticky', top: 0, background: '#f1f5f9', zIndex: 1 }}>
+                    <thead style={{ background: '#f1f5f9' }}>
                       <tr>
-                        <th style={{ padding: '10px' }}>Sản phẩm</th>
-                        <th style={{ padding: '10px' }}>Đơn giá</th>
-                        <th style={{ padding: '10px' }}>SL</th>
-                        <th style={{ textAlign: 'right', padding: '10px' }}>Thành tiền</th>
+                        <th style={{ padding: '8px 10px', fontSize: '12px' }}>Sản phẩm</th>
+                        <th style={{ padding: '8px 10px', fontSize: '12px' }}>Đơn giá</th>
+                        <th style={{ padding: '8px 10px', fontSize: '12px' }}>SL</th>
+                        <th style={{ textAlign: 'right', padding: '8px 10px', fontSize: '12px' }}>Thành tiền</th>
                       </tr>
                     </thead>
                     <tbody>
                       {selectedOrderDetails.items && selectedOrderDetails.items.map((item: any, idx: number) => (
                         <tr key={idx}>
-                          <td style={{ fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px' }}>
+                          <td style={{ fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px' }}>
                             <img 
                               src={item.image} 
                               alt={item.name} 
-                              style={{ width: '35px', height: '35px', objectFit: 'contain', borderRadius: '4px', border: '1px solid #e2e8f0', background: 'white', flexShrink: 0 }}
-                              onError={(e) => { e.currentTarget.src = "https://placehold.co/35x35?text=Img" }} 
+                              style={{ width: '30px', height: '30px', objectFit: 'contain', borderRadius: '4px', border: '1px solid #e2e8f0', background: 'white', flexShrink: 0 }}
+                              onError={(e) => { e.currentTarget.src = "https://placehold.co/30x30?text=Img" }} 
                             />
-                            <span style={{ fontSize: '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '150px' }}>{item.name}</span>
+                            <span style={{ fontSize: '12px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '120px' }}>{item.name}</span>
                           </td>
-                          <td style={{ color: '#64748b', fontSize: '13px', padding: '10px' }}>{Number(item.price).toLocaleString('vi-VN')} đ</td>
-                          <td style={{ fontWeight: 'bold', fontSize: '13px', padding: '10px' }}>{item.cartQty}</td>
-                          <td style={{ color: '#10b981', fontWeight: 'bold', textAlign: 'right', fontSize: '13px', padding: '10px' }}>{(Number(item.price) * item.cartQty).toLocaleString('vi-VN')} đ</td>
+                          <td style={{ color: '#64748b', fontSize: '12px', padding: '8px 10px' }}>{Number(item.price).toLocaleString('vi-VN')} đ</td>
+                          <td style={{ fontWeight: 'bold', fontSize: '12px', padding: '8px 10px' }}>{item.cartQty}</td>
+                          <td style={{ color: '#10b981', fontWeight: 'bold', textAlign: 'right', fontSize: '12px', padding: '8px 10px' }}>{(Number(item.price) * item.cartQty).toLocaleString('vi-VN')} đ</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
                 
-                <div style={{ textAlign: 'right', fontSize: '16px', fontWeight: 'bold', color: '#e11d48', marginTop: '15px', paddingTop: '15px', borderTop: '2px solid #e2e8f0' }}>
+                <div style={{ textAlign: 'right', fontSize: '15px', fontWeight: 'bold', color: '#e11d48', marginTop: '15px', paddingTop: '10px', borderTop: '2px solid #e2e8f0' }}>
                   Tổng thanh toán: {Number(selectedOrderDetails.total_money || selectedOrderDetails.total || 0).toLocaleString('vi-VN')} đ
                 </div>
               </div>
