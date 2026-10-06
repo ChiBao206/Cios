@@ -3,13 +3,13 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import db from '../../db.json'; // Bổ sung đọc dữ liệu từ db.json
 
 export default function RegisterPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
     fullname: '', username: '', phone: '', email: '', password: '', confirmPassword: ''
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,28 +22,38 @@ export default function RegisterPage() {
     const inputUser = formData.username.trim();
     const inputEmail = formData.email.trim();
 
-    // 1. Kiểm tra xem đã có trong db.json gốc chưa
-    const dbUsers = db.users || [];
-    const existInDB = dbUsers.find(
-      (u) => u.username === inputUser || u.email === inputEmail
-    );
-
-    // Báo lỗi nếu dính 1 trong 2 nơi
-    if (existInDB) {
-      alert("Tên đăng nhập hoặc Email đã được sử dụng!");
-      return;
-    }
-
-    // Tạo user mới
-    const newUser = {
-      username: inputUser,
-      email: inputEmail,
-      phone: formData.phone,
-      password: formData.password,
-      role: "0" // 0 là khách hàng bình thường
-    };
+    setIsSubmitting(true);
 
     try {
+      // 1. KÉO DỮ LIỆU TỪ MONGODB ĐỂ KIỂM TRA TRÙNG LẶP (Thay cho db.json)
+      const resUsers = await fetch('/api/users');
+      if (!resUsers.ok) {
+        alert("Lỗi kết nối máy chủ. Vui lòng thử lại sau!");
+        setIsSubmitting(false);
+        return;
+      }
+      const dbUsers = await resUsers.json();
+
+      const existInDB = dbUsers.find(
+        (u: any) => u.username === inputUser || u.email === inputEmail
+      );
+
+      // Báo lỗi nếu trùng username hoặc email
+      if (existInDB) {
+        alert("Tên đăng nhập hoặc Email đã được sử dụng trên hệ thống!");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // 2. TẠO USER MỚI NẾU KHÔNG BỊ TRÙNG
+      const newUser = {
+        username: inputUser,
+        email: inputEmail,
+        phone: formData.phone,
+        password: formData.password,
+        role: "0" // 0 là khách hàng bình thường
+      };
+
       const res = await fetch('/api/users', {
         method: 'POST',
         headers: {
@@ -61,8 +71,9 @@ export default function RegisterPage() {
       }
     } catch (error) {
       console.error("Lỗi khi đăng ký:", error);
-      alert("Đã xảy ra lỗi, vui lòng thử lại sau.");
+      alert("Đã xảy ra lỗi mạng, vui lòng thử lại sau.");
     }
+    setIsSubmitting(false);
   };
 
   return (
@@ -86,12 +97,12 @@ export default function RegisterPage() {
             <input type="text" placeholder="Nhập họ tên..." required onChange={e => setFormData({...formData, fullname: e.target.value})} style={{ width: '100%', padding: '12px 15px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '14px', outline: 'none' }} />
           </div>
 
-          <div style={{ display: 'flex', gap: '15px', marginBottom: '15px' }}>
-            <div style={{ flex: 1 }}>
+          <div style={{ display: 'flex', gap: '15px', marginBottom: '15px', flexWrap: 'wrap' }}>
+            <div style={{ flex: '1 1 200px' }}>
               <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', color: '#0f172a', fontWeight: '700' }}>Tên đăng nhập</label>
               <input type="text" placeholder="VD: user123" required onChange={e => setFormData({...formData, username: e.target.value})} style={{ width: '100%', padding: '12px 15px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '14px', outline: 'none' }} />
             </div>
-            <div style={{ flex: 1 }}>
+            <div style={{ flex: '1 1 200px' }}>
               <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', color: '#0f172a', fontWeight: '700' }}>Số điện thoại</label>
               <input type="tel" placeholder="09xxxx..." required onChange={e => setFormData({...formData, phone: e.target.value})} style={{ width: '100%', padding: '12px 15px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '14px', outline: 'none' }} />
             </div>
@@ -102,19 +113,19 @@ export default function RegisterPage() {
             <input type="email" placeholder="email@gmail.com" required onChange={e => setFormData({...formData, email: e.target.value})} style={{ width: '100%', padding: '12px 15px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '14px', outline: 'none', background: '#f0f9ff' }} />
           </div>
 
-          <div style={{ display: 'flex', gap: '15px', marginBottom: '30px' }}>
-            <div style={{ flex: 1 }}>
+          <div style={{ display: 'flex', gap: '15px', marginBottom: '30px', flexWrap: 'wrap' }}>
+            <div style={{ flex: '1 1 200px' }}>
               <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', color: '#0f172a', fontWeight: '700' }}>Mật khẩu</label>
               <input type="password" placeholder="***" required onChange={e => setFormData({...formData, password: e.target.value})} style={{ width: '100%', padding: '12px 15px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '14px', outline: 'none', background: '#f1f5f9' }} />
             </div>
-            <div style={{ flex: 1 }}>
+            <div style={{ flex: '1 1 200px' }}>
               <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', color: '#0f172a', fontWeight: '700' }}>Nhập lại mật khẩu</label>
               <input type="password" required onChange={e => setFormData({...formData, confirmPassword: e.target.value})} style={{ width: '100%', padding: '12px 15px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '14px', outline: 'none' }} />
             </div>
           </div>
 
-          <button type="submit" style={{ width: '100%', padding: '14px', background: '#10b981', color: 'white', border: 'none', borderRadius: '6px', fontSize: '15px', fontWeight: '800', cursor: 'pointer', transition: '0.2s' }}>
-            ĐĂNG KÝ NGAY
+          <button type="submit" disabled={isSubmitting} style={{ width: '100%', padding: '14px', background: isSubmitting ? '#94a3b8' : '#10b981', color: 'white', border: 'none', borderRadius: '6px', fontSize: '15px', fontWeight: '800', cursor: isSubmitting ? 'not-allowed' : 'pointer', transition: '0.2s' }}>
+            {isSubmitting ? 'ĐANG XỬ LÝ...' : 'ĐĂNG KÝ NGAY'}
           </button>
         </form>
 

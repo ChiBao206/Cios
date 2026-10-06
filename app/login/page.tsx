@@ -14,9 +14,8 @@ export default function LoginPage() {
     e.preventDefault(); 
     setError('');
 
-    // Tự động xóa khoảng trắng ở đầu và cuối do người dùng lỡ tay gõ dư
     const inputUser = username.trim();
-    const inputPass = password; // Mật khẩu thì giữ nguyên
+    const inputPass = password; 
 
     try {
       // 1. Gọi API để lấy danh sách người dùng từ cơ sở dữ liệu thực (MongoDB)
@@ -38,8 +37,9 @@ export default function LoginPage() {
         // Đăng nhập thành công, lưu phiên làm việc vào thiết bị hiện tại
         localStorage.setItem('currentUser', JSON.stringify(user));
 
-        // Ép kiểu về chuỗi (String) để đảm bảo luôn so sánh đúng role
-        if (String(user.role) === "1") {
+        // ĐÃ SỬA: Kiểm tra role linh hoạt hơn (hỗ trợ số 1, chữ "1", hoặc "admin")
+        const userRole = String(user.role).toLowerCase();
+        if (userRole === "1" || userRole === "admin") {
           router.push('/admin');
         } else {
           router.push('/');
@@ -55,7 +55,6 @@ export default function LoginPage() {
 
   return (
     <div style={{ 
-      // Đã thêm ảnh nền chuyên nghiệp với lớp phủ gradient tối màu
       backgroundImage: `linear-gradient(rgba(15, 23, 42, 0.75), rgba(15, 23, 42, 0.9)), url('https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2000&auto=format&fit=crop')`,
       backgroundSize: 'cover',
       backgroundPosition: 'center',
@@ -71,7 +70,7 @@ export default function LoginPage() {
         background: 'white', 
         padding: '40px 30px', 
         borderRadius: '12px', 
-        boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', // Tăng độ bóng để hộp đăng nhập nổi bật hơn trên nền ảnh
+        boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)',
         width: '100%', 
         maxWidth: '400px' 
       }}>

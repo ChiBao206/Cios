@@ -37,7 +37,7 @@ export default function ProfilePage() {
         fetchSupports(parsedUser.username, parsedUser.phone);
       }
 
-      // XÓA DỮ LIỆU ẢO, CHỈ LẤY DỮ LIỆU THẬT TỪ BỘ NHỚ TRÌNH DUYỆT
+      // LẤY DỮ LIỆU FAVORITE
       const savedFavs = localStorage.getItem('camera_bn_favs');
       if(savedFavs) {
         setFavorites(JSON.parse(savedFavs));
@@ -50,7 +50,8 @@ export default function ProfilePage() {
 
   const fetchOrders = async (phone: string) => {
     try {
-      const res = await fetch('/api/orders');
+      const timestamp = new Date().getTime();
+      const res = await fetch(`/api/orders?t=${timestamp}`);
       const allOrders = await res.json();
       const myOrders = allOrders.filter((order: any) => order.customer_phone === phone);
       
@@ -71,7 +72,7 @@ export default function ProfilePage() {
 
            return {
              _id: o._id,
-             id: String(o._id || o.id).slice(-6).toUpperCase(),
+             id: String(o._id || o.id).slice(-6).toUpperCase(), // ĐỒNG BỘ HIỂN THỊ ID
              date: o.createdAt ? new Date(o.createdAt).toLocaleDateString('vi-VN') : 'Hôm nay',
              total: Number(o.total_money).toLocaleString('vi-VN') + ' đ',
              status: o.status || 'Chờ xử lý',
@@ -94,13 +95,12 @@ export default function ProfilePage() {
       if (res.ok) {
         const allSupports = await res.json();
         const mySupports = allSupports.filter((s: any) => s.customer === username || s.phone === phone);
-        // Sắp xếp tin nhắn cũ xếp trên, tin nhắn mới xếp dưới cùng (Giống Zalo/Shopee)
         setSupports(mySupports);  
       }
     } catch (e) { console.log(e); }
   };
 
-const handleLogout = () => {
+  const handleLogout = () => {
     localStorage.removeItem('camera_bn_cart'); 
     localStorage.removeItem('currentUser'); 
     window.location.href = '/'; 
@@ -114,31 +114,50 @@ const handleLogout = () => {
   const handleCancelOrder = async (orderId: string) => {
     if(!window.confirm("Bạn có chắc chắn muốn hủy đơn hàng này?")) return;
     try {
-      const res = await fetch(`/api/orders`, {
+      // ĐÃ SỬA: Đảm bảo gọi API với đúng biến orderId của MongoDB
+      const res = await fetch(`/api/orders?id=${orderId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId: orderId, newStatus: 'Đã hủy' })
+        body: JSON.stringify({ status: 'Đã hủy' }) // Sửa theo format của trang Admin
       });
       if (res.ok) {
         setOrders(orders.map(o => o._id === orderId ? { ...o, status: 'Đã hủy' } : o));
         setViewOrder({ ...viewOrder, status: 'Đã hủy' });
         alert("Đã hủy đơn hàng thành công!");
+      } else {
+        alert("Có lỗi xảy ra khi hủy đơn!");
       }
     } catch (error) { alert("Lỗi mạng!"); }
   };
 
-  const handleUpdateProfile = (e: React.FormEvent) => {
+  const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    const updatedUser = { ...user, ...profileForm };
-    localStorage.setItem('currentUser', JSON.stringify(updatedUser));
-    setUser(updatedUser);
-    alert("Cập nhật thông tin cá nhân thành công!");
+    try {
+      // Gọi API cập nhật User trên MongoDB
+      const res = await fetch(`/api/users?id=${user._id || user.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(profileForm)
+      });
+      
+      if (res.ok) {
+        const updatedUser = { ...user, ...profileForm };
+        localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+        setUser(updatedUser);
+        alert("Cập nhật thông tin cá nhân thành công!");
+      } else {
+        alert("Lỗi cập nhật!");
+      }
+    } catch (err) {
+      alert("Lỗi kết nối!");
+    }
   };
 
   const handleChangePassword = (e: React.FormEvent) => {
     e.preventDefault();
     if(passForm.new !== passForm.confirm) return alert("Mật khẩu nhập lại không khớp!");
     if(passForm.new.length < 6) return alert("Mật khẩu phải dài hơn 6 ký tự!");
+    // (Bạn có thể thêm API đổi mật khẩu tương tự như UpdateProfile ở trên nếu cần)
     alert("Đổi mật khẩu thành công!");
     setPassForm({ old: '', new: '', confirm: '' });
   };
@@ -156,18 +175,18 @@ const handleLogout = () => {
         body: JSON.stringify(newTicket)
       });
       if (res.ok) {
-        // Nối thêm tin nhắn mới vào dưới cùng khung chat
         setSupports([...supports, { ...newTicket, createdAt: new Date() }]);
         setSupportIssue('');
-        // Cuộn xuống cuối (Giả lập)
-        const chatBox = document.getElementById('chat-box-container');
-        if(chatBox) setTimeout(() => chatBox.scrollTop = chatBox.scrollHeight, 100);
+        setTimeout(() => {
+          const chatBox = document.getElementById('chat-box-container');
+          if(chatBox) chatBox.scrollTop = chatBox.scrollHeight;
+        }, 100);
       }
     } catch (e) { alert("Lỗi khi gửi tin nhắn!"); }
   };
 
   const removeFavorite = (id: string) => {
-    const newFavs = favorites.filter(f => f.id !== id);
+    const newFavs = favorites.filter(f => String(f._id || f.id) !== String(id));
     setFavorites(newFavs);
     localStorage.setItem('camera_bn_favs', JSON.stringify(newFavs));
   };
@@ -187,7 +206,6 @@ const handleLogout = () => {
   return (
     <div style={{ background: '#f8fafc', minHeight: '100vh', display: 'flex', flexDirection: 'column', fontFamily: "'Segoe UI', sans-serif" }}>
       
-      {/* HEADER */}
       <header style={{ background: '#1e293b', padding: '15px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Link href="/" style={{ color: 'white', fontWeight: 'bold', fontSize: '20px', textDecoration: 'none' }}><i className="fas fa-video"></i> CIOs - impossible is nothing</Link>
         <Link href="/" style={{ color: '#cbd5e1', textDecoration: 'none', fontSize: '14px' }}><i className="fas fa-home"></i> Về trang chủ</Link>
@@ -195,7 +213,6 @@ const handleLogout = () => {
 
       <div className="profile-layout" style={{ maxWidth: '1200px', width: '95%', margin: '30px auto', display: 'flex', gap: '30px', flex: 1, alignItems: 'flex-start' }}>
         
-        {/* SIDEBAR BÊN TRÁI */}
         <aside className="profile-sidebar" style={{ width: '280px', background: 'white', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
           
           <div style={{ padding: '30px 20px', textAlign: 'center', borderBottom: '1px solid #f1f5f9' }}>
@@ -236,7 +253,6 @@ const handleLogout = () => {
           </div>
         </aside>
 
-        {/* NỘI DUNG CHÍNH BÊN PHẢI */}
         <main className="profile-main" style={{ flex: 1, background: 'white', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0', padding: '40px', minHeight: '600px', position: 'relative' }}>
           
           <style>{`
@@ -248,11 +264,9 @@ const handleLogout = () => {
             .invoice-table td { padding: 15px 10px; border-bottom: 1px dashed #e2e8f0; font-size: 14px; color: #334155; vertical-align: middle; }
             .fav-card { border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; transition: 0.3s; position: relative; }
             .fav-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-color: #cbd5e1; }
-            /* Chat CSS */
             .chat-bubble-user { background: #3b82f6; color: white; padding: 12px 18px; border-radius: 18px 18px 0 18px; max-width: 70%; font-size: 14px; align-self: flex-end; box-shadow: 0 2px 5px rgba(59,130,246,0.2); }
             .chat-bubble-admin { background: #f1f5f9; color: #1e293b; padding: 12px 18px; border-radius: 18px 18px 18px 0; max-width: 70%; font-size: 14px; border: 1px solid #e2e8f0; }
 
-            /* TỰ ĐỘNG CĂN CHỈNH CHO ĐIỆN THOẠI */
             @media (max-width: 768px) {
               .profile-layout { flex-direction: column !important; }
               .profile-sidebar { width: 100% !important; }
@@ -263,7 +277,6 @@ const handleLogout = () => {
             }
           `}</style>
 
-          {/* TAB 1: LỊCH SỬ ĐƠN HÀNG */}
           {activeTab === 'orders' && (
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
@@ -301,7 +314,6 @@ const handleLogout = () => {
             </div>
           )}
 
-          {/* TAB 2: SẢN PHẨM YÊU THÍCH */}
           {activeTab === 'favorites' && (
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', paddingBottom: '15px', borderBottom: '1px solid #f1f5f9' }}>
@@ -319,17 +331,17 @@ const handleLogout = () => {
               ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
                   {favorites.map((fav) => (
-                    <div key={fav.id} className="fav-card">
-                      <button onClick={() => removeFavorite(fav.id)} style={{ position: 'absolute', top: '10px', right: '10px', background: 'white', border: '1px solid #e2e8f0', color: '#ef4444', width: '30px', height: '30px', borderRadius: '50%', cursor: 'pointer', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div key={fav._id || fav.id} className="fav-card">
+                      <button onClick={() => removeFavorite(fav._id || fav.id)} style={{ position: 'absolute', top: '10px', right: '10px', background: 'white', border: '1px solid #e2e8f0', color: '#ef4444', width: '30px', height: '30px', borderRadius: '50%', cursor: 'pointer', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <i className="fas fa-trash-alt"></i>
                       </button>
                       <div style={{ height: '180px', padding: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'white' }}>
-                        <img src={fav.img} alt={fav.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                        <img src={fav.img || fav.image} alt={fav.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
                       </div>
                       <div style={{ padding: '15px', background: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
                         <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#1e293b', lineHeight: '1.4', height: '40px', overflow: 'hidden' }}>{fav.name}</h4>
                         <div style={{ color: '#e11d48', fontWeight: 'bold', fontSize: '15px' }}>{Number(fav.price).toLocaleString('vi-VN')} đ</div>
-                        <Link href={`/product/${fav.id}`} style={{ display: 'block', textAlign: 'center', background: '#3b82f6', color: 'white', padding: '8px', borderRadius: '4px', textDecoration: 'none', fontWeight: 'bold', fontSize: '12px', marginTop: '15px' }}>XEM CHI TIẾT</Link>
+                        <Link href={`/product/${fav._id || fav.id}`} style={{ display: 'block', textAlign: 'center', background: '#3b82f6', color: 'white', padding: '8px', borderRadius: '4px', textDecoration: 'none', fontWeight: 'bold', fontSize: '12px', marginTop: '15px' }}>XEM CHI TIẾT</Link>
                       </div>
                     </div>
                   ))}
@@ -338,7 +350,6 @@ const handleLogout = () => {
             </div>
           )}
 
-          {/* TAB 3: KHUNG CHAT HỖ TRỢ (GIỐNG SHOPEE) */}
           {activeTab === 'support' && (
             <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '15px', paddingBottom: '15px', borderBottom: '1px solid #e2e8f0', marginBottom: '20px' }}>
@@ -353,7 +364,6 @@ const handleLogout = () => {
                 </div>
               </div>
               
-              {/* Vùng hiển thị tin nhắn */}
               <div id="chat-box-container" style={{ flex: 1, background: '#f8fafc', borderRadius: '12px', padding: '20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '20px', minHeight: '350px', border: '1px solid #e2e8f0' }}>
                 
                 <div style={{ textAlign: 'center', fontSize: '12px', color: '#94a3b8', margin: '10px 0' }}>Bắt đầu cuộc trò chuyện. Hãy gửi vấn đề bạn đang gặp phải nhé!</div>
@@ -361,7 +371,6 @@ const handleLogout = () => {
                 {supports.map((s, index) => (
                   <div key={index} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                     
-                    {/* Bong bóng tin nhắn của User (Bên Phải) */}
                     <div className="chat-bubble-user">
                       {s.issue}
                       <div style={{ fontSize: '10px', color: '#bfdbfe', marginTop: '5px', textAlign: 'right' }}>
@@ -369,7 +378,6 @@ const handleLogout = () => {
                       </div>
                     </div>
 
-                   {/* Bong bóng tin nhắn trả lời của Admin (Bên Trái) */}
                     {s.status === 'Đã trả lời' && s.admin_reply && (
                       <div style={{ display: 'flex', gap: '10px', alignSelf: 'flex-start', maxWidth: '80%' }}>
                         <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: '#2563eb', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', flexShrink: 0 }}>
@@ -384,7 +392,6 @@ const handleLogout = () => {
                 ))}
               </div>
 
-              {/* Form gõ tin nhắn */}
               <form onSubmit={handleSubmitSupport} style={{ display: 'flex', gap: '10px', marginTop: '20px', background: 'white', padding: '10px', borderRadius: '30px', border: '1px solid #cbd5e1', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
                 <input 
                   type="text" 
@@ -400,13 +407,11 @@ const handleLogout = () => {
             </div>
           )}
 
-          {/* TAB 4: CÀI ĐẶT TÀI KHOẢN */}
           {activeTab === 'settings' && (
             <div>
               <h2 style={{ fontSize: '22px', fontWeight: '800', color: '#1e293b', marginBottom: '30px', paddingBottom: '15px', borderBottom: '1px solid #f1f5f9' }}>Cài đặt tài khoản</h2>
               <div className="settings-container" style={{ display: 'flex', gap: '30px' }}>
                 
-                {/* Đổi thông tin cá nhân */}
                 <div style={{ flex: 1, border: '1px solid #e2e8f0', padding: '25px', borderRadius: '8px', background: 'white' }}>
                   <h3 style={{ fontSize: '15px', color: '#1e293b', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}><i className="fas fa-user-edit" style={{ color: '#f87171' }}></i> Thông tin cá nhân</h3>
                   <form onSubmit={handleUpdateProfile}>
@@ -423,7 +428,6 @@ const handleLogout = () => {
                   </form>
                 </div>
 
-                {/* Đổi mật khẩu */}
                 <div style={{ flex: 1, border: '1px solid #e2e8f0', padding: '25px', borderRadius: '8px', background: '#f8fafc' }}>
                   <h3 style={{ fontSize: '15px', color: '#1e293b', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}><i className="fas fa-lock" style={{ color: '#f59e0b' }}></i> Đổi mật khẩu</h3>
                   <form onSubmit={handleChangePassword}>
@@ -447,7 +451,6 @@ const handleLogout = () => {
         </main>
       </div>
 
-      {/* MODAL HÓA ĐƠN CHI TIẾT */}
       {viewOrder && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, backdropFilter: 'blur(4px)' }}>
           <div style={{ background: 'white', borderRadius: '12px', width: '700px', maxWidth: '95%', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', overflow: 'hidden' }}>
