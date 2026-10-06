@@ -9,7 +9,6 @@ export default function CartPage() {
   const { cartItems, removeFromCart, updateQty, toggleCheck, totalItems, clearCart } = useCart();
   const totalAmount = cartItems.reduce((sum: number, item: any) => sum + (item.checked ? Number(item.price) * item.cartQty : 0), 0);
 
-  // Kiểm tra xem có sản phẩm nào đang được tick chọn hay không
   const hasCheckedItems = cartItems.some((item: any) => item.checked);
 
   const [name, setName] = useState('');
@@ -96,8 +95,10 @@ export default function CartPage() {
     const paymentText = paymentMethod === 'cod' ? '(COD - Thanh toán khi nhận hàng)' : '(Đã thanh toán Chuyển khoản QR)';
     const fullAddress = `${addressDetail}, ${wardName}, ${distName}, ${provName} ${paymentText}`;
 
+    // Tách riêng danh sách hàng khách chọn mua
+    const purchasedItems = cartItems.filter((i: any) => i.checked);
+
     const newOrder = {
-      id: Math.floor(Math.random() * 10000), 
       user_id: user ? (user._id || user.id) : 2, 
       email: user ? user.email : '',
       total_money: totalAmount,
@@ -105,10 +106,11 @@ export default function CartPage() {
       customer_name: name,
       customer_phone: phone,
       shipping_address: fullAddress,
-      items: JSON.parse(JSON.stringify(cartItems.filter((i: any) => i.checked))) 
+      items: JSON.parse(JSON.stringify(purchasedItems)) 
     };
     
     try {
+      // 1. LƯU ĐƠN HÀNG VÀO DATABASE
       const res = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -116,7 +118,24 @@ export default function CartPage() {
       });
 
       if (res.ok) {
-        alert("🎉 Đặt hàng thành công! Cảm ơn bạn đã mua sắm tại CIOs - impossible is nothing.");
+        
+        // 2. TỰ ĐỘNG TRỪ TỒN KHO TRONG MONGODB NGAY SAU KHI ĐẶT HÀNG
+        // Duyệt qua từng sản phẩm khách mua và gọi API để trừ số lượng
+        for (const item of purchasedItems) {
+          // Tính số lượng còn lại
+          const remainingQty = Number(item.quantity || item.maxQty) - Number(item.cartQty);
+          
+          await fetch(`/api/products?id=${item._id || item.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              quantity: remainingQty > 0 ? remainingQty : 0, 
+              sold: (Number(item.sold) || 0) + Number(item.cartQty) // Cập nhật luôn số lượng đã bán
+            })
+          });
+        }
+
+        alert("🎉 Đặt hàng thành công! Hệ thống đã ghi nhận đơn hàng và tự động cập nhật kho.");
         clearCart(); 
         window.location.href = '/profile'; 
       } else {
@@ -186,16 +205,12 @@ export default function CartPage() {
         ) : (
           <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
 
-            {/* CỘT TRÁI: SẢN PHẨM 
-                ĐÃ SỬA LẠI: Nếu không có món nào được tick, nó sẽ phóng to 100% full màn. 
-                Nếu có tick, nó tự thu nhỏ lại 60% nhường chỗ cho Form giao hàng. 
-            */}
             <div style={{ flex: hasCheckedItems ? '1 1 60%' : '1 1 100%', width: '100%', background: 'white', borderRadius: '12px', padding: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0', transition: 'all 0.3s ease' }}>
               {cartItems.map((item: any) => (
-                <div key={item.id} style={{ display: 'flex', alignItems: 'stretch', padding: '15px 0', borderBottom: '1px solid #f1f5f9', gap: '12px' }}>
+                <div key={item._id || item.id} style={{ display: 'flex', alignItems: 'stretch', padding: '15px 0', borderBottom: '1px solid #f1f5f9', gap: '12px' }}>
                   
                   <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <input type="checkbox" checked={item.checked} onChange={() => toggleCheck(item.id)} style={{ cursor: 'pointer', width: '18px', height: '18px', accentColor: '#e11d48' }} />
+                    <input type="checkbox" checked={item.checked} onChange={() => toggleCheck(item._id || item.id)} style={{ cursor: 'pointer', width: '18px', height: '18px', accentColor: '#e11d48' }} />
                   </div>
 
                   <div style={{ width: '80px', height: '80px', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '4px', flexShrink: 0 }}>
@@ -204,10 +219,10 @@ export default function CartPage() {
 
                   <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minWidth: 0 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' }}>
-                      <Link href={`/product/${item.id}`} style={{ fontWeight: '600', color: '#1e293b', textDecoration: 'none', fontSize: '14px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                      <Link href={`/product/${item._id || item.id}`} style={{ fontWeight: '600', color: '#1e293b', textDecoration: 'none', fontSize: '14px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                         {item.name}
                       </Link>
-                      <button onClick={() => removeFromCart(item.id)} style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '15px', marginTop: '2px' }}>
+                      <button onClick={() => removeFromCart(item._id || item.id)} style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '15px', marginTop: '2px' }}>
                         <i className="fas fa-trash-alt"></i>
                       </button>
                     </div>
@@ -218,9 +233,9 @@ export default function CartPage() {
                       </span>
                       
                       <div style={{ display: 'flex', border: '1px solid #cbd5e1', borderRadius: '4px', overflow: 'hidden' }}>
-                        <button onClick={() => updateQty(item.id, item.cartQty - 1)} disabled={item.cartQty <= 1} style={{ width: '28px', height: '28px', background: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold', color: '#475569' }}>-</button>
+                        <button onClick={() => updateQty(item._id || item.id, item.cartQty - 1)} disabled={item.cartQty <= 1} style={{ width: '28px', height: '28px', background: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold', color: '#475569' }}>-</button>
                         <input type="text" value={item.cartQty} readOnly style={{ width: '35px', height: '28px', border: 'none', borderLeft: '1px solid #cbd5e1', borderRight: '1px solid #cbd5e1', textAlign: 'center', fontWeight: 'bold', fontSize: '13px', color: '#1e293b' }} />
-                        <button onClick={() => updateQty(item.id, item.cartQty + 1)} disabled={item.cartQty >= item.maxQty} style={{ width: '28px', height: '28px', background: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold', color: '#475569' }}>+</button>
+                        <button onClick={() => updateQty(item._id || item.id, item.cartQty + 1)} disabled={item.cartQty >= (item.quantity || item.maxQty)} style={{ width: '28px', height: '28px', background: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold', color: '#475569' }}>+</button>
                       </div>
                     </div>
                   </div>
@@ -228,7 +243,6 @@ export default function CartPage() {
               ))}
             </div>
 
-            {/* CỘT PHẢI: FORM GIAO HÀNG (CHỈ XUẤT HIỆN KHI CÓ SẢN PHẨM ĐƯỢC TICK) */}
             {hasCheckedItems && (
               <div style={{ flex: '1 1 35%', minWidth: '300px', width: '100%', transition: 'all 0.3s ease' }}>
                 <div style={{ background: 'white', borderRadius: '12px', padding: '25px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0' }}>
