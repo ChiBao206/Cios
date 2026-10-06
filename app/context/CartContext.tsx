@@ -15,10 +15,16 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
       const parsedUser = JSON.parse(loggedInUser);
       setUser(parsedUser);
       
-      fetch(`/api/cart?username=${parsedUser.username}`) 
+      // ĐÃ SỬA: Thêm &t=... và cache: 'no-store' để chống trình duyệt lưu cache cũ
+      fetch(`/api/cart?username=${parsedUser.username}&t=${new Date().getTime()}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
+      }) 
         .then(res => res.json())
         .then(data => {
-           if (data && data.cart) {
+           if (data && data.cart && data.cart.length > 0) {
              setCartItems(data.cart);
            } else {
              loadLocalCart();
@@ -93,9 +99,6 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     }));
   };
 
-  // ========================================================
-  // BỔ SUNG: Hàm Chọn/Bỏ chọn TẤT CẢ (Để làm ô tick tổng)
-  // ========================================================
   const toggleAllCheck = (status: boolean) => {
     setCartItems(cartItems.map(item => ({ ...item, checked: status })));
   };
@@ -107,7 +110,6 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   const totalItems = cartItems.reduce((sum, item) => sum + item.cartQty, 0);
 
   return (
-    // Đã xuất hàm toggleAllCheck ra ngoài để trang Giỏ hàng có thể xài được
     <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, updateQty, toggleCheck, toggleAllCheck, totalItems, clearCart }}>
       {children}
     </CartContext.Provider>
