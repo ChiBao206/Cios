@@ -120,17 +120,27 @@ export async function POST(req: Request) {
 }
 
 // ======================================================================
-// THÊM HÀM PUT VÀO ĐÂY ĐỂ XỬ LÝ LỆNH CẬP NHẬT TRẠNG THÁI (HỦY ĐƠN HÀNG)
+// SỬA LẠI HÀM PUT (CẬP NHẬT TRẠNG THÁI) CHO KHỚP VỚI GIAO DIỆN
 // ======================================================================
 export async function PUT(req: Request) {
   try {
-    await connectDB();
-    const { orderId, newStatus } = await req.json();
+    // 1. Lấy ID đơn hàng từ trên URL (giống như cách làm của Sản phẩm/Danh mục)
+    const url = new URL(req.url);
+    const id = url.searchParams.get("id");
     
-    // Tìm đơn hàng theo ID và cập nhật trạng thái mới
+    // 2. Lấy trạng thái mới từ giao diện gửi lên
+    const body = await req.json(); 
+
+    if (!id) {
+      return NextResponse.json({ message: "Thiếu ID đơn hàng" }, { status: 400 });
+    }
+
+    await connectDB();
+    
+    // 3. Tìm đơn hàng theo ID và cập nhật đúng cái biến status
     const updatedOrder = await Order.findByIdAndUpdate(
-      orderId, 
-      { status: newStatus }, 
+      id, 
+      { status: body.status }, 
       { new: true }
     );
     
