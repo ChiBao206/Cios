@@ -140,3 +140,27 @@ export async function PUT(req: Request) {
     return NextResponse.json({ message: error.message }, { status: 500 });
   }
 }
+
+// ======================================================================
+// THÊM HÀM DELETE VÀO ĐÂY ĐỂ XỬ LÝ LỆNH XÓA ĐƠN HÀNG VĨNH VIỄN
+// ======================================================================
+export async function DELETE(req: Request) {
+  try {
+    const url = new URL(req.url);
+    const id = url.searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json({ message: "Thiếu ID đơn hàng" }, { status: 400 });
+    }
+
+    await connectDB();
+    
+    // Xóa đơn hàng dựa theo ID
+    await Order.findByIdAndDelete(id);
+
+    return NextResponse.json({ message: "Đã xóa đơn hàng thành công" }, { status: 200 });
+  } catch (error: any) {
+    console.error("❌ LỖI XÓA ĐƠN HÀNG MONGODB:", error.message);
+    return NextResponse.json({ message: "Không thể xóa đơn hàng", error: error.message }, { status: 500 });
+  }
+}

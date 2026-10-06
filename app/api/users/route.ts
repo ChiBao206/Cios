@@ -49,3 +49,42 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Lỗi server khi đăng ký' }, { status: 500 });
   }
 }
+
+// ==========================================
+// BỔ SUNG: HÀM SỬA THÔNG TIN KHÁCH HÀNG (PUT)
+// ==========================================
+export async function PUT(req: Request) {
+  try {
+    const url = new URL(req.url);
+    const id = url.searchParams.get("id");
+    const body = await req.json();
+
+    if (!id) return NextResponse.json({ message: "Thiếu ID khách hàng" }, { status: 400 });
+
+    await connectDB();
+    const updatedUser = await User.findByIdAndUpdate(id, body, { new: true });
+    
+    return NextResponse.json(updatedUser, { status: 200 });
+  } catch (error) {
+    return NextResponse.json({ message: "Lỗi cập nhật khách hàng" }, { status: 500 });
+  }
+}
+
+// ==========================================
+// BỔ SUNG: HÀM XÓA KHÁCH HÀNG (DELETE)
+// ==========================================
+export async function DELETE(req: Request) {
+  try {
+    const url = new URL(req.url);
+    const id = url.searchParams.get("id");
+
+    if (!id) return NextResponse.json({ message: "Thiếu ID khách hàng" }, { status: 400 });
+
+    await connectDB();
+    await User.findByIdAndDelete(id);
+    
+    return NextResponse.json({ message: "Đã xóa khách hàng" }, { status: 200 });
+  } catch (error) {
+    return NextResponse.json({ message: "Lỗi xóa khách hàng" }, { status: 500 });
+  }
+}
