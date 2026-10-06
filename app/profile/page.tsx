@@ -26,6 +26,11 @@ export default function ProfilePage() {
       const parsedUser = JSON.parse(loggedInUser);
       setUser(parsedUser);
       
+      // ĐÃ SỬA: Lấy ảnh avatar từ localStorage nếu có để hiển thị ngay
+      if (parsedUser.avatar || parsedUser.image) {
+        setAvatar(parsedUser.avatar || parsedUser.image);
+      }
+      
       setProfileForm({ 
         username: parsedUser.username || '', 
         phone: parsedUser.phone || '', 
@@ -37,7 +42,6 @@ export default function ProfilePage() {
         fetchSupports(parsedUser.username, parsedUser.phone);
       }
 
-      // LẤY DỮ LIỆU FAVORITE
       const savedFavs = localStorage.getItem('camera_bn_favs');
       if(savedFavs) {
         setFavorites(JSON.parse(savedFavs));
@@ -72,7 +76,7 @@ export default function ProfilePage() {
 
            return {
              _id: o._id,
-             id: String(o._id || o.id).slice(-6).toUpperCase(), // ĐỒNG BỘ HIỂN THỊ ID
+             id: String(o._id || o.id).slice(-6).toUpperCase(), 
              date: o.createdAt ? new Date(o.createdAt).toLocaleDateString('vi-VN') : 'Hôm nay',
              total: Number(o.total_money).toLocaleString('vi-VN') + ' đ',
              status: o.status || 'Chờ xử lý',
@@ -106,19 +110,49 @@ export default function ProfilePage() {
     window.location.href = '/'; 
   };
 
+  // =========================================================================
+  // ĐÃ SỬA: Hàm này giờ sẽ Ép ảnh thành Base64 và Lưu thẳng lên MongoDB
+  // =========================================================================
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) setAvatar(URL.createObjectURL(file));
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64String = reader.result as string;
+        setAvatar(base64String); // Cập nhật hình ảnh lên màn hình
+        
+        // Cập nhật vào DB ngay lập tức
+        if (user && (user._id || user.id)) {
+          try {
+            const res = await fetch(`/api/users?id=${user._id || user.id}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ avatar: base64String, image: base64String }) // Cập nhật cột avatar
+            });
+            
+            if (res.ok) {
+              // Cập nhật lại bộ nhớ trình duyệt để F5 không bị mất
+              const updatedUser = { ...user, avatar: base64String, image: base64String };
+              localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+              setUser(updatedUser);
+              alert("Đã cập nhật ảnh đại diện!");
+            }
+          } catch (err) {
+            console.error("Lỗi khi lưu avatar:", err);
+          }
+        }
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleCancelOrder = async (orderId: string) => {
     if(!window.confirm("Bạn có chắc chắn muốn hủy đơn hàng này?")) return;
     try {
-      // ĐÃ SỬA: Đảm bảo gọi API với đúng biến orderId của MongoDB
       const res = await fetch(`/api/orders?id=${orderId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'Đã hủy' }) // Sửa theo format của trang Admin
+        body: JSON.stringify({ status: 'Đã hủy' }) 
       });
       if (res.ok) {
         setOrders(orders.map(o => o._id === orderId ? { ...o, status: 'Đã hủy' } : o));
@@ -133,7 +167,6 @@ export default function ProfilePage() {
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // Gọi API cập nhật User trên MongoDB
       const res = await fetch(`/api/users?id=${user._id || user.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -157,7 +190,6 @@ export default function ProfilePage() {
     e.preventDefault();
     if(passForm.new !== passForm.confirm) return alert("Mật khẩu nhập lại không khớp!");
     if(passForm.new.length < 6) return alert("Mật khẩu phải dài hơn 6 ký tự!");
-    // (Bạn có thể thêm API đổi mật khẩu tương tự như UpdateProfile ở trên nếu cần)
     alert("Đổi mật khẩu thành công!");
     setPassForm({ old: '', new: '', confirm: '' });
   };
@@ -273,6 +305,7 @@ export default function ProfilePage() {
               .profile-main { width: 100% !important; padding: 20px !important; min-height: auto !important; }
               .invoice-table { display: block; overflow-x: auto; white-space: nowrap; }
               .settings-container { flex-direction: column !important; gap: 20px !important; }
+              .fav-card { width: 100% !important; }
               #chat-box-container { min-height: 400px !important; max-height: 60vh !important; }
             }
           `}</style>
@@ -329,7 +362,7 @@ export default function ProfilePage() {
                   <Link href="/" style={{ color: '#3b82f6', fontWeight: 'bold', textDecoration: 'underline', marginTop: '10px', display: 'inline-block' }}>Khám phá ngay</Link>
                 </div>
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px' }}>
                   {favorites.map((fav) => (
                     <div key={fav._id || fav.id} className="fav-card">
                       <button onClick={() => removeFavorite(fav._id || fav.id)} style={{ position: 'absolute', top: '10px', right: '10px', background: 'white', border: '1px solid #e2e8f0', color: '#ef4444', width: '30px', height: '30px', borderRadius: '50%', cursor: 'pointer', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
