@@ -53,12 +53,8 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [cartItems, isLoaded, user]);
 
-  // ========================================================
-  // ĐÃ SỬA: Hàm thêm vào giỏ hàng chuẩn 100% không bị trùng
-  // ========================================================
   const addToCart = (product: any, qty: number = 1) => {
     setCartItems(prev => {
-      // Ép kiểu ID về chuỗi để so sánh cho chính xác (hỗ trợ cả id ảo và _id thật từ MongoDB)
       const productId = product._id ? String(product._id) : String(product.id);
 
       const existingItemIndex = prev.findIndex(item => {
@@ -76,9 +72,6 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     });
   };
 
-  // ========================================================
-  // ĐÃ SỬA: Hàm xóa sản phẩm
-  // ========================================================
   const removeFromCart = (id: string) => {
     setCartItems(cartItems.filter(item => {
       const itemId = item._id ? String(item._id) : String(item.id);
@@ -86,9 +79,6 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     }));
   };
 
-  // ========================================================
-  // ĐÃ SỬA: Hàm tăng giảm số lượng
-  // ========================================================
   const updateQty = (id: string, qty: number) => {
     setCartItems(cartItems.map(item => {
       const itemId = item._id ? String(item._id) : String(item.id);
@@ -96,14 +86,18 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     }));
   };
 
-  // ========================================================
-  // ĐÃ SỬA: Hàm tick/bỏ tick sản phẩm
-  // ========================================================
   const toggleCheck = (id: string) => {
     setCartItems(cartItems.map(item => {
       const itemId = item._id ? String(item._id) : String(item.id);
       return itemId === String(id) ? { ...item, checked: !item.checked } : item;
     }));
+  };
+
+  // ========================================================
+  // BỔ SUNG: Hàm Chọn/Bỏ chọn TẤT CẢ (Để làm ô tick tổng)
+  // ========================================================
+  const toggleAllCheck = (status: boolean) => {
+    setCartItems(cartItems.map(item => ({ ...item, checked: status })));
   };
 
   const clearCart = () => {
@@ -113,7 +107,8 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   const totalItems = cartItems.reduce((sum, item) => sum + item.cartQty, 0);
 
   return (
-    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, updateQty, toggleCheck, totalItems, clearCart }}>
+    // Đã xuất hàm toggleAllCheck ra ngoài để trang Giỏ hàng có thể xài được
+    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, updateQty, toggleCheck, toggleAllCheck, totalItems, clearCart }}>
       {children}
     </CartContext.Provider>
   );

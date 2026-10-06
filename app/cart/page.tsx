@@ -6,10 +6,13 @@ import { useState, useEffect } from 'react';
 import NotifBadge from '@/app/components/NotifBadge';
 
 export default function CartPage() {
-  const { cartItems, removeFromCart, updateQty, toggleCheck, totalItems, clearCart } = useCart();
+  // Lấy thêm toggleAllCheck từ Context
+  const { cartItems, removeFromCart, updateQty, toggleCheck, toggleAllCheck, totalItems, clearCart } = useCart();
   const totalAmount = cartItems.reduce((sum: number, item: any) => sum + (item.checked ? Number(item.price) * item.cartQty : 0), 0);
 
   const hasCheckedItems = cartItems.some((item: any) => item.checked);
+  // Kiểm tra xem tất cả các món trong giỏ đã được tick hết chưa
+  const isAllChecked = cartItems.length > 0 && cartItems.every((item: any) => item.checked);
 
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -95,7 +98,6 @@ export default function CartPage() {
     const paymentText = paymentMethod === 'cod' ? '(COD - Thanh toán khi nhận hàng)' : '(Đã thanh toán Chuyển khoản QR)';
     const fullAddress = `${addressDetail}, ${wardName}, ${distName}, ${provName} ${paymentText}`;
 
-    // Tách riêng danh sách hàng khách chọn mua
     const purchasedItems = cartItems.filter((i: any) => i.checked);
 
     const newOrder = {
@@ -110,7 +112,6 @@ export default function CartPage() {
     };
     
     try {
-      // 1. LƯU ĐƠN HÀNG VÀO DATABASE
       const res = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -118,19 +119,14 @@ export default function CartPage() {
       });
 
       if (res.ok) {
-        
-        // 2. TỰ ĐỘNG TRỪ TỒN KHO TRONG MONGODB NGAY SAU KHI ĐẶT HÀNG
-        // Duyệt qua từng sản phẩm khách mua và gọi API để trừ số lượng
         for (const item of purchasedItems) {
-          // Tính số lượng còn lại
           const remainingQty = Number(item.quantity || item.maxQty) - Number(item.cartQty);
-          
           await fetch(`/api/products?id=${item._id || item.id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
               quantity: remainingQty > 0 ? remainingQty : 0, 
-              sold: (Number(item.sold) || 0) + Number(item.cartQty) // Cập nhật luôn số lượng đã bán
+              sold: (Number(item.sold) || 0) + Number(item.cartQty) 
             })
           });
         }
@@ -205,7 +201,19 @@ export default function CartPage() {
         ) : (
           <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
 
-            <div style={{ flex: hasCheckedItems ? '1 1 60%' : '1 1 100%', width: '100%', background: 'white', borderRadius: '12px', padding: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0', transition: 'all 0.3s ease' }}>
+            <div style={{ flex: hasCheckedItems ? '1 1 60%' : '1 1 100%', width: '100%', background: 'white', borderRadius: '12px', padding: '0 15px 15px 15px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0', transition: 'all 0.3s ease' }}>
+              
+              {/* THANH CHỌN TẤT CẢ (VỪA THÊM VÀO) */}
+              <div style={{ display: 'flex', alignItems: 'center', padding: '15px 0', borderBottom: '2px solid #e2e8f0', gap: '12px', marginBottom: '5px' }}>
+                <input 
+                  type="checkbox" 
+                  checked={isAllChecked} 
+                  onChange={(e) => toggleAllCheck(e.target.checked)} 
+                  style={{ cursor: 'pointer', width: '18px', height: '18px', accentColor: '#e11d48' }} 
+                />
+                <span style={{ fontWeight: '700', color: '#1e293b', fontSize: '15px' }}>Chọn tất cả ({cartItems.length} sản phẩm)</span>
+              </div>
+
               {cartItems.map((item: any) => (
                 <div key={item._id || item.id} style={{ display: 'flex', alignItems: 'stretch', padding: '15px 0', borderBottom: '1px solid #f1f5f9', gap: '12px' }}>
                   
