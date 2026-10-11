@@ -15,6 +15,15 @@ export default function AdminDashboard() {
   const [projects, setProjects] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // STATE LƯU CẤU HÌNH HỆ THỐNG
+  const [systemSettings, setSystemSettings] = useState({
+    saleDays: '1, 15',
+    saleDiscount: 5,
+    feeHCM: 30000,
+    feeSouth: 50000,
+    feeOther: 80000
+  });
+
   const [isEditing, setIsEditing] = useState(false);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
 
@@ -78,14 +87,16 @@ export default function AdminDashboard() {
     setIsLoading(true);
     try {
       const timestamp = new Date().getTime();
-      const [prodRes, catRes, ordRes, usrRes, revRes, supRes, projRes] = await Promise.all([
+      // GỌI THÊM API SETTINGS ĐỂ LẤY CẤU HÌNH HỆ THỐNG
+      const [prodRes, catRes, ordRes, usrRes, revRes, supRes, projRes, setRes] = await Promise.all([
         fetch(`/api/products?t=${timestamp}`), 
         fetch(`/api/categories?t=${timestamp}`), 
         fetch(`/api/orders?t=${timestamp}`), 
         fetch(`/api/users?t=${timestamp}`), 
         fetch(`/api/reviews?t=${timestamp}`).catch(() => ({ ok: false, json: () => [] })), 
         fetch(`/api/supports?t=${timestamp}`).catch(() => ({ ok: false, json: () => [] })),
-        fetch(`/api/projects?t=${timestamp}`).catch(() => ({ ok: false, json: () => [] })) 
+        fetch(`/api/projects?t=${timestamp}`).catch(() => ({ ok: false, json: () => [] })),
+        fetch(`/api/settings?t=${timestamp}`).catch(() => ({ ok: false, json: () => null }))
       ]);
       
       if(prodRes.ok) setProducts(await prodRes.json());
@@ -95,10 +106,35 @@ export default function AdminDashboard() {
       if(revRes.ok) setReviews(await revRes.json());
       if(supRes.ok) setSupports(await supRes.json());
       if(projRes.ok) setProjects(await projRes.json());
+      if(setRes.ok) {
+        const sData = await setRes.json();
+        if (sData && Object.keys(sData).length > 0) {
+          setSystemSettings(sData);
+        }
+      }
     } catch (error) {
       console.log("Lỗi tải dữ liệu");
     }
     setIsLoading(false);
+  };
+
+  // HÀM LƯU CÀI ĐẶT
+  const handleSaveSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(systemSettings)
+      });
+      if (res.ok) {
+        alert("🎉 Cập nhật cài đặt hệ thống thành công!");
+      } else {
+        alert("Có lỗi xảy ra khi lưu cấu hình.");
+      }
+    } catch (err) {
+      alert("Lỗi kết nối đến máy chủ!");
+    }
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -530,6 +566,8 @@ export default function AdminDashboard() {
             <li className={activeTab === 'reviews' ? 'active' : ''} onClick={() => setActiveTab('reviews')}><i className="fas fa-star"></i> Đánh giá</li>
             <li className={activeTab === 'customers' ? 'active' : ''} onClick={() => setActiveTab('customers')}><i className="fas fa-users"></i> Khách hàng</li>
             <li className={activeTab === 'support' ? 'active' : ''} onClick={() => { setActiveTab('support'); setShowMobileChat(false); }}><i className="fas fa-headset"></i> Hỗ trợ</li>
+            {/* THÊM NÚT CÀI ĐẶT */}
+            <li className={activeTab === 'settings' ? 'active' : ''} onClick={() => setActiveTab('settings')}><i className="fas fa-cog"></i> Cài đặt hệ thống</li>
           </ul>
           
           <Link href="/" className="admin-home-link">
@@ -969,6 +1007,69 @@ export default function AdminDashboard() {
                       )}
                     </div>
                   </div>
+                </div>
+              )}
+
+              {/* TAB CÀI ĐẶT HỆ THỐNG */}
+              {activeTab === 'settings' && (
+                <div className="admin-card">
+                  <h2 style={{ margin: '0 0 20px 0', color: '#1e293b' }}>⚙️ CÀI ĐẶT HỆ THỐNG MUA BÁN</h2>
+                  <form onSubmit={handleSaveSettings} style={{ maxWidth: '600px', background: '#f8fafc', padding: '25px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                    
+                    <h3 style={{ fontSize: '15px', color: '#0ea5e9', marginBottom: '15px', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px' }}>
+                      <i className="fas fa-tags"></i> Cấu hình Chương trình Giảm giá
+                    </h3>
+                    
+                    <div style={{ marginBottom: '15px' }}>
+                      <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 'bold', color: '#475569' }}>
+                        Ngày diễn ra Sale hàng tháng (Cách nhau bằng dấu phẩy)
+                      </label>
+                      <input 
+                        type="text" 
+                        className="modal-input" 
+                        value={systemSettings.saleDays}
+                        onChange={e => setSystemSettings({...systemSettings, saleDays: e.target.value})}
+                        placeholder="VD: 1, 15"
+                      />
+                      <small style={{ color: '#94a3b8', fontSize: '12px' }}>* Khách hàng sẽ được áp dụng sale vào đúng những ngày này của mỗi tháng.</small>
+                    </div>
+
+                    <div style={{ marginBottom: '25px' }}>
+                      <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 'bold', color: '#475569' }}>
+                        Mức giảm giá (%)
+                      </label>
+                      <input 
+                        type="number" 
+                        className="modal-input" 
+                        value={systemSettings.saleDiscount}
+                        onChange={e => setSystemSettings({...systemSettings, saleDiscount: Number(e.target.value)})}
+                      />
+                    </div>
+
+                    <h3 style={{ fontSize: '15px', color: '#0ea5e9', marginBottom: '15px', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px' }}>
+                      <i className="fas fa-truck"></i> Cấu hình Phí Giao hàng
+                    </h3>
+
+                    <div style={{ display: 'flex', gap: '15px', marginBottom: '15px' }}>
+                      <div style={{ flex: 1 }}>
+                        <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 'bold', color: '#475569' }}>Nội thành HCM (đ)</label>
+                        <input type="number" className="modal-input" value={systemSettings.feeHCM} onChange={e => setSystemSettings({...systemSettings, feeHCM: Number(e.target.value)})} />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 'bold', color: '#475569' }}>Khu vực Miền Nam (đ)</label>
+                        <input type="number" className="modal-input" value={systemSettings.feeSouth} onChange={e => setSystemSettings({...systemSettings, feeSouth: Number(e.target.value)})} />
+                      </div>
+                    </div>
+
+                    <div style={{ marginBottom: '25px' }}>
+                      <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 'bold', color: '#475569' }}>Khu vực Miền Trung & Miền Bắc (đ)</label>
+                      <input type="number" className="modal-input" value={systemSettings.feeOther} onChange={e => setSystemSettings({...systemSettings, feeOther: Number(e.target.value)})} />
+                    </div>
+
+                    <button type="submit" style={{ width: '100%', padding: '12px', border: 'none', background: '#10b981', color: 'white', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                      <i className="fas fa-save"></i> LƯU CẤU HÌNH HỆ THỐNG
+                    </button>
+                  </form>
                 </div>
               )}
             </>
