@@ -66,8 +66,8 @@ export default function Home() {
     setShowSalePopup(false);
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('camera_bn_cart'); 
+const handleLogout = () => {
+    // Không xóa giỏ hàng nữa để lưu lịch sử mua sắm của khách
     localStorage.removeItem('currentUser'); 
     window.location.href = '/'; 
   };
