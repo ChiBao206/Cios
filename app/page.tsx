@@ -28,21 +28,18 @@ export default function Home() {
       setUser(JSON.parse(loggedInUser));
     }
 
-    // KIỂM TRA NGÀY VÀNG (MÙNG 1 VÀ 15) ĐỂ HIỆN POPUP VÀ GIẢM GIÁ
+    // KIỂM TRA NGÀY VÀNG
     const today = new Date();
     const currentDay = today.getDate();
-    // Bạn có thể sửa lại số 11 để test hôm nay, sau khi test xong nhớ đổi lại thành 15 nhé!
+    // Đang test ngày 11, test xong bạn đổi số 11 thành 15 nhé
     const saleCondition = currentDay === 1 || currentDay === 11; 
     
     setIsSaleDay(saleCondition);
     setSaleDayText(currentDay.toString());
     
-    // Nếu là ngày Sale và khách chưa tắt cái Popup này trong ngày hôm nay thì hiện
+    // ĐÃ SỬA: Cứ đúng ngày Sale là hiện Popup (Không dùng sessionStorage chặn nữa)
     if (saleCondition) {
-      const isPopupClosed = sessionStorage.getItem(`closed_sale_popup_${today.toLocaleDateString()}`);
-      if (!isPopupClosed) {
-        setShowSalePopup(true);
-      }
+      setShowSalePopup(true);
     }
 
     const fetchRealData = async () => {
@@ -65,10 +62,8 @@ export default function Home() {
   }, []);
 
   const handleClosePopup = () => {
+    // ĐÃ SỬA: Chỉ đơn giản là đóng popup trên màn hình, không lưu nhớ gì cả
     setShowSalePopup(false);
-    // Lưu trạng thái đã tắt popup trong phiên (session) hiện tại
-    const today = new Date().toLocaleDateString();
-    sessionStorage.setItem(`closed_sale_popup_${today}`, "true");
   };
 
   const handleLogout = () => {
