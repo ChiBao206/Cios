@@ -6,12 +6,12 @@ import { useState, useEffect } from 'react';
 import NotifBadge from '@/app/components/NotifBadge';
 
 export default function CartPage() {
-  // Lấy thêm toggleAllCheck từ Context
   const { cartItems, removeFromCart, updateQty, toggleCheck, toggleAllCheck, totalItems, clearCart } = useCart();
+  
+  // 1. TIỀN HÀNG (TẠM TÍNH)
   const totalAmount = cartItems.reduce((sum: number, item: any) => sum + (item.checked ? Number(item.price) * item.cartQty : 0), 0);
 
   const hasCheckedItems = cartItems.some((item: any) => item.checked);
-  // Kiểm tra xem tất cả các món trong giỏ đã được tick hết chưa
   const isAllChecked = cartItems.length > 0 && cartItems.every((item: any) => item.checked);
 
   const [name, setName] = useState('');
@@ -28,6 +28,32 @@ export default function CartPage() {
   const [selectedProvince, setSelectedProvince] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState('');
   const [selectedWard, setSelectedWard] = useState('');
+
+  // ==========================================
+  // LOGIC TÍNH PHÍ SHIP VÀ SALE
+  // ==========================================
+  const todayDate = new Date().getDate();
+  const isSaleDay = todayDate === 1 || todayDate === 15;
+  const discountAmount = isSaleDay ? totalAmount * 0.05 : 0; // Giảm 5%
+
+  let shippingFee = 0;
+  if (selectedProvince) {
+    const provCode = String(selectedProvince);
+    // Danh sách mã các tỉnh miền Nam (từ Bình Phước, Tây Ninh, ĐN, BD xuống Cà Mau - ngoại trừ HCM)
+    const southCodes = ['70', '72', '74', '75', '77', '80', '82', '83', '84', '86', '87', '89', '91', '92', '93', '94', '95', '96'];
+    
+    if (provCode === '79') {
+      shippingFee = 30000; // Nội thành HCM
+    } else if (southCodes.includes(provCode)) {
+      shippingFee = 50000; // Ngoại thành (Miền Nam)
+    } else {
+      shippingFee = 80000; // Miền Trung và Miền Bắc
+    }
+  }
+
+  // TỔNG CỘNG CUỐI CÙNG
+  const finalTotal = totalAmount - discountAmount + shippingFee;
+  // ==========================================
 
   useEffect(() => {
     const loggedInUser = localStorage.getItem('currentUser');
@@ -103,7 +129,11 @@ export default function CartPage() {
     const newOrder = {
       user_id: user ? (user._id || user.id) : 2, 
       email: user ? user.email : '',
-      total_money: totalAmount,
+      // GỬI LÊN API CÁC THÔNG SỐ TIỀN BẠC MỚI
+      total_money: finalTotal,      // Tổng tiền cuối cùng khách phải trả
+      subtotal: totalAmount,        // Tiền hàng gốc
+      shipping_fee: shippingFee,    // Tiền ship
+      discount: discountAmount,     // Tiền được giảm
       status: "Chờ xử lý", 
       customer_name: name,
       customer_phone: phone,
@@ -203,7 +233,6 @@ export default function CartPage() {
 
             <div style={{ flex: hasCheckedItems ? '1 1 60%' : '1 1 100%', width: '100%', background: 'white', borderRadius: '12px', padding: '0 15px 15px 15px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0', transition: 'all 0.3s ease' }}>
               
-              {/* THANH CHỌN TẤT CẢ (VỪA THÊM VÀO) */}
               <div style={{ display: 'flex', alignItems: 'center', padding: '15px 0', borderBottom: '2px solid #e2e8f0', gap: '12px', marginBottom: '5px' }}>
                 <input 
                   type="checkbox" 
@@ -320,13 +349,32 @@ export default function CartPage() {
                     )}
                   </div>
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: '#475569', marginBottom: '10px' }}>
-                    <span>Tạm tính:</span>
-                    <span style={{ fontWeight: '600' }}>{totalAmount.toLocaleString('vi-VN')} đ</span>
+                  <div style={{ background: '#f1f5f9', padding: '15px', borderRadius: '8px', marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: '#475569', marginBottom: '10px' }}>
+                      <span>Tạm tính ({cartItems.filter((i:any)=>i.checked).length} SP):</span>
+                      <span style={{ fontWeight: '600' }}>{totalAmount.toLocaleString('vi-VN')} đ</span>
+                    </div>
+
+                    {/* HIỂN THỊ DÒNG SALE NẾU LÀ NGÀY 1 HOẶC 15 */}
+                    {isSaleDay && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: '#10b981', marginBottom: '10px' }}>
+                        <span>Giảm giá ngày vàng (5%):</span>
+                        <span style={{ fontWeight: '600' }}>- {discountAmount.toLocaleString('vi-VN')} đ</span>
+                      </div>
+                    )}
+
+                    {/* HIỂN THỊ TIỀN SHIP */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: '#475569', marginBottom: '10px' }}>
+                      <span>Phí vận chuyển:</span>
+                      <span style={{ fontWeight: '600' }}>
+                        {selectedProvince ? `${shippingFee.toLocaleString('vi-VN')} đ` : 'Chưa xác định'}
+                      </span>
+                    </div>
                   </div>
+
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', paddingTop: '15px', borderTop: '1px dashed #cbd5e1' }}>
                     <span style={{ fontSize: '16px', fontWeight: '800', color: '#1e293b' }}>Tổng cộng:</span>
-                    <span style={{ fontSize: '24px', fontWeight: '800', color: '#e11d48' }}>{totalAmount.toLocaleString('vi-VN')} đ</span>
+                    <span style={{ fontSize: '24px', fontWeight: '800', color: '#e11d48' }}>{finalTotal.toLocaleString('vi-VN')} đ</span>
                   </div>
                   <button onClick={handleCheckout} disabled={isSubmitting} style={{ width: '100%', padding: '15px', background: isSubmitting ? '#f43f5e' : '#e11d48', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '800', fontSize: '15px', cursor: isSubmitting ? 'not-allowed' : 'pointer', transition: '0.3s' }}>
                     {isSubmitting ? 'ĐANG XỬ LÝ...' : 'XÁC NHẬN ĐẶT HÀNG'}

@@ -1,15 +1,15 @@
 import { NextResponse } from 'next/server';
 import connectDB from '../../../lib/mongodb';
 import Order from '../../../models/Order';
-import User from '../../../models/User'; // Import thêm User để tìm email khách hàng
-import { sendEmail } from '../../../lib/sendEmail'; // Import cỗ máy gửi mail
+import User from '../../../models/User'; 
+import { sendEmail } from '../../../lib/sendEmail'; 
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
     await connectDB();
-    const data = await Order.find({}).sort({ createdAt: -1 }); // Lấy đơn mới nhất lên đầu
+    const data = await Order.find({}).sort({ createdAt: -1 }); 
     return NextResponse.json(data);
   } catch (error) {
     return NextResponse.json({ message: "Lỗi kết nối DB" }, { status: 500 });
@@ -21,23 +21,20 @@ export async function POST(req: Request) {
     await connectDB();
     const body = await req.json();
     
-    console.log("👉 DỮ LIỆU ĐANG GỬI LÊN MONGODB:", body); // In ra terminal để theo dõi
+    console.log("👉 DỮ LIỆU ĐANG GỬI LÊN MONGODB:", body); 
     
-    // Ép kiểu chắc chắn user_id là chuỗi (đề phòng lỗi vặt)
     if (body.user_id) {
       body.user_id = String(body.user_id);
     }
 
-    // 1. Lưu đơn hàng vào MongoDB trước cho nhanh
     const newData = await Order.create(body);
 
     // ==========================================
-    // 2. KÍCH HOẠT GỬI HÓA ĐƠN EMAIL (CHẠY NGẦM)
+    // KÍCH HOẠT GỬI HÓA ĐƠN EMAIL BẢN NÂNG CẤP CHI TIẾT
     // ==========================================
     try {
       let customerEmail = body.email; 
       
-      // Nếu frontend không truyền email lên, tự động tìm trong Database dựa vào user_id hoặc tên
       if (!customerEmail && body.user_id && body.user_id !== '2') {
         const user = await User.findOne({ 
           $or: [{ _id: body.user_id }, { id: body.user_id }, { username: body.customer_name }] 
@@ -45,9 +42,7 @@ export async function POST(req: Request) {
         if (user && user.email) customerEmail = user.email;
       }
 
-      // Nếu tìm thấy email thì tiến hành lên bill gửi cho khách
       if (customerEmail) {
-        // Tạo bảng danh sách sản phẩm
         const itemsHtml = body.items.map((item: any) => `
           <tr>
             <td style="padding: 12px 10px; border-bottom: 1px solid #e2e8f0; color: #334155; font-weight: 600;">${item.name}</td>
@@ -56,7 +51,9 @@ export async function POST(req: Request) {
           </tr>
         `).join('');
 
-        const subject = `🎉 Xác nhận Đơn hàng #${String(newData._id || newData.id).slice(-4)} - CIOs - impossible is nothing`;
+        const subject = `🎉 Xác nhận Đơn hàng #${String(newData._id || newData.id).slice(-4)} | CIOs - impossible is nothing`;
+        
+        // ĐÃ NÂNG CẤP: Hiển thị chi tiết Tạm tính, Phí ship, Giảm giá
         const html = `
           <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 650px; margin: 0 auto; padding: 25px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #f8fafc;">
             <div style="text-align: center; padding-bottom: 20px; border-bottom: 2px dashed #cbd5e1;">
@@ -89,8 +86,21 @@ export async function POST(req: Request) {
               </tbody>
               <tfoot>
                 <tr>
-                  <td colspan="2" style="padding: 15px 10px; text-align: right; font-weight: bold; font-size: 15px; color: #1e293b; border-top: 2px solid #e2e8f0;">TỔNG CỘNG:</td>
-                  <td style="padding: 15px 10px; text-align: right; font-weight: 900; font-size: 18px; color: #e11d48; border-top: 2px solid #e2e8f0;">${Number(body.total_money).toLocaleString('vi-VN')} đ</td>
+                  <td colspan="2" style="padding: 15px 10px 10px 10px; text-align: right; font-weight: bold; font-size: 13px; color: #475569; border-top: 2px solid #e2e8f0;">TẠM TÍNH:</td>
+                  <td style="padding: 15px 10px 10px 10px; text-align: right; font-weight: bold; font-size: 14px; color: #1e293b; border-top: 2px solid #e2e8f0;">${Number(body.subtotal || 0).toLocaleString('vi-VN')} đ</td>
+                </tr>
+                ${body.discount > 0 ? `
+                <tr>
+                  <td colspan="2" style="padding: 5px 10px; text-align: right; font-weight: bold; font-size: 13px; color: #10b981;">GIẢM GIÁ (5%):</td>
+                  <td style="padding: 5px 10px; text-align: right; font-weight: bold; font-size: 14px; color: #10b981;">- ${Number(body.discount).toLocaleString('vi-VN')} đ</td>
+                </tr>` : ''}
+                <tr>
+                  <td colspan="2" style="padding: 5px 10px 15px 10px; text-align: right; font-weight: bold; font-size: 13px; color: #475569;">PHÍ VẬN CHUYỂN:</td>
+                  <td style="padding: 5px 10px 15px 10px; text-align: right; font-weight: bold; font-size: 14px; color: #1e293b;">${Number(body.shipping_fee || 0).toLocaleString('vi-VN')} đ</td>
+                </tr>
+                <tr>
+                  <td colspan="2" style="padding: 15px 10px; text-align: right; font-weight: 900; font-size: 15px; color: #1e293b; border-top: 1px dashed #cbd5e1;">TỔNG THANH TOÁN:</td>
+                  <td style="padding: 15px 10px; text-align: right; font-weight: 900; font-size: 18px; color: #e11d48; border-top: 1px dashed #cbd5e1;">${Number(body.total_money).toLocaleString('vi-VN')} đ</td>
                 </tr>
               </tfoot>
             </table>
@@ -102,33 +112,24 @@ export async function POST(req: Request) {
           </div>
         `;
         
-        // Gửi ngầm không cần await để khách hàng không phải chờ tải trang lâu
         sendEmail(customerEmail, subject, html).catch(err => console.log("Lỗi gửi mail đơn hàng ngầm:", err));
       }
     } catch (mailError) {
       console.error("Lỗi hệ thống chuẩn bị mail:", mailError);
     }
-    // ==========================================
 
     return NextResponse.json(newData, { status: 201 });
     
   } catch (error: any) {
-    // Nếu có lỗi, nó sẽ in đỏ chót nguyên nhân chính xác ra terminal VS Code
     console.error("❌ LỖI LƯU ĐƠN HÀNG MONGODB:", error.message); 
     return NextResponse.json({ message: error.message }, { status: 500 });
   }
 }
 
-// ======================================================================
-// SỬA LẠI HÀM PUT (CẬP NHẬT TRẠNG THÁI) CHO KHỚP VỚI GIAO DIỆN
-// ======================================================================
 export async function PUT(req: Request) {
   try {
-    // 1. Lấy ID đơn hàng từ trên URL (giống như cách làm của Sản phẩm/Danh mục)
     const url = new URL(req.url);
     const id = url.searchParams.get("id");
-    
-    // 2. Lấy trạng thái mới từ giao diện gửi lên
     const body = await req.json(); 
 
     if (!id) {
@@ -136,8 +137,6 @@ export async function PUT(req: Request) {
     }
 
     await connectDB();
-    
-    // 3. Tìm đơn hàng theo ID và cập nhật đúng cái biến status
     const updatedOrder = await Order.findByIdAndUpdate(
       id, 
       { status: body.status }, 
@@ -151,9 +150,6 @@ export async function PUT(req: Request) {
   }
 }
 
-// ======================================================================
-// THÊM HÀM DELETE VÀO ĐÂY ĐỂ XỬ LÝ LỆNH XÓA ĐƠN HÀNG VĨNH VIỄN
-// ======================================================================
 export async function DELETE(req: Request) {
   try {
     const url = new URL(req.url);
@@ -164,8 +160,6 @@ export async function DELETE(req: Request) {
     }
 
     await connectDB();
-    
-    // Xóa đơn hàng dựa theo ID
     await Order.findByIdAndDelete(id);
 
     return NextResponse.json({ message: "Đã xóa đơn hàng thành công" }, { status: 200 });
