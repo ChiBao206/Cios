@@ -294,7 +294,7 @@ export default function CartPage() {
             {hasCheckedItems && (
               <div style={{ flex: '1 1 35%', minWidth: '300px', width: '100%', transition: 'all 0.3s ease' }}>
                 <div style={{ background: 'white', borderRadius: '12px', padding: '25px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0' }}>
-                  <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#1e293b', textTransform: 'uppercase', marginBottom: '20px' }}>Thôngীকার giao hàng</h3>
+                  <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#1e293b', textTransform: 'uppercase', marginBottom: '20px' }}>Thông tin giao hàng</h3>
 
                   <div style={{ marginBottom: '15px' }}>
                     <label style={{ display: 'block', fontSize: '13px', color: '#475569', marginBottom: '8px' }}>Họ tên</label>
