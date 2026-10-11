@@ -20,6 +20,9 @@ export default function CartPage() {
   const [isSubmitting, setIsSubmitting] = useState(false); 
   const [paymentMethod, setPaymentMethod] = useState('cod'); 
   const [user, setUser] = useState<any>(null);
+  
+  // TRẠNG THÁI KIỂM TRA QUYỀN ĐĂNG NHẬP
+  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
 
   const [provinces, setProvinces] = useState<any[]>([]);
   const [districts, setDistricts] = useState<any[]>([]);
@@ -39,7 +42,6 @@ export default function CartPage() {
   let shippingFee = 0;
   if (selectedProvince) {
     const provCode = String(selectedProvince);
-    // Danh sách mã các tỉnh miền Nam (từ Bình Phước, Tây Ninh, ĐN, BD xuống Cà Mau - ngoại trừ HCM)
     const southCodes = ['70', '72', '74', '75', '77', '80', '82', '83', '84', '86', '87', '89', '91', '92', '93', '94', '95', '96'];
     
     if (provCode === '79') {
@@ -51,18 +53,24 @@ export default function CartPage() {
     }
   }
 
-  // TỔNG CỘNG CUỐI CÙNG
   const finalTotal = totalAmount - discountAmount + shippingFee;
   // ==========================================
 
   useEffect(() => {
     const loggedInUser = localStorage.getItem('currentUser');
-    if (loggedInUser) {
-      const parsedUser = JSON.parse(loggedInUser);
-      setUser(parsedUser);
-      setName(parsedUser.username || '');
-      setPhone(parsedUser.phone || '');
+    
+    // BẢO VỆ NHIỀU LỚP: Chưa đăng nhập là đuổi cổ về /login
+    if (!loggedInUser) {
+      alert("Vui lòng đăng nhập tài khoản để vào giỏ hàng!");
+      window.location.href = '/login';
+      return;
     }
+
+    const parsedUser = JSON.parse(loggedInUser);
+    setUser(parsedUser);
+    setName(parsedUser.username || '');
+    setPhone(parsedUser.phone || '');
+    setIsLoadingAuth(false); // Đã kiểm tra thẻ sinh viên xong, cho vào!
 
     fetch('https://provinces.open-api.vn/api/?depth=1')
       .then(res => res.json())
@@ -71,8 +79,7 @@ export default function CartPage() {
   }, []);
 
   const handleLogout = () => {
-    clearCart();
-    localStorage.removeItem('camera_bn_cart'); 
+    clearCart(); // Xóa sạch giỏ hàng khỏi màn hình hiện tại
     localStorage.removeItem('currentUser'); 
     window.location.href = '/'; 
   };
@@ -129,11 +136,10 @@ export default function CartPage() {
     const newOrder = {
       user_id: user ? (user._id || user.id) : 2, 
       email: user ? user.email : '',
-      // GỬI LÊN API CÁC THÔNG SỐ TIỀN BẠC MỚI
-      total_money: finalTotal,      // Tổng tiền cuối cùng khách phải trả
-      subtotal: totalAmount,        // Tiền hàng gốc
-      shipping_fee: shippingFee,    // Tiền ship
-      discount: discountAmount,     // Tiền được giảm
+      total_money: finalTotal,      
+      subtotal: totalAmount,        
+      shipping_fee: shippingFee,    
+      discount: discountAmount,     
       status: "Chờ xử lý", 
       customer_name: name,
       customer_phone: phone,
@@ -172,6 +178,11 @@ export default function CartPage() {
     }
     setIsSubmitting(false);
   };
+
+  // NẾU CHƯA KIỂM TRA QUYỀN XONG, HIỆN MÀN HÌNH CHỜ (Tránh lộ giao diện giỏ hàng)
+  if (isLoadingAuth) {
+    return <div style={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#f8fafc', color: '#64748b', fontWeight: 'bold' }}><i className="fas fa-spinner fa-spin" style={{ marginRight: '10px' }}></i> Đang tải giỏ hàng...</div>;
+  }
 
   return (
     <div style={{ background: '#f8fafc', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -283,7 +294,7 @@ export default function CartPage() {
             {hasCheckedItems && (
               <div style={{ flex: '1 1 35%', minWidth: '300px', width: '100%', transition: 'all 0.3s ease' }}>
                 <div style={{ background: 'white', borderRadius: '12px', padding: '25px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0' }}>
-                  <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#1e293b', textTransform: 'uppercase', marginBottom: '20px' }}>Thông tin giao hàng</h3>
+                  <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#1e293b', textTransform: 'uppercase', marginBottom: '20px' }}>Thôngীকার giao hàng</h3>
 
                   <div style={{ marginBottom: '15px' }}>
                     <label style={{ display: 'block', fontSize: '13px', color: '#475569', marginBottom: '8px' }}>Họ tên</label>
@@ -355,7 +366,6 @@ export default function CartPage() {
                       <span style={{ fontWeight: '600' }}>{totalAmount.toLocaleString('vi-VN')} đ</span>
                     </div>
 
-                    {/* HIỂN THỊ DÒNG SALE NẾU LÀ NGÀY 1 HOẶC 15 */}
                     {isSaleDay && (
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: '#10b981', marginBottom: '10px' }}>
                         <span>Giảm giá ngày vàng (5%):</span>
@@ -363,7 +373,6 @@ export default function CartPage() {
                       </div>
                     )}
 
-                    {/* HIỂN THỊ TIỀN SHIP */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: '#475569', marginBottom: '10px' }}>
                       <span>Phí vận chuyển:</span>
                       <span style={{ fontWeight: '600' }}>
