@@ -32,7 +32,7 @@ export default function Home() {
     const today = new Date();
     const currentDay = today.getDate();
     // Bạn có thể sửa lại số 11 để test hôm nay, sau khi test xong nhớ đổi lại thành 15 nhé!
-    const saleCondition = currentDay === 1 || currentDay === 15; 
+    const saleCondition = currentDay === 1 || currentDay === 11; 
     
     setIsSaleDay(saleCondition);
     setSaleDayText(currentDay.toString());
