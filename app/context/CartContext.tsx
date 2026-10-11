@@ -9,56 +9,63 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [user, setUser] = useState<any>(null);
 
+  // ======================================================================
+  // 1. TẢI DỮ LIỆU: KIỂM TRA ĐĂNG NHẬP VÀ MÓC ĐÚNG GIỎ HÀNG CỦA TÀI KHOẢN ĐÓ
+  // ======================================================================
   useEffect(() => {
     const loggedInUser = localStorage.getItem('currentUser');
+    
     if (loggedInUser) {
       const parsedUser = JSON.parse(loggedInUser);
       setUser(parsedUser);
       
-      // ĐÃ SỬA: Thêm &t=... và cache: 'no-store' để chống trình duyệt lưu cache cũ
+      // Lấy giỏ hàng từ MongoDB
       fetch(`/api/cart?username=${parsedUser.username}&t=${new Date().getTime()}`, {
         cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache'
-        }
+        headers: { 'Cache-Control': 'no-cache' }
       }) 
         .then(res => res.json())
         .then(data => {
            if (data && data.cart && data.cart.length > 0) {
              setCartItems(data.cart);
            } else {
-             loadLocalCart();
+             // Nếu DB trống, tìm rổ riêng lưu trên máy của tài khoản này
+             const savedCart = localStorage.getItem(`camera_bn_cart_${parsedUser.username}`);
+             if (savedCart) setCartItems(JSON.parse(savedCart));
            }
            setIsLoaded(true);
         })
         .catch(() => {
-           loadLocalCart();
+           const savedCart = localStorage.getItem(`camera_bn_cart_${parsedUser.username}`);
+           if (savedCart) setCartItems(JSON.parse(savedCart));
            setIsLoaded(true);
         });
     } else {
-      loadLocalCart();
+      // ĐÃ SỬA: NẾU CHƯA ĐĂNG NHẬP -> LẬP TỨC ÉP GIỎ HÀNG VỀ TRỐNG BÓC
+      setUser(null);
+      setCartItems([]);
       setIsLoaded(true);
     }
   }, []);
 
-  const loadLocalCart = () => {
-    const savedCart = localStorage.getItem('camera_bn_cart');
-    if (savedCart) setCartItems(JSON.parse(savedCart));
-  }
-
+  // ======================================================================
+  // 2. LƯU TRỮ: CHỈ LƯU KHI CÓ TÀI KHOẢN VÀ LƯU VÀO ĐÚNG RỔ CỦA NGƯỜI ĐÓ
+  // ======================================================================
   useEffect(() => {
-    if (isLoaded) {
-      localStorage.setItem('camera_bn_cart', JSON.stringify(cartItems));
-      if (user) {
-        fetch('/api/cart', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: user.username, cart: cartItems })
-        }).catch(err => console.log("Lỗi đồng bộ giỏ hàng:", err));
-      }
+    if (isLoaded && user) {
+      // Lưu vào trình duyệt với đuôi là TÊN TÀI KHOẢN (Ví dụ: camera_bn_cart_admin)
+      localStorage.setItem(`camera_bn_cart_${user.username}`, JSON.stringify(cartItems));
+      
+      // Bắn lên lưu vô MongoDB
+      fetch('/api/cart', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: user.username, cart: cartItems })
+      }).catch(err => console.log("Lỗi đồng bộ giỏ hàng:", err));
     }
   }, [cartItems, isLoaded, user]);
 
+  // Các chức năng thêm, xóa, sửa số lượng giữ nguyên
   const addToCart = (product: any, qty: number = 1) => {
     setCartItems(prev => {
       const productId = product._id ? String(product._id) : String(product.id);
