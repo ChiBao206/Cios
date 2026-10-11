@@ -55,13 +55,17 @@ export default function CartPage() {
   const finalTotal = totalAmount - discountAmount + shippingFee;
   // ==========================================
 
-  useEffect(() => {
+useEffect(() => {
     const loggedInUser = localStorage.getItem('currentUser');
     if (loggedInUser) {
       const parsedUser = JSON.parse(loggedInUser);
       setUser(parsedUser);
       setName(parsedUser.username || '');
       setPhone(parsedUser.phone || '');
+    } else {
+      // ĐÂY LÀ ANH BẢO VỆ TUI MỚI THÊM VÀO: 
+      // Nếu không có tài khoản (chưa đăng nhập), lập tức đuổi về trang Login
+      window.location.href = '/login';
     }
 
     fetch('https://provinces.open-api.vn/api/?depth=1')
@@ -69,7 +73,7 @@ export default function CartPage() {
       .then(data => setProvinces(data))
       .catch(err => console.error("Lỗi tải tỉnh thành: ", err));
   }, []);
-
+  
   const handleLogout = () => {
     clearCart();
     localStorage.removeItem('camera_bn_cart'); 
