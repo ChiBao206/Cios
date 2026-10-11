@@ -31,9 +31,18 @@ export default function ProductDetail() {
   const [reviewImage, setReviewImage] = useState('');
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
+  // STATE KIỂM TRA NGÀY VÀNG (1 VÀ 15)
+  const [isSaleDay, setIsSaleDay] = useState(false);
+
   useEffect(() => {
     const loggedInUser = localStorage.getItem('currentUser');
     if (loggedInUser) setUser(JSON.parse(loggedInUser));
+
+    // KÍCH HOẠT LOGIC GIẢM GIÁ
+    const today = new Date();
+    const currentDay = today.getDate();
+    // Đang để 11 để bạn test, test xong nhớ đổi thành 15
+    setIsSaleDay(currentDay === 1 || currentDay === 11);
 
     const fetchData = async () => {
       try {
@@ -185,8 +194,8 @@ export default function ProductDetail() {
         .breadcrumb-box a { color: #1e293b; transition: 0.2s; text-decoration: none; }
         .breadcrumb-box a:hover { color: #0ea5e9; }
         
-        .pd-main-card { background: white; border-radius: 12px; padding: 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #f1f5f9; display: flex; gap: 50px; flex-wrap: wrap; margin-bottom: 30px; }
-        .pd-img-col { flex: 1; min-width: 300px; display: flex; justify-content: center; align-items: center; padding: 20px; }
+        .pd-main-card { background: white; border-radius: 12px; padding: 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #f1f5f9; display: flex; gap: 50px; flex-wrap: wrap; margin-bottom: 30px; position: relative;}
+        .pd-img-col { flex: 1; min-width: 300px; display: flex; justify-content: center; align-items: center; padding: 20px; position: relative;}
         .pd-img-col img { width: 100%; max-width: 400px; object-fit: contain; }
         
         .pd-info-col { flex: 1.2; min-width: 350px; position: relative; }
@@ -195,8 +204,9 @@ export default function ProductDetail() {
         .pd-heart:hover { color: #ef4444; border-color: #ef4444; background: #fff1f2; }
         
         .pd-title { font-size: 28px; color: #0f172a; margin-bottom: 20px; font-weight: 800; line-height: 1.3; padding-right: 50px;}
-        .pd-price-box { background: #fafafa; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #f1f5f9;}
+        .pd-price-box { background: #fafafa; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #f1f5f9; display: flex; align-items: baseline; gap: 15px;}
         .pd-price { color: #ef4444; font-size: 36px; font-weight: 800; }
+        .pd-old-price { color: #94a3b8; font-size: 18px; text-decoration: line-through; }
         
         .pd-rating { display: flex; align-items: center; gap: 10px; font-size: 14px; margin-bottom: 25px; color: #64748b; }
         .pd-stars { color: #facc15; font-size: 13px; }
@@ -227,7 +237,7 @@ export default function ProductDetail() {
         .badge-discount { position: absolute; top: 15px; left: 15px; background: #ef4444; color: white; font-size: 11px; font-weight: bold; padding: 4px 8px; border-radius: 4px; z-index: 2; }
         .rc-img { height: 160px; display: flex; justify-content: center; align-items: center; margin-bottom: 15px; overflow: hidden; }
         .rc-title { font-size: 14px; font-weight: 600; color: #334155; margin-bottom: 10px; height: 40px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-        .rc-price-row { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
+        .rc-price-row { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; flex-direction: column; justify-content: center; min-height: 40px;}
         .rc-new-price { color: #ef4444; font-weight: 800; font-size: 16px; }
         .rc-old-price { color: #94a3b8; text-decoration: line-through; font-size: 12px; }
         .rc-meta { display: flex; justify-content: space-between; font-size: 12px; color: #94a3b8; margin-top: auto; }
@@ -286,6 +296,13 @@ export default function ProductDetail() {
         </div>
 
         <div className="pd-main-card">
+          {/* TAG SALE DÀNH CHO SẢN PHẨM CHÍNH */}
+          {isSaleDay && (
+            <div style={{ position: 'absolute', top: '20px', left: '20px', background: '#e11d48', color: 'white', padding: '5px 12px', borderRadius: '6px', fontSize: '16px', fontWeight: 'bold', zIndex: 5, boxShadow: '0 4px 10px rgba(225,29,72,0.3)', transform: 'rotate(-5deg)' }}>
+              -5% GIẢM NGAY
+            </div>
+          )}
+
           <div className="pd-img-col">
             <img src={product.image} alt={product.name} />
           </div>
@@ -296,8 +313,16 @@ export default function ProductDetail() {
             
             <h1 className="pd-title">{product.name}</h1>
             
+            {/* CHỖ NÀY ĐÃ SỬA: HIỆN 2 GIÁ CHO SẢN PHẨM CHÍNH */}
             <div className="pd-price-box">
-              <div className="pd-price">{Number(product.price).toLocaleString('vi-VN')} đ</div>
+              {isSaleDay ? (
+                <>
+                  <div className="pd-price">{(Number(product.price) * 0.95).toLocaleString('vi-VN')} đ</div>
+                  <div className="pd-old-price">{Number(product.price).toLocaleString('vi-VN')} đ</div>
+                </>
+              ) : (
+                <div className="pd-price">{Number(product.price).toLocaleString('vi-VN')} đ</div>
+              )}
             </div>
 
             <div className="pd-rating">
@@ -332,6 +357,7 @@ export default function ProductDetail() {
                       router.push('/login');
                     } else {
                       addToCart(product, quantity, true);
+                      alert(`Đã thêm ${quantity} sản phẩm vào giỏ hàng!`);
                     }
                   }}>
                     <i className="fas fa-cart-plus"></i> THÊM VÀO GIỎ
@@ -419,7 +445,7 @@ export default function ProductDetail() {
                   <div style={{ textAlign: 'center', minWidth: '120px' }}>
                     <div style={{ fontSize: '50px', fontWeight: '900', color: '#f59e0b', lineHeight: '1' }}>{avgRating}</div>
                     <div style={{ color: '#f59e0b', fontSize: '18px', margin: '5px 0' }}>
-                       {'★'.repeat(Math.round(Number(avgRating)))}{'☆'.repeat(5 - Math.round(Number(avgRating)))}
+                        {'★'.repeat(Math.round(Number(avgRating)))}{'☆'.repeat(5 - Math.round(Number(avgRating)))}
                     </div>
                     <div style={{ fontSize: '13px', color: '#64748b' }}>{totalReviews} bài đánh giá</div>
                   </div>
@@ -525,7 +551,7 @@ export default function ProductDetail() {
                           </div>
                           
                           <div style={{ color: '#f59e0b', fontSize: '13px', margin: '5px 0' }}>
-                            {'★'.repeat(rRating)}{'☆'.repeat(5 - rRating)}
+                             {'★'.repeat(rRating)}{'☆'.repeat(5 - rRating)}
                           </div>
                           
                           <p style={{ fontSize: '14px', color: '#334155', lineHeight: '1.6', margin: '8px 0' }}>{r.comment || r.content}</p>
@@ -553,13 +579,10 @@ export default function ProductDetail() {
             <h2 className="section-title-center">CÓ THỂ BẠN SẼ THÍCH</h2>
             <div className="product-grid" style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
               {relatedProducts.map((p) => {
-                const discount = p.old_price && Number(p.old_price) > Number(p.price) 
-                  ? Math.round(((Number(p.old_price) - Number(p.price)) / Number(p.old_price)) * 100) 
-                  : 0;
-
                 return (
                   <div className="related-card" key={p._id || p.id} style={{ flex: 1, minWidth: '250px' }}>
-                    {discount > 0 && <div className="badge-discount">-{discount}%</div>}
+                    {/* CHỖ NÀY ĐÃ SỬA: HIỆN TAG SALE CHO SẢN PHẨM LIÊN QUAN */}
+                    {isSaleDay && <div className="badge-discount">-5%</div>}
                     
                     <div className="rc-img">
                       <Link href={`/product/${p._id || p.id}`} style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -571,9 +594,22 @@ export default function ProductDetail() {
                       <div className="rc-title">{p.name}</div>
                     </Link>
                     
+                    {/* CHỖ NÀY ĐÃ SỬA: HIỆN 2 GIÁ CHO SẢN PHẨM LIÊN QUAN */}
                     <div className="rc-price-row">
-                      <span className="rc-new-price">{Number(p.price).toLocaleString('vi-VN')} đ</span>
-                      {p.old_price && <span className="rc-old-price">{Number(p.old_price).toLocaleString('vi-VN')} đ</span>}
+                      {isSaleDay ? (
+                        <>
+                          <span className="rc-old-price" style={{ color: '#94a3b8', textDecoration: 'line-through', fontSize: '12px' }}>
+                            {Number(p.price).toLocaleString('vi-VN')} đ
+                          </span>
+                          <span className="rc-new-price" style={{ color: '#ef4444', fontWeight: '800', fontSize: '16px' }}>
+                            {(Number(p.price) * 0.95).toLocaleString('vi-VN')} đ
+                          </span>
+                        </>
+                      ) : (
+                        <span className="rc-new-price" style={{ color: '#ef4444', fontWeight: '800', fontSize: '16px' }}>
+                          {Number(p.price).toLocaleString('vi-VN')} đ
+                        </span>
+                      )}
                     </div>
                     
                     <div className="rc-meta">
