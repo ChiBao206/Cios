@@ -33,7 +33,7 @@ export default function CartPage() {
   // LOGIC TÍNH PHÍ SHIP VÀ SALE
   // ==========================================
   const todayDate = new Date().getDate();
-  const isSaleDay = todayDate === 1 || todayDate === 15;
+  const isSaleDay = todayDate === 1 || todayDate === 11;
   const discountAmount = isSaleDay ? totalAmount * 0.05 : 0; // Giảm 5%
 
   let shippingFee = 0;
