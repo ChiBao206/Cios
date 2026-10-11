@@ -37,12 +37,13 @@ export default function LoginPage() {
         // Đăng nhập thành công, lưu phiên làm việc vào thiết bị hiện tại
         localStorage.setItem('currentUser', JSON.stringify(user));
 
-        // ĐÃ SỬA: Kiểm tra role linh hoạt hơn (hỗ trợ số 1, chữ "1", hoặc "admin")
         const userRole = String(user.role).toLowerCase();
+        
+        // ĐÃ SỬA: Đổi từ router.push sang window.location.href để ép tải lại giỏ hàng
         if (userRole === "1" || userRole === "admin") {
-          router.push('/admin');
+          window.location.href = '/admin';
         } else {
-          router.push('/');
+          window.location.href = '/';
         }
       } else {
         setError('Tài khoản hoặc mật khẩu không chính xác!');
