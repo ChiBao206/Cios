@@ -15,12 +15,28 @@ export default function Home() {
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // STATE HIỂN THỊ POPUP SALE KHỦNG
+  const [showSalePopup, setShowSalePopup] = useState(false);
 
   // 2. TỰ ĐỘNG GỌI API ĐỂ LẤY DỮ LIỆU TỪ DATABASE
   useEffect(() => {
     const loggedInUser = localStorage.getItem("currentUser");
     if (loggedInUser) {
       setUser(JSON.parse(loggedInUser));
+    }
+
+    // KIỂM TRA NGÀY VÀNG (MÙNG 1 VÀ 15) ĐỂ HIỆN POPUP
+    const today = new Date();
+    const currentDay = today.getDate();
+    const isSaleDay = currentDay === 1 || currentDay === 11;
+    
+    // Nếu là ngày Sale và khách chưa tắt cái Popup này trong ngày hôm nay thì hiện
+    if (isSaleDay) {
+      const isPopupClosed = sessionStorage.getItem(`closed_sale_popup_${today.toLocaleDateString()}`);
+      if (!isPopupClosed) {
+        setShowSalePopup(true);
+      }
     }
 
     const fetchRealData = async () => {
@@ -41,6 +57,13 @@ export default function Home() {
 
     fetchRealData();
   }, []);
+
+  const handleClosePopup = () => {
+    setShowSalePopup(false);
+    // Lưu trạng thái đã tắt popup trong phiên (session) hiện tại
+    const today = new Date().toLocaleDateString();
+    sessionStorage.setItem(`closed_sale_popup_${today}`, "true");
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('camera_bn_cart'); 
@@ -99,6 +122,50 @@ export default function Home() {
 
   return (
     <>
+      {/* KHU VỰC POPUP HIỂN THỊ CHƯƠNG TRÌNH KHUYẾN MÃI NGÀY 1 & 15 */}
+      {showSalePopup && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(15, 23, 42, 0.8)', backdropFilter: 'blur(5px)' }}>
+          <div style={{ background: 'white', width: '500px', maxWidth: '90%', borderRadius: '16px', overflow: 'hidden', position: 'relative', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', animation: 'popIn 0.5s ease-out' }}>
+            
+            {/* Nút đóng */}
+            <button onClick={handleClosePopup} style={{ position: 'absolute', top: '15px', right: '15px', background: 'rgba(255,255,255,0.2)', color: 'white', border: 'none', width: '35px', height: '35px', borderRadius: '50%', fontSize: '18px', cursor: 'pointer', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(2px)' }}>
+              <i className="fas fa-times"></i>
+            </button>
+
+            {/* Banner Header */}
+            <div style={{ background: 'linear-gradient(135deg, #e11d48, #f43f5e)', padding: '40px 20px', textAlign: 'center', color: 'white', position: 'relative', overflow: 'hidden' }}>
+              <i className="fas fa-gift" style={{ fontSize: '60px', opacity: 0.2, position: 'absolute', left: '-10px', bottom: '-10px', transform: 'rotate(-15deg)' }}></i>
+              <i className="fas fa-percentage" style={{ fontSize: '50px', opacity: 0.2, position: 'absolute', right: '10px', top: '10px', transform: 'rotate(15deg)' }}></i>
+              <h2 style={{ fontSize: '28px', fontWeight: '900', margin: '0 0 10px 0', textTransform: 'uppercase', textShadow: '2px 2px 4px rgba(0,0,0,0.2)' }}>Ngày Vàng Săn Deal</h2>
+              <div style={{ display: 'inline-block', background: '#facc15', color: '#b45309', padding: '5px 15px', borderRadius: '30px', fontWeight: 'bold', fontSize: '14px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+                Duy nhất ngày {new Date().getDate()}
+              </div>
+            </div>
+
+            {/* Content Body */}
+            <div style={{ padding: '30px', textAlign: 'center' }}>
+              <h3 style={{ fontSize: '22px', color: '#1e293b', margin: '0 0 15px 0', fontWeight: '800' }}>Giảm Ngay <span style={{ color: '#e11d48', fontSize: '32px' }}>5%</span></h3>
+              <p style={{ color: '#475569', fontSize: '15px', lineHeight: '1.6', marginBottom: '25px' }}>
+                Mua sắm thả ga, không lo về giá! Áp dụng trực tiếp 5% vào tổng hóa đơn khi bạn chốt đơn trong hôm nay.
+              </p>
+              <button 
+                onClick={handleClosePopup}
+                style={{ width: '100%', padding: '15px', background: '#1e293b', color: 'white', border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', transition: '0.3s', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }}
+              >
+                MUA SẮM NGAY
+              </button>
+            </div>
+          </div>
+
+          <style>{`
+            @keyframes popIn {
+              0% { transform: scale(0.8); opacity: 0; }
+              100% { transform: scale(1); opacity: 1; }
+            }
+          `}</style>
+        </div>
+      )}
+
       {/* 1. HEADER (NAVBAR) */}
       <header
         style={{
