@@ -16,8 +16,10 @@ export default function Home() {
   const [categories, setCategories] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
-  // STATE HIỂN THỊ POPUP SALE KHỦNG
+  // STATE HIỂN THỊ POPUP & SALE
   const [showSalePopup, setShowSalePopup] = useState(false);
+  const [isSaleDay, setIsSaleDay] = useState(false);
+  const [saleDayText, setSaleDayText] = useState("");
 
   // 2. TỰ ĐỘNG GỌI API ĐỂ LẤY DỮ LIỆU TỪ DATABASE
   useEffect(() => {
@@ -26,13 +28,17 @@ export default function Home() {
       setUser(JSON.parse(loggedInUser));
     }
 
-    // KIỂM TRA NGÀY VÀNG (MÙNG 1 VÀ 15) ĐỂ HIỆN POPUP
+    // KIỂM TRA NGÀY VÀNG (MÙNG 1 VÀ 15) ĐỂ HIỆN POPUP VÀ GIẢM GIÁ
     const today = new Date();
     const currentDay = today.getDate();
-    const isSaleDay = currentDay === 1 || currentDay === 11;
+    // Bạn có thể sửa lại số 11 để test hôm nay, sau khi test xong nhớ đổi lại thành 15 nhé!
+    const saleCondition = currentDay === 1 || currentDay === 15; 
+    
+    setIsSaleDay(saleCondition);
+    setSaleDayText(currentDay.toString());
     
     // Nếu là ngày Sale và khách chưa tắt cái Popup này trong ngày hôm nay thì hiện
-    if (isSaleDay) {
+    if (saleCondition) {
       const isPopupClosed = sessionStorage.getItem(`closed_sale_popup_${today.toLocaleDateString()}`);
       if (!isPopupClosed) {
         setShowSalePopup(true);
@@ -138,7 +144,7 @@ export default function Home() {
               <i className="fas fa-percentage" style={{ fontSize: '50px', opacity: 0.2, position: 'absolute', right: '10px', top: '10px', transform: 'rotate(15deg)' }}></i>
               <h2 style={{ fontSize: '28px', fontWeight: '900', margin: '0 0 10px 0', textTransform: 'uppercase', textShadow: '2px 2px 4px rgba(0,0,0,0.2)' }}>Ngày Vàng Săn Deal</h2>
               <div style={{ display: 'inline-block', background: '#facc15', color: '#b45309', padding: '5px 15px', borderRadius: '30px', fontWeight: 'bold', fontSize: '14px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
-                Duy nhất ngày {new Date().getDate()}
+                Duy nhất ngày {saleDayText}
               </div>
             </div>
 
@@ -146,7 +152,7 @@ export default function Home() {
             <div style={{ padding: '30px', textAlign: 'center' }}>
               <h3 style={{ fontSize: '22px', color: '#1e293b', margin: '0 0 15px 0', fontWeight: '800' }}>Giảm Ngay <span style={{ color: '#e11d48', fontSize: '32px' }}>5%</span></h3>
               <p style={{ color: '#475569', fontSize: '15px', lineHeight: '1.6', marginBottom: '25px' }}>
-                Mua sắm thả ga, không lo về giá! Áp dụng trực tiếp 5% vào tổng hóa đơn khi bạn chốt đơn trong hôm nay.
+                Mua sắm thả ga, không lo về giá! Áp dụng trực tiếp 5% vào toàn bộ sản phẩm cửa hàng và tổng hóa đơn khi bạn chốt đơn trong hôm nay.
               </p>
               <button 
                 onClick={handleClosePopup}
@@ -486,11 +492,19 @@ export default function Home() {
             {hotProducts.map((product) => (
               <div className="hot-card" key={product.id || product._id}>
                 <div className="hot-badge">TOP</div>
-                <div className="hot-img">
+                
+                <div className="hot-img" style={{ position: 'relative' }}>
+                  {/* TAG SALE GÓC TRÁI DÀNH CHO NGÀY VÀNG */}
+                  {isSaleDay && (
+                    <div style={{ position: 'absolute', top: '10px', left: '10px', background: '#e11d48', color: 'white', padding: '3px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold', zIndex: 2, boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
+                      -5%
+                    </div>
+                  )}
                   <Link href={`/product/${product.id || product._id}`}>
                     <img src={product.image} alt={product.name} />
                   </Link>
                 </div>
+                
                 <div className="hot-info">
                   <Link
                     href={`/product/${product.id || product._id}`}
@@ -498,8 +512,23 @@ export default function Home() {
                   >
                     <h3>{product.name}</h3>
                   </Link>
-                  <div className="hot-price">
-                    {Number(product.price).toLocaleString("vi-VN")} đ
+                  
+                  {/* CHỖ NÀY ĐÃ SỬA: HIỆN 2 GIÁ GẠCH CHÉO NẾU LÀ NGÀY SALE */}
+                  <div className="hot-price" style={{ minHeight: '45px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                    {isSaleDay ? (
+                      <>
+                        <span style={{ textDecoration: 'line-through', color: '#94a3b8', fontSize: '13px', fontWeight: 'normal', marginBottom: '2px' }}>
+                          {Number(product.price).toLocaleString("vi-VN")} đ
+                        </span>
+                        <span style={{ color: '#e11d48', fontSize: '16px' }}>
+                          {(Number(product.price) * 0.95).toLocaleString("vi-VN")} đ
+                        </span>
+                      </>
+                    ) : (
+                      <span style={{ color: '#e11d48', fontSize: '16px' }}>
+                        {Number(product.price).toLocaleString("vi-VN")} đ
+                      </span>
+                    )}
                   </div>
 
                   {Number(product.quantity) > 0 ? (
@@ -534,11 +563,19 @@ export default function Home() {
                 <div className="favorite-btn">
                   <i className="fas fa-heart"></i>
                 </div>
-                <div className="card-img">
+                
+                <div className="card-img" style={{ position: 'relative' }}>
+                   {/* TAG SALE GÓC TRÁI DÀNH CHO NGÀY VÀNG */}
+                   {isSaleDay && (
+                    <div style={{ position: 'absolute', top: '10px', left: '10px', background: '#e11d48', color: 'white', padding: '3px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold', zIndex: 2, boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
+                      -5%
+                    </div>
+                  )}
                   <Link href={`/product/${product.id || product._id}`}>
                     <img src={product.image} alt={product.name} />
                   </Link>
                 </div>
+
                 <div className="card-body">
                   <Link
                     href={`/product/${product.id || product._id}`}
@@ -546,9 +583,25 @@ export default function Home() {
                   >
                     <h3>{product.name}</h3>
                   </Link>
-                  <div className="price-row">
-                    {Number(product.price).toLocaleString("vi-VN")} đ
+
+                  {/* CHỖ NÀY ĐÃ SỬA: HIỆN 2 GIÁ GẠCH CHÉO NẾU LÀ NGÀY SALE */}
+                  <div className="price-row" style={{ minHeight: '40px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start' }}>
+                    {isSaleDay ? (
+                      <>
+                        <span style={{ textDecoration: 'line-through', color: '#94a3b8', fontSize: '12px', fontWeight: 'normal' }}>
+                          {Number(product.price).toLocaleString("vi-VN")} đ
+                        </span>
+                        <span style={{ color: '#e11d48', fontSize: '16px', fontWeight: 'bold' }}>
+                          {(Number(product.price) * 0.95).toLocaleString("vi-VN")} đ
+                        </span>
+                      </>
+                    ) : (
+                      <span style={{ color: '#e11d48', fontSize: '16px', fontWeight: 'bold' }}>
+                        {Number(product.price).toLocaleString("vi-VN")} đ
+                      </span>
+                    )}
                   </div>
+
                   <div
                     style={{
                       fontSize: "11px",
