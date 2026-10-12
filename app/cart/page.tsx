@@ -793,4 +793,4 @@ export default function CartPage() {
       </footer>
     </div>
   );
-}
+} 
