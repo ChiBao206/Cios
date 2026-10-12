@@ -120,6 +120,29 @@ export default function Home() {
     window.location.href = '/'; 
   };
 
+  // ĐÃ THÊM: HÀM XỬ LÝ THÊM SẢN PHẨM VÀO YÊU THÍCH
+  const addToFavorite = (productData: any) => {
+    if (!user) {
+      alert("Vui lòng đăng nhập để lưu sản phẩm yêu thích nhé!");
+      router.push('/login');
+      return;
+    }
+    
+    const saved = localStorage.getItem('camera_bn_favs');
+    let favList = saved ? JSON.parse(saved) : [];
+    
+    // Kiểm tra xem sản phẩm đã có trong danh sách chưa
+    const exists = favList.find((item: any) => String(item._id || item.id) === String(productData._id || productData.id));
+    
+    if(!exists) {
+      favList.push(productData);
+      localStorage.setItem('camera_bn_favs', JSON.stringify(favList));
+      alert("❤️ Đã thêm vào mục Sản phẩm yêu thích thành công!");
+    } else { 
+      alert("Sản phẩm này đã nằm trong mục Yêu thích rồi!"); 
+    }
+  };
+
   // 3. CHIA SẢN PHẨM DỰA TRÊN DỮ LIỆU THẬT (Sau khi đã tải xong)
   const hotProducts = products.slice(0, 4);
   const baseProducts = products.slice(4);
@@ -637,7 +660,6 @@ export default function Home() {
                             Còn {v.maxUsage - v.usedCount} lượt
                           </div>
                           
-                          {/* ĐÃ SỬA: Đổi chữ LƯU MÃ thành ĐÃ DÙNG nếu có trong lịch sử */}
                           <button 
                             className="btn-save-voucher" 
                             disabled={isSaved || isUsed}
@@ -729,7 +751,15 @@ export default function Home() {
           <div className="product-grid">
             {currentProducts.map((product) => (
               <div className="product-card" key={product.id || product._id}>
-                <div className="favorite-btn">
+                {/* ĐÃ SỬA: Gắn onClick gọi hàm addToFavorite vào nút trái tim */}
+                <div 
+                  className="favorite-btn" 
+                  onClick={(e) => {
+                    e.stopPropagation(); // Tránh bị click đè vào thẻ cha
+                    addToFavorite(product);
+                  }}
+                  style={{ cursor: 'pointer' }}
+                >
                   <i className="fas fa-heart"></i>
                 </div>
                 

@@ -41,6 +41,7 @@ export default function ProfilePage() {
         fetchSupports(parsedUser.username, parsedUser.phone);
       }
 
+      // LẤY DỮ LIỆU TỪ MỤC YÊU THÍCH TRÊN TRÌNH DUYỆT
       const savedFavs = localStorage.getItem('camera_bn_favs');
       if(savedFavs) {
         setFavorites(JSON.parse(savedFavs));
@@ -104,14 +105,10 @@ export default function ProfilePage() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('camera_bn_cart'); 
     localStorage.removeItem('currentUser'); 
     window.location.href = '/'; 
   };
 
-  // =========================================================================
-  // BỘ NÉN ẢNH TỰ ĐỘNG CHỐNG TRÀN BỘ NHỚ CHO ĐIỆN THOẠI (CANVAS COMPRESSOR)
-  // =========================================================================
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -119,14 +116,12 @@ export default function ProfilePage() {
       reader.onload = (event) => {
         const img = new Image();
         img.onload = async () => {
-          // Khởi tạo Canvas để thu nhỏ ảnh
           const canvas = document.createElement('canvas');
-          const MAX_WIDTH = 300; // Giới hạn kích thước tối đa 300px
+          const MAX_WIDTH = 300; 
           const MAX_HEIGHT = 300;
           let width = img.width;
           let height = img.height;
 
-          // Tính toán tỷ lệ
           if (width > height) {
             if (width > MAX_WIDTH) {
               height *= MAX_WIDTH / width;
@@ -141,11 +136,9 @@ export default function ProfilePage() {
           canvas.width = width;
           canvas.height = height;
           
-          // Vẽ ảnh mới đã bóp dung lượng
           const ctx = canvas.getContext('2d');
           ctx?.drawImage(img, 0, 0, width, height);
           
-          // Xuất file ảnh chất lượng 70% (dung lượng chỉ còn ~20KB)
           const base64String = canvas.toDataURL('image/jpeg', 0.7); 
           
           setAvatar(base64String);
@@ -173,11 +166,8 @@ export default function ProfilePage() {
     }
   };
 
-  // =========================================================================
-  // XÓA ẢNH AVATAR QUAY VỀ MẶC ĐỊNH
-  // =========================================================================
   const handleDeleteAvatar = async (e: React.MouseEvent) => {
-    e.stopPropagation(); // Chặn việc tự động mở khung chọn file khi bấm nút X
+    e.stopPropagation(); 
     if (!window.confirm("Bạn có chắc chắn muốn xóa ảnh đại diện và quay về mặc định?")) return;
     
     setAvatar('');
@@ -302,7 +292,6 @@ export default function ProfilePage() {
           
           <div style={{ padding: '30px 20px', textAlign: 'center', borderBottom: '1px solid #f1f5f9' }}>
             
-            {/* VÙNG CHỨA AVATAR CÓ NÚT XÓA */}
             <div style={{ position: 'relative', width: '100px', height: '100px', margin: '0 auto 15px' }}>
               <div 
                 style={{ width: '100%', height: '100%', borderRadius: '50%', background: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', cursor: 'pointer', boxShadow: '0 4px 15px rgba(37, 99, 235, 0.3)', overflow: 'hidden' }}
@@ -316,7 +305,6 @@ export default function ProfilePage() {
                 <input type="file" ref={fileInputRef} onChange={handleAvatarChange} accept="image/*" style={{ display: 'none' }} />
               </div>
               
-              {/* Nút Xóa hiện ra khi có avatar */}
               {avatar && (
                 <button 
                   onClick={handleDeleteAvatar} 
@@ -357,7 +345,7 @@ export default function ProfilePage() {
           
           <style>{`
             .avatar-container:hover .avatar-overlay { opacity: 1 !important; }
-            .profile-input { width: 100%; padding: 12px; border: 1px solid #cbd5e1; borderRadius: 6px; font-size: 14px; outline: none; margin-bottom: 20px; transition: 0.3s; }
+            .profile-input { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; outline: none; margin-bottom: 20px; transition: 0.3s; }
             .profile-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
             .btn-outline:hover { background: #f1f5f9 !important; }
             .invoice-table th { padding: 12px 10px; text-align: left; color: #64748b; font-size: 11px; text-transform: uppercase; border-bottom: 2px solid #f1f5f9; }
@@ -437,7 +425,7 @@ export default function ProfilePage() {
                         <i className="fas fa-trash-alt"></i>
                       </button>
                       <div style={{ height: '180px', padding: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'white' }}>
-                        <img src={fav.img || fav.image} alt={fav.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                        <img src={fav.img || fav.image || fav.image_url} alt={fav.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
                       </div>
                       <div style={{ padding: '15px', background: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
                         <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#1e293b', lineHeight: '1.4', height: '40px', overflow: 'hidden' }}>{fav.name}</h4>
@@ -606,4 +594,4 @@ export default function ProfilePage() {
       )}
     </div>
   );
-} 
+}
