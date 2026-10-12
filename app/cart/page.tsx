@@ -803,8 +803,7 @@ export default function CartPage() {
                 borderRadius: "8px",
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "center",
-                overflow: "hidden"
+                justifyItems: "center",
               }}
             >
               <iframe
