@@ -32,18 +32,21 @@ export default function CartPage() {
   const [selectedWard, setSelectedWard] = useState('');
 
   // ==========================================
-  // STATE CẤU HÌNH VÀ VOUCHER
+  // STATE CẤU HÌNH VÀ VOUCHER ĐÃ LƯU
   // ==========================================
   const [systemSettings, setSystemSettings] = useState({
     saleDays: '', saleDiscount: 0, feeHCM: 30000, feeSouth: 50000, feeOther: 80000
   });
   
   // Voucher states
-  const [voucherCode, setVoucherCode] = useState('');
   const [appliedVoucher, setAppliedVoucher] = useState<any>(null);
   const [voucherMsg, setVoucherMsg] = useState({ type: '', text: '' });
+  
+  // Mới: State để mở popup danh sách voucher đã lưu
+  const [showVoucherModal, setShowVoucherModal] = useState(false);
+  const [savedVouchersList, setSavedVouchersList] = useState<any[]>([]);
 
-  // Lấy dữ liệu settings và tỉnh thành
+  // Lấy dữ liệu settings, tỉnh thành và các VOUCHER KHÁCH ĐÃ LƯU TỪ DB
   useEffect(() => {
     const loggedInUser = localStorage.getItem('currentUser');
     
@@ -65,51 +68,61 @@ export default function CartPage() {
       .then(data => setProvinces(data))
       .catch(err => console.error("Lỗi tải tỉnh thành: ", err));
 
-    // Fetch cấu hình Admin
-    fetch(`/api/settings?t=${new Date().getTime()}`)
-      .then(res => res.json())
-      .then(data => { if(data) setSystemSettings(data); })
-      .catch(() => {});
+    const loadData = async () => {
+      try {
+        const timestamp = new Date().getTime();
+        const [setRes, vouRes] = await Promise.all([
+          fetch(`/api/settings?t=${timestamp}`).catch(() => null),
+          fetch(`/api/vouchers?t=${timestamp}`).catch(() => null)
+        ]);
+
+        if (setRes && setRes.ok) {
+          const sData = await setRes.json();
+          if(sData) setSystemSettings(sData);
+        }
+
+        // Lấy danh sách các mã khách đã "Lưu mã" từ LocalStorage
+        const localSaved = localStorage.getItem('camera_bn_my_vouchers');
+        let mySavedCodes: string[] = [];
+        if (localSaved) mySavedCodes = JSON.parse(localSaved);
+
+        // Đối chiếu với DB để hiển thị chi tiết (phần trăm giảm, đk tối thiểu, ngày hết hạn)
+        if (vouRes && vouRes.ok) {
+          const vData = await vouRes.json();
+          const validSavedVouchers = vData.filter((v: any) => 
+            mySavedCodes.includes(v.code) && 
+            v.isActive && 
+            v.usedCount < v.maxUsage && 
+            new Date(v.expireDate) >= new Date()
+          );
+          setSavedVouchersList(validSavedVouchers);
+        }
+
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    loadData();
   }, []);
 
   // ==========================================
-  // HÀM XỬ LÝ VOUCHER
+  // HÀM ÁP DỤNG VOUCHER KHI CHỌN TỪ POPUP
   // ==========================================
-  const handleApplyVoucher = async () => {
-    if(!voucherCode.trim()) {
-      setVoucherMsg({ type: 'error', text: 'Vui lòng nhập mã giảm giá!' });
+  const handleSelectVoucher = (voucher: any) => {
+    // Kiểm tra đơn tối thiểu
+    if(totalAmount < voucher.minOrderValue) {
+      alert(`Voucher này yêu cầu đơn hàng tối thiểu ${Number(voucher.minOrderValue).toLocaleString('vi-VN')}đ! Vui lòng mua thêm sản phẩm.`);
       return;
     }
-    setVoucherMsg({ type: '', text: 'Đang kiểm tra mã...' });
     
-    try {
-      const res = await fetch(`/api/vouchers?code=${voucherCode.trim().toUpperCase()}`);
-      if(!res.ok) {
-        const data = await res.json();
-        setVoucherMsg({ type: 'error', text: data.message || 'Mã không hợp lệ!' });
-        setAppliedVoucher(null);
-        return;
-      }
-      
-      const voucher = await res.json();
-      
-      // Kiểm tra đơn tối thiểu
-      if(totalAmount < voucher.minOrderValue) {
-        setVoucherMsg({ type: 'error', text: `Đơn hàng tối thiểu ${Number(voucher.minOrderValue).toLocaleString('vi-VN')}đ để dùng mã này!` });
-        setAppliedVoucher(null);
-        return;
-      }
-      
-      setAppliedVoucher(voucher);
-      setVoucherMsg({ type: 'success', text: `Áp dụng thành công mã giảm ${voucher.discountPercent}%!` });
-    } catch(e) {
-      setVoucherMsg({ type: 'error', text: 'Lỗi kiểm tra mã. Vui lòng thử lại!' });
-    }
+    setAppliedVoucher(voucher);
+    setVoucherMsg({ type: 'success', text: `Áp dụng thành công mã giảm ${voucher.discountPercent}%!` });
+    setShowVoucherModal(false);
   };
 
   const handleRemoveVoucher = () => {
     setAppliedVoucher(null);
-    setVoucherCode('');
     setVoucherMsg({ type: '', text: '' });
   };
 
@@ -117,7 +130,6 @@ export default function CartPage() {
   useEffect(() => {
     if (appliedVoucher && totalAmount < appliedVoucher.minOrderValue) {
       setAppliedVoucher(null);
-      setVoucherCode('');
       setVoucherMsg({ type: 'error', text: `Mã ${appliedVoucher.code} đã bị gỡ vì tổng đơn dưới ${Number(appliedVoucher.minOrderValue).toLocaleString('vi-VN')}đ.` });
     }
   }, [totalAmount, appliedVoucher]);
@@ -236,13 +248,17 @@ export default function CartPage() {
           });
         }
 
-        // TĂNG SỐ LƯỢT SỬ DỤNG VOUCHER LÊN 1
+        // TĂNG SỐ LƯỢT SỬ DỤNG VOUCHER LÊN 1 NẾU CÓ DÙNG VÀ XÓA KHỎI VÍ
         if (appliedVoucher) {
           await fetch(`/api/vouchers?id=${appliedVoucher._id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ usedCount: Number(appliedVoucher.usedCount) + 1 })
           }).catch(e => console.log("Lỗi cập nhật voucher:", e));
+
+          // Xóa voucher đó khỏi danh sách "Đã lưu" vì đã dùng rồi
+          const updatedSavedList = savedVouchersList.filter(v => v.code !== appliedVoucher.code).map(v => v.code);
+          localStorage.setItem('camera_bn_my_vouchers', JSON.stringify(updatedSavedList));
         }
 
         alert("🎉 Đặt hàng thành công! Hệ thống đã ghi nhận đơn hàng.");
@@ -263,6 +279,81 @@ export default function CartPage() {
 
   return (
     <div style={{ background: '#f8fafc', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      
+      {/* CSS CHO MODAL VOUCHER */}
+      <style>{`
+        .voucher-modal-overlay {
+          position: fixed; inset: 0; background: rgba(15,23,42,0.7); display: flex; justify-content: center; alignItems: center; z-index: 1000; padding: 20px;
+        }
+        .voucher-modal-content {
+          background: #f8fafc; border-radius: 12px; width: 100%; max-width: 500px; max-height: 80vh; display: flex; flexDirection: column; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+        }
+        .voucher-modal-header {
+          padding: 20px; background: white; display: flex; justify-content: space-between; alignItems: center; border-bottom: 1px solid #e2e8f0;
+        }
+        .voucher-modal-body {
+          padding: 20px; overflow-y: auto; flex: 1; display: flex; flexDirection: column; gap: 15px;
+        }
+        .v-item {
+          display: flex; background: white; border-radius: 8px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .v-item-left {
+          width: 90px; background: linear-gradient(135deg, #e11d48, #f43f5e); color: white; display: flex; flexDirection: column; justifyContent: center; alignItems: center; border-right: 2px dashed rgba(255,255,255,0.5); padding: 10px;
+        }
+        .v-item-right {
+          flex: 1; padding: 15px; display: flex; flexDirection: column; justifyContent: space-between;
+        }
+      `}</style>
+
+      {/* POPUP CHỌN VOUCHER TỪ VÍ */}
+      {showVoucherModal && (
+        <div className="voucher-modal-overlay">
+          <div className="voucher-modal-content">
+            <div className="voucher-modal-header">
+              <h3 style={{ margin: 0, color: '#1e293b', fontSize: '18px' }}><i className="fas fa-ticket-alt" style={{ color: '#f59e0b', marginRight: '8px' }}></i> Ví Voucher của bạn</h3>
+              <button onClick={() => setShowVoucherModal(false)} style={{ background: 'none', border: 'none', fontSize: '24px', color: '#94a3b8', cursor: 'pointer' }}>&times;</button>
+            </div>
+            <div className="voucher-modal-body">
+              {savedVouchersList.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px 20px', color: '#64748b' }}>
+                  <i className="fas fa-box-open" style={{ fontSize: '40px', marginBottom: '15px', color: '#cbd5e1' }}></i>
+                  <p>Bạn chưa lưu mã giảm giá nào.</p>
+                  <Link href="/" style={{ color: '#3b82f6', fontWeight: 'bold', textDecoration: 'none' }}>Về trang chủ thu thập ngay!</Link>
+                </div>
+              ) : (
+                savedVouchersList.map(v => {
+                  const isEligible = totalAmount >= v.minOrderValue;
+                  return (
+                    <div className="v-item" key={v.code} style={{ opacity: isEligible ? 1 : 0.6 }}>
+                      <div className="v-item-left">
+                        <span style={{ fontSize: '20px', fontWeight: '900' }}>{v.discountPercent}%</span>
+                        <span style={{ fontSize: '10px', textTransform: 'uppercase', fontWeight: 'bold' }}>Giảm</span>
+                      </div>
+                      <div className="v-item-right">
+                        <div>
+                          <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#1e293b' }}>Mã: <span style={{ color: '#e11d48' }}>{v.code}</span></div>
+                          <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>Đơn tối thiểu {Number(v.minOrderValue).toLocaleString('vi-VN')}đ</div>
+                          <div style={{ fontSize: '11px', color: '#ef4444', marginTop: '4px' }}>HSD: {new Date(v.expireDate).toLocaleDateString('vi-VN')}</div>
+                        </div>
+                        <div style={{ marginTop: '10px', textAlign: 'right' }}>
+                          <button 
+                            onClick={() => handleSelectVoucher(v)}
+                            disabled={!isEligible}
+                            style={{ background: isEligible ? '#3b82f6' : '#cbd5e1', color: 'white', border: 'none', padding: '6px 15px', borderRadius: '4px', fontWeight: 'bold', cursor: isEligible ? 'pointer' : 'not-allowed' }}
+                          >
+                            {isEligible ? 'Áp dụng' : 'Chưa đủ ĐK'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <header style={{ background: '#1e293b', padding: '12px 0', borderBottom: '1px solid #0f172a' }}>
         <div style={{ maxWidth: '1140px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '96%', flexWrap: 'wrap', gap: '10px' }}>
           <div style={{ color: 'white', fontWeight: 'bold', fontSize: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -437,40 +528,38 @@ export default function CartPage() {
                     )}
                   </div>
 
-                  {/* KHUNG NHẬP MÃ GIẢM GIÁ */}
+                  {/* KHUNG ÁP DỤNG VOUCHER BẰNG NÚT */}
                   <div style={{ border: '1px dashed #cbd5e1', background: '#f8fafc', padding: '20px', borderRadius: '8px', marginBottom: '30px' }}>
-                    <label style={{ display: 'block', fontSize: '14px', color: '#1e293b', fontWeight: 'bold', marginBottom: '10px' }}>
-                      <i className="fas fa-ticket-alt" style={{ color: '#f59e0b' }}></i> Mã giảm giá (Voucher)
-                    </label>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                      <label style={{ fontSize: '14px', color: '#1e293b', fontWeight: 'bold' }}>
+                        <i className="fas fa-ticket-alt" style={{ color: '#f59e0b' }}></i> Voucher & Khuyến mãi
+                      </label>
+                      <button 
+                        onClick={() => setShowVoucherModal(true)}
+                        style={{ background: 'transparent', color: '#3b82f6', border: 'none', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
+                      >
+                        Chọn Mã Giảm Giá <i className="fas fa-chevron-right" style={{ fontSize: '10px' }}></i>
+                      </button>
+                    </div>
                     
-                    {!appliedVoucher ? (
-                      <>
-                        <div style={{ display: 'flex', gap: '10px' }}>
-                          <input 
-                            type="text" 
-                            placeholder="Nhập mã khuyến mãi..." 
-                            value={voucherCode} 
-                            onChange={e => setVoucherCode(e.target.value)} 
-                            style={{ flex: 1, padding: '10px 15px', border: '1px solid #cbd5e1', borderRadius: '6px', outline: 'none', textTransform: 'uppercase', fontSize: '14px' }} 
-                          />
-                          <button onClick={handleApplyVoucher} style={{ background: '#1e293b', color: 'white', border: 'none', padding: '0 20px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s' }}>
-                            Áp dụng
-                          </button>
-                        </div>
-                        {voucherMsg.text && (
-                          <div style={{ color: voucherMsg.type === 'error' ? '#ef4444' : '#10b981', fontSize: '12px', marginTop: '8px', fontWeight: 'bold' }}>
-                            {voucherMsg.text}
-                          </div>
-                        )}
-                      </>
-                    ) : (
+                    {appliedVoucher ? (
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#ecfdf5', border: '1px solid #10b981', padding: '12px 15px', borderRadius: '6px' }}>
                         <div style={{ color: '#047857', fontWeight: 'bold', fontSize: '14px' }}>
                           <i className="fas fa-check-circle"></i> Đã áp dụng mã: {appliedVoucher.code} (-{appliedVoucher.discountPercent}%)
                         </div>
                         <button onClick={handleRemoveVoucher} style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', textDecoration: 'underline' }}>
-                          Hủy
+                          Gỡ bỏ
                         </button>
+                      </div>
+                    ) : (
+                      <div style={{ padding: '10px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '13px', color: '#64748b', textAlign: 'center' }}>
+                        Chưa áp dụng mã giảm giá nào
+                      </div>
+                    )}
+                    
+                    {voucherMsg.type === 'error' && (
+                      <div style={{ color: '#ef4444', fontSize: '12px', marginTop: '8px', fontWeight: 'bold', textAlign: 'center' }}>
+                        {voucherMsg.text}
                       </div>
                     )}
                   </div>
@@ -518,7 +607,7 @@ export default function CartPage() {
         )}
       </main>
 
-      {/* FLOATING BUTTONS (Sửa lại giống trang chủ) */}
+      {/* FLOATING BUTTONS */}
       <div className="floating-buttons">
         <a href="https://zalo.me/0971024173" target="_blank" rel="noopener noreferrer" className="float-btn zalo">
           <i className="fas fa-comment-dots"></i> Chat Zalo
@@ -535,7 +624,7 @@ export default function CartPage() {
         </button>
       </div>
 
-      {/* FOOTER (Sửa lại giống trang chủ) */}
+      {/* FOOTER */}
       <footer className="pro-footer" style={{ background: '#1e293b', color: '#cbd5e1', paddingTop: '60px', marginTop: 'auto' }}>
         <div className="footer-container" style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', flexWrap: 'wrap', gap: '40px', padding: '0 20px', paddingBottom: '40px' }}>
           <div className="footer-col" style={{ flex: 1.5, minWidth: '250px' }}>

@@ -20,7 +20,11 @@ export default function Home() {
   const [showSalePopup, setShowSalePopup] = useState(false);
   const [isSaleDay, setIsSaleDay] = useState(false);
   const [saleDayText, setSaleDayText] = useState("");
-  const [saleDiscount, setSaleDiscount] = useState(0); // State lưu % giảm giá
+  const [saleDiscount, setSaleDiscount] = useState(0); 
+
+  // STATE VOUCHER (MÃ GIẢM GIÁ)
+  const [vouchers, setVouchers] = useState<any[]>([]);
+  const [savedVouchers, setSavedVouchers] = useState<string[]>([]); // Lưu trữ các mã khách đã bấm LƯU
 
   // 2. TỰ ĐỘNG GỌI API ĐỂ LẤY DỮ LIỆU TỪ DATABASE
   useEffect(() => {
@@ -29,19 +33,38 @@ export default function Home() {
       setUser(JSON.parse(loggedInUser));
     }
 
+    // Lấy giỏ voucher đã lưu từ trước của khách hàng (nếu có)
+    const localSavedVouchers = localStorage.getItem('camera_bn_my_vouchers');
+    if(localSavedVouchers) {
+      setSavedVouchers(JSON.parse(localSavedVouchers));
+    }
+
     const fetchRealData = async () => {
       try {
         const timestamp = new Date().getTime();
-        const [prodRes, catRes, setRes] = await Promise.all([
+        // GỌI THÊM API VOUCHERS
+        const [prodRes, catRes, setRes, vouRes] = await Promise.all([
           fetch(`/api/products?t=${timestamp}`),
           fetch(`/api/categories?t=${timestamp}`),
-          fetch(`/api/settings?t=${timestamp}`).catch(() => null)
+          fetch(`/api/settings?t=${timestamp}`).catch(() => null),
+          fetch(`/api/vouchers?t=${timestamp}`).catch(() => null)
         ]);
         
         if (prodRes.ok) setProducts(await prodRes.json());
         if (catRes.ok) setCategories(await catRes.json());
         
-        // NẾU CÓ CẤU HÌNH TỪ ADMIN THÌ ÁP DỤNG VÀO ĐÂY
+        // Lấy danh sách Voucher đang kích hoạt
+        if (vouRes && vouRes.ok) {
+          const vData = await vouRes.json();
+          // Chỉ lấy những mã còn Active, Số lượng dùng < Max Usage, và chưa hết hạn
+          const validVouchers = vData.filter((v: any) => 
+            v.isActive && 
+            v.usedCount < v.maxUsage && 
+            new Date(v.expireDate) >= new Date()
+          );
+          setVouchers(validVouchers);
+        }
+        
         if (setRes && setRes.ok) {
           const sData = await setRes.json();
           if (sData) {
@@ -66,6 +89,22 @@ export default function Home() {
 
     fetchRealData();
   }, []);
+
+  // HÀM BẤM "LƯU MÃ"
+  const handleSaveVoucher = (code: string) => {
+    if (!user) {
+      alert("Vui lòng đăng nhập để lưu mã giảm giá nhé!");
+      router.push('/login');
+      return;
+    }
+
+    if (!savedVouchers.includes(code)) {
+      const newSavedList = [...savedVouchers, code];
+      setSavedVouchers(newSavedList);
+      localStorage.setItem('camera_bn_my_vouchers', JSON.stringify(newSavedList));
+      alert(`🎉 Đã lưu mã ${code} vào ví Voucher của bạn! Hãy vào Giỏ hàng để sử dụng nhé.`);
+    }
+  };
 
   const handleClosePopup = () => {
     setShowSalePopup(false);
@@ -127,6 +166,87 @@ export default function Home() {
 
   return (
     <>
+      <style>{`
+        /* CSS CHO VOUCHER TICKETS */
+        .voucher-scroll-container {
+          display: flex;
+          gap: 20px;
+          overflow-x: auto;
+          padding: 10px 5px 20px 5px;
+          margin-bottom: 30px;
+          -ms-overflow-style: none;  /* IE and Edge */
+          scrollbar-width: none;  /* Firefox */
+        }
+        .voucher-scroll-container::-webkit-scrollbar {
+          display: none; /* Chrome, Safari and Opera */
+        }
+        
+        .voucher-ticket {
+          display: flex;
+          min-width: 320px;
+          background: white;
+          border-radius: 12px;
+          box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+          position: relative;
+          border: 1px solid #e2e8f0;
+          overflow: hidden;
+        }
+        
+        .voucher-ticket::before, .voucher-ticket::after {
+          content: '';
+          position: absolute;
+          width: 20px;
+          height: 20px;
+          background: #f8fafc;
+          border-radius: 50%;
+          border: 1px solid #e2e8f0;
+          top: 50%;
+          transform: translateY(-50%);
+          z-index: 2;
+        }
+        .voucher-ticket::before { left: -10px; border-right-color: transparent; border-top-color: transparent; border-bottom-color: transparent;}
+        .voucher-ticket::after { left: 100px; border-left-color: transparent; border-top-color: transparent; border-bottom-color: transparent; }
+
+        .voucher-left {
+          background: linear-gradient(135deg, #e11d48, #f43f5e);
+          width: 110px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          padding: 15px 10px;
+          border-right: 2px dashed rgba(255,255,255,0.5);
+          position: relative;
+        }
+        
+        .voucher-right {
+          flex: 1;
+          padding: 15px;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+        }
+        
+        .btn-save-voucher {
+          background: #3b82f6;
+          color: white;
+          border: none;
+          padding: 6px 12px;
+          border-radius: 4px;
+          font-weight: bold;
+          font-size: 12px;
+          cursor: pointer;
+          transition: 0.2s;
+        }
+        .btn-save-voucher:hover { background: #2563eb; }
+        .btn-save-voucher:disabled {
+          background: #cbd5e1;
+          color: #64748b;
+          cursor: not-allowed;
+        }
+      `}</style>
+
       {/* KHU VỰC POPUP HIỂN THỊ CHƯƠNG TRÌNH KHUYẾN MÃI THEO ADMIN */}
       {showSalePopup && saleDiscount > 0 && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(15, 23, 42, 0.8)', backdropFilter: 'blur(5px)' }}>
@@ -328,6 +448,7 @@ export default function Home() {
 
       {/* 3. MAIN LAYOUT */}
       <div className="main-container">
+        
         {/* CỘT TRÁI (SIDEBAR) */}
         <aside className="sidebar-left">
           {/* DANH MỤC */}
@@ -465,6 +586,7 @@ export default function Home() {
 
         {/* CỘT PHẢI (NỘI DUNG CHÍNH) */}
         <main className="content-right">
+          
           <div className="search-bar-modern">
             <span style={{ padding: "10px 15px", color: "#3b82f6" }}>
               <i className="fas fa-search"></i>
@@ -480,6 +602,52 @@ export default function Home() {
             </button>
           </div>
 
+          {/* ==================================================== */}
+          {/* KHU VỰC VOUCHER "SĂN DEAL" */}
+          {/* ==================================================== */}
+          {vouchers.length > 0 && (
+            <div style={{ marginBottom: '40px' }}>
+              <h2 className="section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span><i className="fas fa-ticket-alt" style={{ color: "#f59e0b" }}></i> MÃ GIẢM GIÁ DÀNH CHO BẠN</span>
+              </h2>
+              
+              <div className="voucher-scroll-container">
+                {vouchers.map((v) => {
+                  const isSaved = savedVouchers.includes(v.code);
+                  
+                  return (
+                    <div className="voucher-ticket" key={v._id}>
+                      <div className="voucher-left">
+                        <span style={{ fontSize: '28px', fontWeight: '900', lineHeight: 1 }}>{v.discountPercent}%</span>
+                        <span style={{ fontSize: '11px', textTransform: 'uppercase', marginTop: '5px', fontWeight: 'bold' }}>Giảm giá</span>
+                      </div>
+                      <div className="voucher-right">
+                        <div>
+                          <div style={{ fontSize: '15px', fontWeight: '800', color: '#1e293b', marginBottom: '4px' }}>Mã: <span style={{ color: '#e11d48' }}>{v.code}</span></div>
+                          <div style={{ fontSize: '12px', color: '#64748b' }}>Đơn tối thiểu {Number(v.minOrderValue).toLocaleString('vi-VN')}đ</div>
+                          <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>HSD: {new Date(v.expireDate).toLocaleDateString('vi-VN')}</div>
+                        </div>
+                        
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
+                          <div style={{ fontSize: '11px', color: '#f59e0b', fontWeight: 'bold' }}>
+                            Còn {v.maxUsage - v.usedCount} lượt
+                          </div>
+                          <button 
+                            className="btn-save-voucher" 
+                            disabled={isSaved}
+                            onClick={() => handleSaveVoucher(v.code)}
+                          >
+                            {isSaved ? 'Đã lưu' : 'Lưu mã'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
           {/* BÁN CHẠY NHẤT */}
           <h2 className="section-title">
             <i className="fas fa-fire" style={{ color: "#e11d48" }}></i> BÁN CHẠY NHẤT
@@ -490,7 +658,6 @@ export default function Home() {
                 <div className="hot-badge">TOP</div>
                 
                 <div className="hot-img" style={{ position: 'relative' }}>
-                  {/* TAG SALE GÓC TRÁI DÀNH CHO NGÀY VÀNG DỰA VÀO ADMIN */}
                   {isSaleDay && saleDiscount > 0 && (
                     <div style={{ position: 'absolute', top: '10px', left: '10px', background: '#e11d48', color: 'white', padding: '3px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold', zIndex: 2, boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
                       -{saleDiscount}%
@@ -509,7 +676,6 @@ export default function Home() {
                     <h3>{product.name}</h3>
                   </Link>
                   
-                  {/* TÍNH TOÁN GIÁ DỰA VÀO ADMIN */}
                   <div className="hot-price" style={{ minHeight: '45px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                     {isSaleDay && saleDiscount > 0 ? (
                       <>
