@@ -810,7 +810,7 @@ export default function CartPage() {
               <iframe
                 src="https://maps.google.com/maps?q=12%20Tr%E1%BB%8Bnh%20%C4%90%C3%ACnh%20Th%E1%BA%A3o%2C%20Ho%C3%A0%20Th%E1%BA%A1nh%2C%20T%C3%A2n%20Ph%C3%BA%2C%20H%E1%BB%93%20Ch%C3%AD%20Minh&t=&z=16&ie=UTF8&iwloc=&output=embed"
                 width="100%"
-                height="200"
+                height="200" 
                 style={{ border: 0 }}
                 allowFullScreen={true}
                 loading="lazy"
