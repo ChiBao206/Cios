@@ -573,7 +573,7 @@ export default function ProfilePage() {
                   </tbody>
                 </table>
               </div>
-
+ 
               <div style={{ textAlign: 'right', paddingRight: '10px' }}>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '40px', alignItems: 'center' }}>
                   <span style={{ fontSize: '16px', fontWeight: '900', color: '#1e293b' }}>TỔNG CỘNG</span>
