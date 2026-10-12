@@ -24,25 +24,31 @@ export default function Home() {
 
   // STATE VOUCHER (MÃ GIẢM GIÁ)
   const [vouchers, setVouchers] = useState<any[]>([]);
-  const [savedVouchers, setSavedVouchers] = useState<string[]>([]); // Lưu trữ các mã khách đã bấm LƯU
+  const [savedVouchers, setSavedVouchers] = useState<string[]>([]); // Mã khách đã lưu
+  const [usedVouchers, setUsedVouchers] = useState<string[]>([]); // MỚI: Mã khách ĐÃ SỬ DỤNG
 
   // 2. TỰ ĐỘNG GỌI API ĐỂ LẤY DỮ LIỆU TỪ DATABASE
   useEffect(() => {
     const loggedInUser = localStorage.getItem("currentUser");
+    
+    // Gán ngay để check Voucher sau này
+    let currentUsername = "";
     if (loggedInUser) {
-      setUser(JSON.parse(loggedInUser));
-    }
+      const parsedUser = JSON.parse(loggedInUser);
+      setUser(parsedUser);
+      currentUsername = parsedUser.username;
+      
+      // Lấy lịch sử voucher đã lưu và đã sử dụng của tài khoản này
+      const localSavedVouchers = localStorage.getItem(`camera_bn_my_vouchers_${currentUsername}`);
+      if(localSavedVouchers) setSavedVouchers(JSON.parse(localSavedVouchers));
 
-    // Lấy giỏ voucher đã lưu từ trước của khách hàng (nếu có)
-    const localSavedVouchers = localStorage.getItem('camera_bn_my_vouchers');
-    if(localSavedVouchers) {
-      setSavedVouchers(JSON.parse(localSavedVouchers));
+      const localUsedVouchers = localStorage.getItem(`camera_bn_used_vouchers_${currentUsername}`);
+      if(localUsedVouchers) setUsedVouchers(JSON.parse(localUsedVouchers));
     }
 
     const fetchRealData = async () => {
       try {
         const timestamp = new Date().getTime();
-        // GỌI THÊM API VOUCHERS
         const [prodRes, catRes, setRes, vouRes] = await Promise.all([
           fetch(`/api/products?t=${timestamp}`),
           fetch(`/api/categories?t=${timestamp}`),
@@ -56,7 +62,6 @@ export default function Home() {
         // Lấy danh sách Voucher đang kích hoạt
         if (vouRes && vouRes.ok) {
           const vData = await vouRes.json();
-          // Chỉ lấy những mã còn Active, Số lượng dùng < Max Usage, và chưa hết hạn
           const validVouchers = vData.filter((v: any) => 
             v.isActive && 
             v.usedCount < v.maxUsage && 
@@ -101,7 +106,7 @@ export default function Home() {
     if (!savedVouchers.includes(code)) {
       const newSavedList = [...savedVouchers, code];
       setSavedVouchers(newSavedList);
-      localStorage.setItem('camera_bn_my_vouchers', JSON.stringify(newSavedList));
+      localStorage.setItem(`camera_bn_my_vouchers_${user.username}`, JSON.stringify(newSavedList));
       alert(`🎉 Đã lưu mã ${code} vào ví Voucher của bạn! Hãy vào Giỏ hàng để sử dụng nhé.`);
     }
   };
@@ -155,7 +160,6 @@ export default function Home() {
     setCurrentPage(currentPage === totalPages ? 1 : currentPage + 1);
   };
 
-  // 4. MÀN HÌNH CHỜ TRONG LÚC TẢI DỮ LIỆU TỪ MONGODB
   if (isLoading) {
     return (
       <div style={{ height: "100vh", display: "flex", justifyContent: "center", alignItems: "center", fontSize: "20px", fontWeight: "bold", color: "#64748b" }}>
@@ -448,7 +452,6 @@ export default function Home() {
 
       {/* 3. MAIN LAYOUT */}
       <div className="main-container">
-        
         {/* CỘT TRÁI (SIDEBAR) */}
         <aside className="sidebar-left">
           {/* DANH MỤC */}
@@ -614,6 +617,7 @@ export default function Home() {
               <div className="voucher-scroll-container">
                 {vouchers.map((v) => {
                   const isSaved = savedVouchers.includes(v.code);
+                  const isUsed = usedVouchers.includes(v.code);
                   
                   return (
                     <div className="voucher-ticket" key={v._id}>
@@ -632,13 +636,16 @@ export default function Home() {
                           <div style={{ fontSize: '11px', color: '#f59e0b', fontWeight: 'bold' }}>
                             Còn {v.maxUsage - v.usedCount} lượt
                           </div>
+                          
+                          {/* ĐÃ SỬA: Đổi chữ LƯU MÃ thành ĐÃ DÙNG nếu có trong lịch sử */}
                           <button 
                             className="btn-save-voucher" 
-                            disabled={isSaved}
+                            disabled={isSaved || isUsed}
                             onClick={() => handleSaveVoucher(v.code)}
                           >
-                            {isSaved ? 'Đã lưu' : 'Lưu mã'}
+                            {isUsed ? 'Đã sử dụng' : (isSaved ? 'Đã lưu' : 'Lưu mã')}
                           </button>
+
                         </div>
                       </div>
                     </div>
@@ -821,7 +828,7 @@ export default function Home() {
         </main>
       </div>
 
-      {/* 4. FLOATING BUTTONS */}
+      {/* FLOATING BUTTONS */}
       <div className="floating-buttons">
         <a href="https://zalo.me/0971024173" target="_blank" rel="noopener noreferrer" className="float-btn zalo">
           <i className="fas fa-comment-dots"></i> Chat Zalo
@@ -838,7 +845,7 @@ export default function Home() {
         </button>
       </div>
 
-      {/* 5. FOOTER */}
+      {/* FOOTER */}
       <footer className="pro-footer">
         <div className="footer-container">
           <div className="footer-col">

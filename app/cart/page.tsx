@@ -32,20 +32,21 @@ export default function CartPage() {
   const [selectedWard, setSelectedWard] = useState('');
 
   // ==========================================
-  // STATE CẤU HÌNH VÀ VOUCHER ĐÃ LƯU
+  // STATE CẤU HÌNH VÀ VOUCHER ĐÃ LƯU / ĐÃ DÙNG
   // ==========================================
   const [systemSettings, setSystemSettings] = useState({
     saleDays: '', saleDiscount: 0, feeHCM: 30000, feeSouth: 50000, feeOther: 80000
   });
   
-  // Voucher states
-  const [voucherCode, setVoucherCode] = useState(''); // Mới: Phục hồi State nhập tay
+  const [voucherCode, setVoucherCode] = useState(''); 
   const [appliedVoucher, setAppliedVoucher] = useState<any>(null);
   const [voucherMsg, setVoucherMsg] = useState({ type: '', text: '' });
   
-  // State để mở popup danh sách voucher đã lưu
   const [showVoucherModal, setShowVoucherModal] = useState(false);
   const [savedVouchersList, setSavedVouchersList] = useState<any[]>([]);
+  
+  // STATE MỚI: Danh sách các mã khách đã dùng rồi
+  const [usedVouchersList, setUsedVouchersList] = useState<string[]>([]);
 
   // Lấy dữ liệu settings, tỉnh thành và các VOUCHER KHÁCH ĐÃ LƯU TỪ DB
   useEffect(() => {
@@ -82,12 +83,15 @@ export default function CartPage() {
           if(sData) setSystemSettings(sData);
         }
 
-        // Lấy danh sách các mã khách đã "Lưu mã" từ LocalStorage
-        const localSaved = localStorage.getItem('camera_bn_my_vouchers');
+        // Lấy danh sách ĐÃ SỬ DỤNG của riêng khách hàng này
+        const localUsed = localStorage.getItem(`camera_bn_used_vouchers_${parsedUser.username}`);
+        if (localUsed) setUsedVouchersList(JSON.parse(localUsed));
+
+        // Lấy danh sách ĐÃ LƯU VÍ
+        const localSaved = localStorage.getItem(`camera_bn_my_vouchers_${parsedUser.username}`);
         let mySavedCodes: string[] = [];
         if (localSaved) mySavedCodes = JSON.parse(localSaved);
 
-        // Đối chiếu với DB để hiển thị chi tiết
         if (vouRes && vouRes.ok) {
           const vData = await vouRes.json();
           const validSavedVouchers = vData.filter((v: any) => 
@@ -111,7 +115,6 @@ export default function CartPage() {
   // HÀM XỬ LÝ NHẬP MÃ BẰNG TAY VÀ TỪ POPUP
   // ==========================================
   
-  // Xử lý khi khách BẤM VÀO MÃ TỪ VÍ
   const handleSelectVoucher = (voucher: any) => {
     if(totalAmount < voucher.minOrderValue) {
       alert(`Voucher này yêu cầu đơn hàng tối thiểu ${Number(voucher.minOrderValue).toLocaleString('vi-VN')}đ! Vui lòng mua thêm sản phẩm.`);
@@ -122,12 +125,18 @@ export default function CartPage() {
     setShowVoucherModal(false);
   };
 
-  // Xử lý khi khách TỰ NHẬP MÃ VÀ BẤM ÁP DỤNG
   const handleApplyManualVoucher = async () => {
     if(!voucherCode.trim()) {
       setVoucherMsg({ type: 'error', text: 'Vui lòng nhập mã giảm giá!' });
       return;
     }
+
+    // ĐÃ THÊM: CHẶN DÙNG LẠI MÃ NẾU ĐÃ CÓ TRONG LỊCH SỬ
+    if (usedVouchersList.includes(voucherCode.trim().toUpperCase())) {
+      setVoucherMsg({ type: 'error', text: 'Bạn đã sử dụng mã này cho đơn hàng trước đó rồi!' });
+      return;
+    }
+
     setVoucherMsg({ type: '', text: 'Đang kiểm tra mã...' });
     
     try {
@@ -149,7 +158,7 @@ export default function CartPage() {
       
       setAppliedVoucher(voucher);
       setVoucherMsg({ type: 'success', text: `Áp dụng thành công mã giảm ${voucher.discountPercent}%!` });
-      setVoucherCode(''); // Xóa text trên ô input sau khi áp dụng thành công
+      setVoucherCode(''); 
     } catch(e) {
       setVoucherMsg({ type: 'error', text: 'Lỗi kiểm tra mã. Vui lòng thử lại!' });
     }
@@ -161,7 +170,6 @@ export default function CartPage() {
     setVoucherMsg({ type: '', text: '' });
   };
 
-  // Nếu người dùng giảm số lượng hàng làm tổng tiền rớt xuống dưới mức tối thiểu của Voucher, tự động gỡ Voucher
   useEffect(() => {
     if (appliedVoucher && totalAmount < appliedVoucher.minOrderValue) {
       setAppliedVoucher(null);
@@ -171,7 +179,7 @@ export default function CartPage() {
   }, [totalAmount, appliedVoucher]);
 
   // ==========================================
-  // THUẬT TOÁN TÍNH TIỀN CHUNG (SALE + VOUCHER + SHIP)
+  // THUẬT TOÁN TÍNH TIỀN CHUNG
   // ==========================================
   const currentDay = new Date().getDate();
   const saleDaysArr = (systemSettings.saleDays || "").split(',').map(d => parseInt(d.trim()));
@@ -195,7 +203,6 @@ export default function CartPage() {
     }
   }
 
-  // Đảm bảo tiền hàng không bị âm nếu giảm giá quá nhiều
   const finalTotal = Math.max(0, totalAmount - totalDiscount) + shippingFee;
 
   const handleLogout = () => {
@@ -255,7 +262,7 @@ export default function CartPage() {
       total_money: finalTotal,      
       subtotal: totalAmount,        
       shipping_fee: shippingFee,    
-      discount: totalDiscount,  // Gộp cả sale và voucher   
+      discount: totalDiscount,    
       status: "Chờ xử lý", 
       customer_name: name,
       customer_phone: phone,
@@ -271,7 +278,6 @@ export default function CartPage() {
       });
 
       if (res.ok) {
-        // Cập nhật tồn kho sản phẩm
         for (const item of purchasedItems) {
           const remainingQty = Number(item.quantity || item.maxQty) - Number(item.cartQty);
           await fetch(`/api/products?id=${item._id || item.id}`, {
@@ -284,7 +290,7 @@ export default function CartPage() {
           });
         }
 
-        // TĂNG SỐ LƯỢT SỬ DỤNG VOUCHER LÊN 1 NẾU CÓ DÙNG VÀ XÓA KHỎI VÍ
+        // ĐÃ THÊM: XÓA VOUCHER KHỎI VÍ VÀ ĐƯA VÀO DANH SÁCH "ĐÃ SỬ DỤNG"
         if (appliedVoucher) {
           await fetch(`/api/vouchers?id=${appliedVoucher._id}`, {
             method: 'PUT',
@@ -292,9 +298,13 @@ export default function CartPage() {
             body: JSON.stringify({ usedCount: Number(appliedVoucher.usedCount) + 1 })
           }).catch(e => console.log("Lỗi cập nhật voucher:", e));
 
-          // Xóa voucher đó khỏi danh sách "Đã lưu" vì đã dùng rồi
-          const updatedSavedList = savedVouchersList.filter(v => v.code !== appliedVoucher.code).map(v => v.code);
-          localStorage.setItem('camera_bn_my_vouchers', JSON.stringify(updatedSavedList));
+          const newUsedList = [...usedVouchersList, appliedVoucher.code];
+          localStorage.setItem(`camera_bn_used_vouchers_${user.username}`, JSON.stringify(newUsedList));
+
+          const localSaved = localStorage.getItem(`camera_bn_my_vouchers_${user.username}`);
+          let mySavedCodes: string[] = localSaved ? JSON.parse(localSaved) : [];
+          const updatedSavedList = mySavedCodes.filter(c => c !== appliedVoucher.code);
+          localStorage.setItem(`camera_bn_my_vouchers_${user.username}`, JSON.stringify(updatedSavedList));
         }
 
         alert("🎉 Đặt hàng thành công! Hệ thống đã ghi nhận đơn hàng.");
@@ -316,7 +326,6 @@ export default function CartPage() {
   return (
     <div style={{ background: '#f8fafc', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       
-      {/* ĐÃ FIX: CHUYỂN TOÀN BỘ CSS SANG DẠNG KEBAB-CASE CHUẨN HTML */}
       <style>{`
         .voucher-modal-overlay {
           position: fixed; 
@@ -606,9 +615,9 @@ export default function CartPage() {
                     )}
                   </div>
 
-                  {/* KHU VỰC VOUCHER: TÍCH HỢP TỰ NHẬP + CHỌN TỪ VÍ */}
+                  {/* KHUNG ÁP DỤNG VOUCHER BẰNG NÚT */}
                   <div style={{ border: '1px dashed #cbd5e1', background: '#f8fafc', padding: '20px', borderRadius: '8px', marginBottom: '30px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                       <label style={{ fontSize: '14px', color: '#1e293b', fontWeight: 'bold' }}>
                         <i className="fas fa-ticket-alt" style={{ color: '#f59e0b' }}></i> Mã giảm giá (Voucher)
                       </label>
@@ -643,7 +652,7 @@ export default function CartPage() {
                     ) : (
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#ecfdf5', border: '1px solid #10b981', padding: '12px 15px', borderRadius: '6px' }}>
                         <div style={{ color: '#047857', fontWeight: 'bold', fontSize: '14px' }}>
-                          <i className="fas fa-check-circle"></i> Đã áp dụng: {appliedVoucher.code} (-{appliedVoucher.discountPercent}%)
+                          <i className="fas fa-check-circle"></i> Đã áp dụng mã: {appliedVoucher.code} (-{appliedVoucher.discountPercent}%)
                         </div>
                         <button onClick={handleRemoveVoucher} style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', textDecoration: 'underline' }}>
                           Gỡ bỏ
