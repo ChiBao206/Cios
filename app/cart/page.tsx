@@ -326,6 +326,7 @@ export default function CartPage() {
   return (
     <div style={{ background: '#f8fafc', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       
+      {/* ĐÃ FIX: CHUYỂN TOÀN BỘ CSS SANG DẠNG KEBAB-CASE CHUẨN HTML */}
       <style>{`
         .voucher-modal-overlay {
           position: fixed; 
@@ -615,9 +616,9 @@ export default function CartPage() {
                     )}
                   </div>
 
-                  {/* KHUNG ÁP DỤNG VOUCHER BẰNG NÚT */}
+                  {/* KHU VỰC VOUCHER: TÍCH HỢP TỰ NHẬP + CHỌN TỪ VÍ */}
                   <div style={{ border: '1px dashed #cbd5e1', background: '#f8fafc', padding: '20px', borderRadius: '8px', marginBottom: '30px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
                       <label style={{ fontSize: '14px', color: '#1e293b', fontWeight: 'bold' }}>
                         <i className="fas fa-ticket-alt" style={{ color: '#f59e0b' }}></i> Mã giảm giá (Voucher)
                       </label>
@@ -652,7 +653,7 @@ export default function CartPage() {
                     ) : (
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#ecfdf5', border: '1px solid #10b981', padding: '12px 15px', borderRadius: '6px' }}>
                         <div style={{ color: '#047857', fontWeight: 'bold', fontSize: '14px' }}>
-                          <i className="fas fa-check-circle"></i> Đã áp dụng mã: {appliedVoucher.code} (-{appliedVoucher.discountPercent}%)
+                          <i className="fas fa-check-circle"></i> Đã áp dụng: {appliedVoucher.code} (-{appliedVoucher.discountPercent}%)
                         </div>
                         <button onClick={handleRemoveVoucher} style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', textDecoration: 'underline' }}>
                           Gỡ bỏ
