@@ -13,6 +13,8 @@ export default function AdminDashboard() {
   const [reviews, setReviews] = useState<any[]>([]);
   const [supports, setSupports] = useState<any[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
+  // THÊM STATE VOUCHER
+  const [vouchers, setVouchers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // STATE LƯU CẤU HÌNH HỆ THỐNG
@@ -26,6 +28,18 @@ export default function AdminDashboard() {
 
   const [isEditing, setIsEditing] = useState(false);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
+
+  // STATE FORM VOUCHER
+  const [showVoucherForm, setShowVoucherForm] = useState(false);
+  const [isEditingVoucher, setIsEditingVoucher] = useState(false);
+  const [editingVoucherId, setEditingVoucherId] = useState<string | null>(null);
+  const [newVoucher, setNewVoucher] = useState({
+    code: '',
+    discountPercent: 10,
+    minOrderValue: 0,
+    maxUsage: 100,
+    expireDate: ''
+  });
 
   const openAddProductModal = () => {
     setIsEditing(false);
@@ -47,6 +61,27 @@ export default function AdminDashboard() {
     });
     setImagePreview(product.image || '');
     setShowProductForm(true);
+  };
+
+  // MỞ FORM THÊM/SỬA VOUCHER
+  const openAddVoucherModal = () => {
+    setIsEditingVoucher(false);
+    setEditingVoucherId(null);
+    setNewVoucher({ code: '', discountPercent: 10, minOrderValue: 0, maxUsage: 100, expireDate: '' });
+    setShowVoucherForm(true);
+  };
+
+  const openEditVoucherModal = (voucher: any) => {
+    setIsEditingVoucher(true);
+    setEditingVoucherId(voucher._id);
+    setNewVoucher({
+      code: voucher.code,
+      discountPercent: voucher.discountPercent,
+      minOrderValue: voucher.minOrderValue,
+      maxUsage: voucher.maxUsage,
+      expireDate: new Date(voucher.expireDate).toISOString().split('T')[0] // Format yyyy-mm-dd
+    });
+    setShowVoucherForm(true);
   };
   
   const [searchOrderCode, setSearchOrderCode] = useState('');
@@ -87,8 +122,8 @@ export default function AdminDashboard() {
     setIsLoading(true);
     try {
       const timestamp = new Date().getTime();
-      // GỌI THÊM API SETTINGS ĐỂ LẤY CẤU HÌNH HỆ THỐNG
-      const [prodRes, catRes, ordRes, usrRes, revRes, supRes, projRes, setRes] = await Promise.all([
+      // GỌI THÊM API VOUCHER
+      const [prodRes, catRes, ordRes, usrRes, revRes, supRes, projRes, setRes, vouRes] = await Promise.all([
         fetch(`/api/products?t=${timestamp}`), 
         fetch(`/api/categories?t=${timestamp}`), 
         fetch(`/api/orders?t=${timestamp}`), 
@@ -96,7 +131,8 @@ export default function AdminDashboard() {
         fetch(`/api/reviews?t=${timestamp}`).catch(() => ({ ok: false, json: () => [] })), 
         fetch(`/api/supports?t=${timestamp}`).catch(() => ({ ok: false, json: () => [] })),
         fetch(`/api/projects?t=${timestamp}`).catch(() => ({ ok: false, json: () => [] })),
-        fetch(`/api/settings?t=${timestamp}`).catch(() => ({ ok: false, json: () => null }))
+        fetch(`/api/settings?t=${timestamp}`).catch(() => ({ ok: false, json: () => null })),
+        fetch(`/api/vouchers?t=${timestamp}`).catch(() => ({ ok: false, json: () => [] }))
       ]);
       
       if(prodRes.ok) setProducts(await prodRes.json());
@@ -106,6 +142,8 @@ export default function AdminDashboard() {
       if(revRes.ok) setReviews(await revRes.json());
       if(supRes.ok) setSupports(await supRes.json());
       if(projRes.ok) setProjects(await projRes.json());
+      if(vouRes.ok) setVouchers(await vouRes.json());
+      
       if(setRes.ok) {
         const sData = await setRes.json();
         if (sData && Object.keys(sData).length > 0) {
@@ -116,6 +154,63 @@ export default function AdminDashboard() {
       console.log("Lỗi tải dữ liệu");
     }
     setIsLoading(false);
+  };
+
+  // XỬ LÝ LƯU VOUCHER
+  const handleVoucherSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newVoucher.expireDate) return alert("Vui lòng chọn ngày hết hạn!");
+    
+    try {
+      if (isEditingVoucher && editingVoucherId) {
+        const res = await fetch(`/api/vouchers?id=${editingVoucherId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newVoucher)
+        });
+        if(res.ok) alert("Cập nhật mã giảm giá thành công!");
+      } else {
+        const res = await fetch('/api/vouchers', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newVoucher)
+        });
+        if(res.ok) {
+          alert("Thêm mã giảm giá thành công!");
+        } else {
+          const data = await res.json();
+          alert(data.message || "Lỗi tạo mã");
+          return;
+        }
+      }
+      setShowVoucherForm(false);
+      fetchAllData(); 
+    } catch (e) { alert("Lỗi khi lưu voucher"); }
+  };
+
+  const handleDeleteVoucher = async (id: string) => {
+    if (window.confirm("Bạn có chắc muốn xóa mã giảm giá này?")) {
+      try {
+        await fetch(`/api/vouchers?id=${id}`, { method: 'DELETE' });
+        alert("Đã xóa mã!");
+        fetchAllData();
+      } catch (error) {
+        alert("Lỗi khi xóa!");
+      }
+    }
+  };
+
+  const handleToggleVoucher = async (id: string, currentStatus: boolean) => {
+    try {
+      await fetch(`/api/vouchers?id=${id}`, { 
+        method: 'PUT', 
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: !currentStatus }) 
+      });
+      fetchAllData();
+    } catch (error) {
+      alert("Lỗi hệ thống");
+    }
   };
 
   // HÀM LƯU CÀI ĐẶT
@@ -566,7 +661,8 @@ export default function AdminDashboard() {
             <li className={activeTab === 'reviews' ? 'active' : ''} onClick={() => setActiveTab('reviews')}><i className="fas fa-star"></i> Đánh giá</li>
             <li className={activeTab === 'customers' ? 'active' : ''} onClick={() => setActiveTab('customers')}><i className="fas fa-users"></i> Khách hàng</li>
             <li className={activeTab === 'support' ? 'active' : ''} onClick={() => { setActiveTab('support'); setShowMobileChat(false); }}><i className="fas fa-headset"></i> Hỗ trợ</li>
-            {/* THÊM NÚT CÀI ĐẶT */}
+            {/* THÊM TAB VOUCHER */}
+            <li className={activeTab === 'vouchers' ? 'active' : ''} onClick={() => setActiveTab('vouchers')}><i className="fas fa-ticket-alt"></i> Mã giảm giá</li>
             <li className={activeTab === 'settings' ? 'active' : ''} onClick={() => setActiveTab('settings')}><i className="fas fa-cog"></i> Cài đặt hệ thống</li>
           </ul>
           
@@ -646,6 +742,66 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                 </>
+              )}
+
+              {/* GIAO DIỆN QUẢN LÝ VOUCHER */}
+              {activeTab === 'vouchers' && (
+                <div className="admin-card">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
+                    <h2 style={{ margin: 0, color: '#1e293b' }}>🎟️ QUẢN LÝ MÃ GIẢM GIÁ</h2>
+                    <button onClick={openAddVoucherModal} style={{ background: '#10b981', color: 'white', border: 'none', padding: '8px 15px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>+ Thêm Mã Mới</button>
+                  </div>
+                  <div className="table-responsive">
+                    <table className="admin-table">
+                      <thead>
+                        <tr>
+                          <th>Mã Code</th>
+                          <th>Giảm (%)</th>
+                          <th>Đơn tối thiểu</th>
+                          <th>Đã dùng</th>
+                          <th>Hết hạn</th>
+                          <th>Trạng thái</th>
+                          <th style={{ textAlign: 'right' }}>Hành động</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {vouchers.map((v: any) => {
+                          const isExpired = new Date(v.expireDate) < new Date();
+                          return (
+                            <tr key={v._id}>
+                              <td style={{ fontWeight: 'bold', color: '#e11d48', fontSize: '16px' }}>{v.code}</td>
+                              <td style={{ color: '#10b981', fontWeight: 'bold' }}>{v.discountPercent}%</td>
+                              <td style={{ color: '#64748b' }}>{Number(v.minOrderValue).toLocaleString('vi-VN')} đ</td>
+                              <td><span style={{ color: v.usedCount >= v.maxUsage ? '#ef4444' : '#3b82f6', fontWeight: 'bold' }}>{v.usedCount}</span> / {v.maxUsage}</td>
+                              <td style={{ color: isExpired ? '#ef4444' : '#64748b', fontWeight: isExpired ? 'bold' : 'normal' }}>
+                                {new Date(v.expireDate).toLocaleDateString('vi-VN')}
+                              </td>
+                              <td>
+                                <button 
+                                  onClick={() => handleToggleVoucher(v._id, v.isActive)}
+                                  style={{ background: v.isActive ? '#dcfce7' : '#fef2f2', color: v.isActive ? '#16a34a' : '#ef4444', border: `1px solid ${v.isActive ? '#16a34a' : '#ef4444'}`, padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}
+                                >
+                                  {v.isActive ? 'Đang bật' : 'Đang tắt'}
+                                </button>
+                              </td>
+                              <td style={{ textAlign: 'right' }}>
+                                <button className="action-btn" style={{ color: '#3b82f6', marginRight: '5px' }} onClick={() => openEditVoucherModal(v)}>
+                                  <i className="fas fa-edit"></i>
+                                </button>
+                                <button className="action-btn" style={{ color: '#ef4444' }} onClick={() => handleDeleteVoucher(v._id)}>
+                                  <i className="fas fa-trash"></i>
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                        {vouchers.length === 0 && (
+                          <tr><td colSpan={7} style={{ textAlign: 'center', padding: '30px', color: '#94a3b8' }}>Chưa có mã giảm giá nào được tạo.</td></tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               )}
 
               {activeTab === 'categories' && (
@@ -1073,6 +1229,62 @@ export default function AdminDashboard() {
                 </div>
               )}
             </>
+          )}
+
+          {/* MODAL THÊM/SỬA MÃ GIẢM GIÁ */}
+          {showVoucherForm && (
+            <div className="modal-overlay">
+              <div className="modal-content" style={{ maxWidth: '500px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', paddingBottom: '15px', borderBottom: '1px solid #e2e8f0' }}>
+                 <h3 style={{ margin: 0, color: '#1e293b', fontSize: '18px' }}>
+                    <i className="fas fa-ticket-alt" style={{ color: '#10b981', marginRight: '10px' }}></i> 
+                    {isEditingVoucher ? 'Sửa Mã Giảm Giá' : 'Tạo Mã Giảm Giá Mới'}
+                  </h3>
+                  <button onClick={() => setShowVoucherForm(false)} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#94a3b8' }}>&times;</button>
+                </div>
+                
+                <form onSubmit={handleVoucherSubmit}>
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 'bold', color: '#475569' }}>Mã Code (VD: FREESHIP, SALE50) *</label>
+                  <input 
+                    className="modal-input" 
+                    required 
+                    value={newVoucher.code} 
+                    onChange={e => setNewVoucher({...newVoucher, code: e.target.value})} 
+                    placeholder="Nhập tên mã viết liền không dấu..." 
+                    style={{ textTransform: 'uppercase' }}
+                  />
+                  
+                  <div style={{ display: 'flex', gap: '15px' }}>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 'bold', color: '#475569' }}>Mức giảm (%) *</label>
+                      <input className="modal-input" type="number" required value={newVoucher.discountPercent} onChange={e => setNewVoucher({...newVoucher, discountPercent: Number(e.target.value)})} min="1" max="100" />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 'bold', color: '#475569' }}>Đơn tối thiểu (đ) *</label>
+                      <input className="modal-input" type="number" required value={newVoucher.minOrderValue} onChange={e => setNewVoucher({...newVoucher, minOrderValue: Number(e.target.value)})} min="0" />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '15px' }}>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 'bold', color: '#475569' }}>Số lượng mã *</label>
+                      <input className="modal-input" type="number" required value={newVoucher.maxUsage} onChange={e => setNewVoucher({...newVoucher, maxUsage: Number(e.target.value)})} min="1" />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 'bold', color: '#475569' }}>Ngày hết hạn *</label>
+                      <input className="modal-input" type="date" required value={newVoucher.expireDate} onChange={e => setNewVoucher({...newVoucher, expireDate: e.target.value})} />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '15px', paddingTop: '15px', borderTop: '1px solid #e2e8f0' }}>
+                    <button type="button" onClick={() => setShowVoucherForm(false)} style={{ padding: '8px 15px', border: '1px solid #cbd5e1', background: '#f8fafc', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', color: '#475569', fontSize: '13px' }}>Hủy bỏ</button>
+                    <button type="submit" style={{ padding: '8px 20px', border: 'none', background: '#10b981', color: 'white', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}>
+                      <i className="fas fa-save"></i> {isEditingVoucher ? 'Lưu Cập Nhật' : 'Lưu Mã Mới'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
           )}
 
           {/* MODAL THÊM/SỬA DỰ ÁN */}

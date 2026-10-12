@@ -21,7 +21,6 @@ export default function CartPage() {
   const [paymentMethod, setPaymentMethod] = useState('cod'); 
   const [user, setUser] = useState<any>(null);
   
-  // TRẠNG THÁI KIỂM TRA QUYỀN ĐĂNG NHẬP
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
 
   const [provinces, setProvinces] = useState<any[]>([]);
@@ -33,33 +32,21 @@ export default function CartPage() {
   const [selectedWard, setSelectedWard] = useState('');
 
   // ==========================================
-  // LOGIC TÍNH PHÍ SHIP VÀ SALE
+  // STATE CẤU HÌNH VÀ VOUCHER
   // ==========================================
-  const todayDate = new Date().getDate();
-  const isSaleDay = todayDate === 1 || todayDate === 11;
-  const discountAmount = isSaleDay ? totalAmount * 0.05 : 0; // Giảm 5%
+  const [systemSettings, setSystemSettings] = useState({
+    saleDays: '', saleDiscount: 0, feeHCM: 30000, feeSouth: 50000, feeOther: 80000
+  });
+  
+  // Voucher states
+  const [voucherCode, setVoucherCode] = useState('');
+  const [appliedVoucher, setAppliedVoucher] = useState<any>(null);
+  const [voucherMsg, setVoucherMsg] = useState({ type: '', text: '' });
 
-  let shippingFee = 0;
-  if (selectedProvince) {
-    const provCode = String(selectedProvince);
-    const southCodes = ['70', '72', '74', '75', '77', '80', '82', '83', '84', '86', '87', '89', '91', '92', '93', '94', '95', '96'];
-    
-    if (provCode === '79') {
-      shippingFee = 30000; // Nội thành HCM
-    } else if (southCodes.includes(provCode)) {
-      shippingFee = 50000; // Ngoại thành (Miền Nam)
-    } else {
-      shippingFee = 80000; // Miền Trung và Miền Bắc
-    }
-  }
-
-  const finalTotal = totalAmount - discountAmount + shippingFee;
-  // ==========================================
-
+  // Lấy dữ liệu settings và tỉnh thành
   useEffect(() => {
     const loggedInUser = localStorage.getItem('currentUser');
     
-    // BẢO VỆ NHIỀU LỚP: Chưa đăng nhập là đuổi cổ về /login
     if (!loggedInUser) {
       alert("Vui lòng đăng nhập tài khoản để vào giỏ hàng!");
       window.location.href = '/login';
@@ -70,16 +57,101 @@ export default function CartPage() {
     setUser(parsedUser);
     setName(parsedUser.username || '');
     setPhone(parsedUser.phone || '');
-    setIsLoadingAuth(false); // Đã kiểm tra thẻ sinh viên xong, cho vào!
+    setIsLoadingAuth(false);
 
+    // Fetch API Tỉnh thành
     fetch('https://provinces.open-api.vn/api/?depth=1')
       .then(res => res.json())
       .then(data => setProvinces(data))
       .catch(err => console.error("Lỗi tải tỉnh thành: ", err));
+
+    // Fetch cấu hình Admin
+    fetch(`/api/settings?t=${new Date().getTime()}`)
+      .then(res => res.json())
+      .then(data => { if(data) setSystemSettings(data); })
+      .catch(() => {});
   }, []);
 
+  // ==========================================
+  // HÀM XỬ LÝ VOUCHER
+  // ==========================================
+  const handleApplyVoucher = async () => {
+    if(!voucherCode.trim()) {
+      setVoucherMsg({ type: 'error', text: 'Vui lòng nhập mã giảm giá!' });
+      return;
+    }
+    setVoucherMsg({ type: '', text: 'Đang kiểm tra mã...' });
+    
+    try {
+      const res = await fetch(`/api/vouchers?code=${voucherCode.trim().toUpperCase()}`);
+      if(!res.ok) {
+        const data = await res.json();
+        setVoucherMsg({ type: 'error', text: data.message || 'Mã không hợp lệ!' });
+        setAppliedVoucher(null);
+        return;
+      }
+      
+      const voucher = await res.json();
+      
+      // Kiểm tra đơn tối thiểu
+      if(totalAmount < voucher.minOrderValue) {
+        setVoucherMsg({ type: 'error', text: `Đơn hàng tối thiểu ${Number(voucher.minOrderValue).toLocaleString('vi-VN')}đ để dùng mã này!` });
+        setAppliedVoucher(null);
+        return;
+      }
+      
+      setAppliedVoucher(voucher);
+      setVoucherMsg({ type: 'success', text: `Áp dụng thành công mã giảm ${voucher.discountPercent}%!` });
+    } catch(e) {
+      setVoucherMsg({ type: 'error', text: 'Lỗi kiểm tra mã. Vui lòng thử lại!' });
+    }
+  };
+
+  const handleRemoveVoucher = () => {
+    setAppliedVoucher(null);
+    setVoucherCode('');
+    setVoucherMsg({ type: '', text: '' });
+  };
+
+  // Nếu người dùng giảm số lượng hàng làm tổng tiền rớt xuống dưới mức tối thiểu của Voucher, tự động gỡ Voucher
+  useEffect(() => {
+    if (appliedVoucher && totalAmount < appliedVoucher.minOrderValue) {
+      setAppliedVoucher(null);
+      setVoucherCode('');
+      setVoucherMsg({ type: 'error', text: `Mã ${appliedVoucher.code} đã bị gỡ vì tổng đơn dưới ${Number(appliedVoucher.minOrderValue).toLocaleString('vi-VN')}đ.` });
+    }
+  }, [totalAmount, appliedVoucher]);
+
+  // ==========================================
+  // THUẬT TOÁN TÍNH TIỀN CHUNG (SALE + VOUCHER + SHIP)
+  // ==========================================
+  const currentDay = new Date().getDate();
+  const saleDaysArr = (systemSettings.saleDays || "").split(',').map(d => parseInt(d.trim()));
+  const isSaleDay = saleDaysArr.includes(currentDay) && systemSettings.saleDiscount > 0;
+
+  const saleDiscountAmount = isSaleDay ? (totalAmount * systemSettings.saleDiscount) / 100 : 0;
+  const voucherDiscountAmount = appliedVoucher ? (totalAmount * appliedVoucher.discountPercent) / 100 : 0;
+  const totalDiscount = saleDiscountAmount + voucherDiscountAmount;
+
+  let shippingFee = 0;
+  if (selectedProvince) {
+    const provCode = String(selectedProvince);
+    const southCodes = ['70', '72', '74', '75', '77', '80', '82', '83', '84', '86', '87', '89', '91', '92', '93', '94', '95', '96'];
+    
+    if (provCode === '79') {
+      shippingFee = systemSettings.feeHCM;
+    } else if (southCodes.includes(provCode)) {
+      shippingFee = systemSettings.feeSouth;
+    } else {
+      shippingFee = systemSettings.feeOther;
+    }
+  }
+
+  // Đảm bảo tiền hàng không bị âm nếu giảm giá quá nhiều
+  const finalTotal = Math.max(0, totalAmount - totalDiscount) + shippingFee;
+
   const handleLogout = () => {
-    clearCart(); // Xóa sạch giỏ hàng khỏi màn hình hiện tại
+    clearCart(); 
     localStorage.removeItem('currentUser'); 
     window.location.href = '/'; 
   };
@@ -90,12 +162,10 @@ export default function CartPage() {
     setSelectedDistrict(''); 
     setWards([]);            
     setSelectedWard('');     
-
     if (provinceCode) {
       fetch(`https://provinces.open-api.vn/api/p/${provinceCode}?depth=2`)
         .then(res => res.json())
-        .then(data => setDistricts(data.districts))
-        .catch(err => console.error("Lỗi tải quận huyện: ", err));
+        .then(data => setDistricts(data.districts));
     }
   };
 
@@ -103,12 +173,10 @@ export default function CartPage() {
     const districtCode = e.target.value;
     setSelectedDistrict(districtCode);
     setSelectedWard(''); 
-
     if (districtCode) {
       fetch(`https://provinces.open-api.vn/api/d/${districtCode}?depth=2`)
         .then(res => res.json())
-        .then(data => setWards(data.wards))
-        .catch(err => console.error("Lỗi tải phường xã: ", err));
+        .then(data => setWards(data.wards));
     }
   };
 
@@ -139,7 +207,7 @@ export default function CartPage() {
       total_money: finalTotal,      
       subtotal: totalAmount,        
       shipping_fee: shippingFee,    
-      discount: discountAmount,     
+      discount: totalDiscount,  // Gộp cả sale và voucher   
       status: "Chờ xử lý", 
       customer_name: name,
       customer_phone: phone,
@@ -155,6 +223,7 @@ export default function CartPage() {
       });
 
       if (res.ok) {
+        // Cập nhật tồn kho sản phẩm
         for (const item of purchasedItems) {
           const remainingQty = Number(item.quantity || item.maxQty) - Number(item.cartQty);
           await fetch(`/api/products?id=${item._id || item.id}`, {
@@ -167,7 +236,16 @@ export default function CartPage() {
           });
         }
 
-        alert("🎉 Đặt hàng thành công! Hệ thống đã ghi nhận đơn hàng và tự động cập nhật kho.");
+        // TĂNG SỐ LƯỢT SỬ DỤNG VOUCHER LÊN 1
+        if (appliedVoucher) {
+          await fetch(`/api/vouchers?id=${appliedVoucher._id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ usedCount: Number(appliedVoucher.usedCount) + 1 })
+          }).catch(e => console.log("Lỗi cập nhật voucher:", e));
+        }
+
+        alert("🎉 Đặt hàng thành công! Hệ thống đã ghi nhận đơn hàng.");
         clearCart(); 
         window.location.href = '/profile'; 
       } else {
@@ -179,7 +257,6 @@ export default function CartPage() {
     setIsSubmitting(false);
   };
 
-  // NẾU CHƯA KIỂM TRA QUYỀN XONG, HIỆN MÀN HÌNH CHỜ (Tránh lộ giao diện giỏ hàng)
   if (isLoadingAuth) {
     return <div style={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#f8fafc', color: '#64748b', fontWeight: 'bold' }}><i className="fas fa-spinner fa-spin" style={{ marginRight: '10px' }}></i> Đang tải giỏ hàng...</div>;
   }
@@ -294,7 +371,7 @@ export default function CartPage() {
             {hasCheckedItems && (
               <div style={{ flex: '1 1 35%', minWidth: '300px', width: '100%', transition: 'all 0.3s ease' }}>
                 <div style={{ background: 'white', borderRadius: '12px', padding: '25px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0' }}>
-                  <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#1e293b', textTransform: 'uppercase', marginBottom: '20px' }}>Thông tin giao hàng</h3>
+                  <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#1e293b', textTransform: 'uppercase', marginBottom: '20px' }}>THÔNG TIN GIAO HÀNG</h3>
 
                   <div style={{ marginBottom: '15px' }}>
                     <label style={{ display: 'block', fontSize: '13px', color: '#475569', marginBottom: '8px' }}>Họ tên</label>
@@ -360,16 +437,62 @@ export default function CartPage() {
                     )}
                   </div>
 
+                  {/* KHUNG NHẬP MÃ GIẢM GIÁ */}
+                  <div style={{ border: '1px dashed #cbd5e1', background: '#f8fafc', padding: '20px', borderRadius: '8px', marginBottom: '30px' }}>
+                    <label style={{ display: 'block', fontSize: '14px', color: '#1e293b', fontWeight: 'bold', marginBottom: '10px' }}>
+                      <i className="fas fa-ticket-alt" style={{ color: '#f59e0b' }}></i> Mã giảm giá (Voucher)
+                    </label>
+                    
+                    {!appliedVoucher ? (
+                      <>
+                        <div style={{ display: 'flex', gap: '10px' }}>
+                          <input 
+                            type="text" 
+                            placeholder="Nhập mã khuyến mãi..." 
+                            value={voucherCode} 
+                            onChange={e => setVoucherCode(e.target.value)} 
+                            style={{ flex: 1, padding: '10px 15px', border: '1px solid #cbd5e1', borderRadius: '6px', outline: 'none', textTransform: 'uppercase', fontSize: '14px' }} 
+                          />
+                          <button onClick={handleApplyVoucher} style={{ background: '#1e293b', color: 'white', border: 'none', padding: '0 20px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s' }}>
+                            Áp dụng
+                          </button>
+                        </div>
+                        {voucherMsg.text && (
+                          <div style={{ color: voucherMsg.type === 'error' ? '#ef4444' : '#10b981', fontSize: '12px', marginTop: '8px', fontWeight: 'bold' }}>
+                            {voucherMsg.text}
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#ecfdf5', border: '1px solid #10b981', padding: '12px 15px', borderRadius: '6px' }}>
+                        <div style={{ color: '#047857', fontWeight: 'bold', fontSize: '14px' }}>
+                          <i className="fas fa-check-circle"></i> Đã áp dụng mã: {appliedVoucher.code} (-{appliedVoucher.discountPercent}%)
+                        </div>
+                        <button onClick={handleRemoveVoucher} style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', textDecoration: 'underline' }}>
+                          Hủy
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* BẢNG TỔNG KẾT TIỀN TỆ */}
                   <div style={{ background: '#f1f5f9', padding: '15px', borderRadius: '8px', marginBottom: '20px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: '#475569', marginBottom: '10px' }}>
                       <span>Tạm tính ({cartItems.filter((i:any)=>i.checked).length} SP):</span>
                       <span style={{ fontWeight: '600' }}>{totalAmount.toLocaleString('vi-VN')} đ</span>
                     </div>
 
-                    {isSaleDay && (
+                    {isSaleDay && saleDiscountAmount > 0 && (
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: '#10b981', marginBottom: '10px' }}>
-                        <span>Giảm giá ngày vàng (5%):</span>
-                        <span style={{ fontWeight: '600' }}>- {discountAmount.toLocaleString('vi-VN')} đ</span>
+                        <span>Giảm giá ngày vàng ({systemSettings.saleDiscount}%):</span>
+                        <span style={{ fontWeight: '600' }}>- {saleDiscountAmount.toLocaleString('vi-VN')} đ</span>
+                      </div>
+                    )}
+
+                    {appliedVoucher && voucherDiscountAmount > 0 && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: '#f59e0b', marginBottom: '10px' }}>
+                        <span>Voucher ({appliedVoucher.code}):</span>
+                        <span style={{ fontWeight: '600' }}>- {voucherDiscountAmount.toLocaleString('vi-VN')} đ</span>
                       </div>
                     )}
 
@@ -394,6 +517,93 @@ export default function CartPage() {
           </div>
         )}
       </main>
+
+      {/* FLOATING BUTTONS (Sửa lại giống trang chủ) */}
+      <div className="floating-buttons">
+        <a href="https://zalo.me/0971024173" target="_blank" rel="noopener noreferrer" className="float-btn zalo">
+          <i className="fas fa-comment-dots"></i> Chat Zalo
+        </a>
+        <a href="tel:0971024173" className="float-btn phone">
+          <i className="fas fa-phone-alt"></i> 0971.024.173
+        </a>
+        <button 
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} 
+          className="float-btn up-top" 
+          style={{ border: 'none', cursor: 'pointer' }}
+        >
+          <i className="fas fa-arrow-up"></i>
+        </button>
+      </div>
+
+      {/* FOOTER (Sửa lại giống trang chủ) */}
+      <footer className="pro-footer" style={{ background: '#1e293b', color: '#cbd5e1', paddingTop: '60px', marginTop: 'auto' }}>
+        <div className="footer-container" style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', flexWrap: 'wrap', gap: '40px', padding: '0 20px', paddingBottom: '40px' }}>
+          <div className="footer-col" style={{ flex: 1.5, minWidth: '250px' }}>
+            <h3 style={{ color: 'white', marginBottom: '20px' }}>CIOs - impossible is nothing</h3>
+            <p style={{ lineHeight: 1.6, marginBottom: '20px' }}>Đối tác tin cậy cung cấp giải pháp an ninh toàn diện. Cam kết sản phẩm chính hãng, dịch vụ tận tâm và hỗ trợ kỹ thuật trọn đời.</p>
+            <div className="social-icons" style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+              <div className="social-btn" style={{ width: '35px', height: '35px', borderRadius: '50%', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: '#3b5998' }}><i className="fab fa-facebook-f"></i></div>
+              <div className="social-btn" style={{ width: '35px', height: '35px', borderRadius: '50%', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: '#e1306c' }}><i className="fab fa-instagram"></i></div>
+              <div className="social-btn" style={{ width: '35px', height: '35px', borderRadius: '50%', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: '#ff0000' }}><i className="fab fa-youtube"></i></div>
+            </div>
+          </div>
+
+          <div className="footer-col" style={{ flex: 1, minWidth: '200px' }}>
+            <h3 style={{ color: 'white', marginBottom: '20px' }}>CHÍNH SÁCH HỖ TRỢ</h3>
+            <ul className="footer-links" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              <li style={{ marginBottom: '12px' }}><span style={{ color: '#0ea5e9', marginRight: '8px' }}>›</span> Chính sách bảo hành 24 tháng</li>
+              <li style={{ marginBottom: '12px' }}><span style={{ color: '#0ea5e9', marginRight: '8px' }}>›</span> Đổi trả 1-1 trong 30 ngày</li>
+              <li style={{ marginBottom: '12px' }}><span style={{ color: '#0ea5e9', marginRight: '8px' }}>›</span> Chính sách bảo mật thông tin</li>
+              <li style={{ marginBottom: '12px' }}><span style={{ color: '#0ea5e9', marginRight: '8px' }}>›</span> Hướng dẫn mua hàng online</li>
+              <li style={{ marginBottom: '12px' }}><span style={{ color: '#0ea5e9', marginRight: '8px' }}>›</span> Hướng dẫn thanh toán</li>
+            </ul>
+          </div>
+
+          <div className="footer-col" style={{ flex: 1.5, minWidth: '250px' }}>
+            <h3 style={{ color: 'white', marginBottom: '20px' }}>LIÊN HỆ VỚI CHÚNG TÔI</h3>
+            <div style={{ display: 'flex', gap: '15px', marginBottom: '15px' }}>
+              <div style={{ color: '#0ea5e9', fontSize: '18px' }}><i className="fas fa-map-marker-alt"></i></div>
+              <div><strong style={{ color: 'white' }}>Trụ sở chính:</strong><p style={{ margin: '5px 0 0 0' }}>12 Trịnh Đình Thảo, P. Hòa Thạnh, Q. Tân Phú, TP. Hồ Chí Minh</p></div>
+            </div>
+            <div style={{ display: 'flex', gap: '15px', marginBottom: '15px' }}>
+              <div style={{ color: '#0ea5e9', fontSize: '18px' }}><i className="fas fa-phone-alt"></i></div>
+              <div><strong style={{ color: 'white' }}>Hotline 24/7:</strong><p style={{ margin: '5px 0 0 0', color: '#0ea5e9', fontWeight: 'bold' }}>0971.024.173</p></div>
+            </div>
+            <div style={{ display: 'flex', gap: '15px', marginBottom: '15px' }}>
+              <div style={{ color: '#0ea5e9', fontSize: '18px' }}><i className="fas fa-envelope"></i></div>
+              <div><strong style={{ color: 'white' }}>Email hỗ trợ:</strong><p style={{ margin: '5px 0 0 0' }}>hotro@cameracb.com</p></div>
+            </div>
+          </div>
+
+          <div className="footer-col" style={{ flex: 1.5, minWidth: '250px' }}>
+            <h3 style={{ color: 'white', marginBottom: '20px' }}>BẢN ĐỒ CỬA HÀNG</h3>
+            <div
+              className="map-frame"
+              style={{
+                background: "#ccc",
+                height: "150px",
+                borderRadius: "8px",
+                display: "flex",
+                alignItems: "center",
+                justifyItems: "center",
+                overflow: "hidden"
+              }}
+            >
+              <iframe
+                src="https://maps.google.com/maps?q=12%20Tr%E1%BB%8Bnh%20%C4%90%C3%ACnh%20Th%E1%BA%A3o%2C%20Ho%C3%A0%20Th%E1%BA%A1nh%2C%20T%C3%A2n%20Ph%C3%BA%2C%20H%E1%BB%93%20Ch%C3%AD%20Minh&t=&z=16&ie=UTF8&iwloc=&output=embed"
+                width="100%"
+                height="200"
+                style={{ border: 0 }}
+                allowFullScreen={true}
+                loading="lazy"
+              ></iframe>
+            </div>
+          </div>
+        </div>
+        <div style={{ background: '#0f172a', textAlign: 'center', padding: '20px', fontSize: '14px', borderTop: '1px solid #334155' }}>
+          © 2026 Công Ty TNHH CIOs - impossible is nothing. Giấy phép KD số: 0123456789.
+        </div>
+      </footer>
     </div>
   );
 }
