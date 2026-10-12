@@ -69,14 +69,17 @@ export default function ProductDetail() {
           setReviews(currentReviews);
         }
 
-        // XỬ LÝ CẤU HÌNH TỪ ADMIN
+        // XỬ LÝ CẤU HÌNH TỪ ADMIN ĐỂ ÁP DỤNG SALE
         if (setRes && setRes.ok) {
           const sData = await setRes.json();
           if (sData) {
-            setSaleDiscount(Number(sData.saleDiscount) || 0);
+            const discount = Number(sData.saleDiscount) || 0;
+            setSaleDiscount(discount);
+            
             const currentDay = new Date().getDate();
             const daysArray = (sData.saleDays || "").split(',').map((d: string) => parseInt(d.trim()));
-            if (daysArray.includes(currentDay)) {
+            
+            if (daysArray.includes(currentDay) && discount > 0) {
               setIsSaleDay(true);
             }
           }
@@ -302,7 +305,7 @@ export default function ProductDetail() {
         </div>
 
         <div className="pd-main-card">
-          {/* TAG SALE ĐỘNG TỪ ADMIN */}
+          {/* TAG SALE DÀNH CHO SẢN PHẨM CHÍNH ĐỘNG TỪ ADMIN */}
           {isSaleDay && saleDiscount > 0 && (
             <div style={{ position: 'absolute', top: '20px', left: '20px', background: '#e11d48', color: 'white', padding: '5px 12px', borderRadius: '6px', fontSize: '16px', fontWeight: 'bold', zIndex: 5, boxShadow: '0 4px 10px rgba(225,29,72,0.3)', transform: 'rotate(-5deg)' }}>
               -{saleDiscount}% GIẢM NGAY
@@ -319,7 +322,7 @@ export default function ProductDetail() {
             
             <h1 className="pd-title">{product.name}</h1>
             
-            {/* TÍNH TOÁN GIÁ DỰA THEO ADMIN */}
+            {/* TÍNH TOÁN GIÁ DỰA TRÊN CẤU HÌNH ADMIN */}
             <div className="pd-price-box">
               {isSaleDay && saleDiscount > 0 ? (
                 <>
@@ -587,6 +590,7 @@ export default function ProductDetail() {
               {relatedProducts.map((p) => {
                 return (
                   <div className="related-card" key={p._id || p.id} style={{ flex: 1, minWidth: '250px' }}>
+                    {/* TAG SALE DÀNH CHO SẢN PHẨM LIÊN QUAN */}
                     {isSaleDay && saleDiscount > 0 && <div className="badge-discount">-{saleDiscount}%</div>}
                     
                     <div className="rc-img">
@@ -599,6 +603,7 @@ export default function ProductDetail() {
                       <div className="rc-title">{p.name}</div>
                     </Link>
                     
+                    {/* TÍNH TOÁN GIÁ DỰA THEO ADMIN CHO SẢN PHẨM LIÊN QUAN */}
                     <div className="rc-price-row">
                       {isSaleDay && saleDiscount > 0 ? (
                         <>
