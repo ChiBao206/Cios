@@ -326,7 +326,7 @@ export default function CartPage() {
   return (
     <div style={{ background: '#f8fafc', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       
-      {/* ĐÃ FIX: CHUYỂN TOÀN BỘ CSS SANG DẠNG KEBAB-CASE CHUẨN HTML */}
+      {/* CSS DẠNG KEBAB-CASE CHUẨN */}
       <style>{`
         .voucher-modal-overlay {
           position: fixed; 
@@ -616,7 +616,7 @@ export default function CartPage() {
                     )}
                   </div>
 
-                  {/* KHU VỰC VOUCHER: TÍCH HỢP TỰ NHẬP + CHỌN TỪ VÍ */}
+                  {/* KHUNG ÁP DỤNG VOUCHER BẰNG NÚT */}
                   <div style={{ border: '1px dashed #cbd5e1', background: '#f8fafc', padding: '20px', borderRadius: '8px', marginBottom: '30px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
                       <label style={{ fontSize: '14px', color: '#1e293b', fontWeight: 'bold' }}>
@@ -723,47 +723,78 @@ export default function CartPage() {
       </div>
 
       {/* FOOTER */}
-      <footer className="pro-footer" style={{ background: '#1e293b', color: '#cbd5e1', paddingTop: '60px', marginTop: 'auto' }}>
-        <div className="footer-container" style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', flexWrap: 'wrap', gap: '40px', padding: '0 20px', paddingBottom: '40px' }}>
-          <div className="footer-col" style={{ flex: 1.5, minWidth: '250px' }}>
-            <h3 style={{ color: 'white', marginBottom: '20px' }}>CIOs - impossible is nothing</h3>
-            <p style={{ lineHeight: 1.6, marginBottom: '20px' }}>Đối tác tin cậy cung cấp giải pháp an ninh toàn diện. Cam kết sản phẩm chính hãng, dịch vụ tận tâm và hỗ trợ kỹ thuật trọn đời.</p>
-            <div className="social-icons" style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-              <div className="social-btn" style={{ width: '35px', height: '35px', borderRadius: '50%', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: '#3b5998' }}><i className="fab fa-facebook-f"></i></div>
-              <div className="social-btn" style={{ width: '35px', height: '35px', borderRadius: '50%', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: '#e1306c' }}><i className="fab fa-instagram"></i></div>
-              <div className="social-btn" style={{ width: '35px', height: '35px', borderRadius: '50%', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: '#ff0000' }}><i className="fab fa-youtube"></i></div>
+      <footer className="pro-footer" style={{ marginTop: 'auto' }}>
+        <div className="footer-container">
+          <div className="footer-col">
+            <h3>CIOs - impossible is nothing</h3>
+            <p>
+              Đối tác tin cậy cung cấp giải pháp an ninh toàn diện. Cam kết sản
+              phẩm chính hãng, dịch vụ tận tâm và hỗ trợ kỹ thuật trọn đời.
+            </p>
+            <div className="social-icons">
+              <div className="social-btn" style={{ background: "#3b5998" }}>
+                <i className="fab fa-facebook-f"></i>
+              </div>
+              <div className="social-btn" style={{ background: "#e1306c" }}>
+                <i className="fab fa-instagram"></i>
+              </div>
+              <div className="social-btn" style={{ background: "#ff0000" }}>
+                <i className="fab fa-youtube"></i>
+              </div>
+            </div>
+            <div className="newsletter-box">
+              <span>Đăng ký nhận khuyến mãi:</span>
+              <div className="input-group">
+                <input type="email" placeholder="Email của bạn..." />
+                <button>GỬI</button>
+              </div>
             </div>
           </div>
 
-          <div className="footer-col" style={{ flex: 1, minWidth: '200px' }}>
-            <h3 style={{ color: 'white', marginBottom: '20px' }}>CHÍNH SÁCH HỖ TRỢ</h3>
-            <ul className="footer-links" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              <li style={{ marginBottom: '12px' }}><span style={{ color: '#0ea5e9', marginRight: '8px' }}>›</span> Chính sách bảo hành 24 tháng</li>
-              <li style={{ marginBottom: '12px' }}><span style={{ color: '#0ea5e9', marginRight: '8px' }}>›</span> Đổi trả 1-1 trong 30 ngày</li>
-              <li style={{ marginBottom: '12px' }}><span style={{ color: '#0ea5e9', marginRight: '8px' }}>›</span> Chính sách bảo mật thông tin</li>
-              <li style={{ marginBottom: '12px' }}><span style={{ color: '#0ea5e9', marginRight: '8px' }}>›</span> Hướng dẫn mua hàng online</li>
-              <li style={{ marginBottom: '12px' }}><span style={{ color: '#0ea5e9', marginRight: '8px' }}>›</span> Hướng dẫn thanh toán</li>
+          <div className="footer-col">
+            <h3>CHÍNH SÁCH HỖ TRỢ</h3>
+            <ul className="footer-links">
+              <li><span className="bullet">›</span> Chính sách bảo hành 24 tháng</li>
+              <li><span className="bullet">›</span> Đổi trả 1-1 trong 30 ngày</li>
+              <li><span className="bullet">›</span> Chính sách bảo mật thông tin</li>
+              <li><span className="bullet">›</span> Hướng dẫn mua hàng online</li>
+              <li><span className="bullet">›</span> Hướng dẫn thanh toán</li>
             </ul>
           </div>
 
-          <div className="footer-col" style={{ flex: 1.5, minWidth: '250px' }}>
-            <h3 style={{ color: 'white', marginBottom: '20px' }}>LIÊN HỆ VỚI CHÚNG TÔI</h3>
-            <div style={{ display: 'flex', gap: '15px', marginBottom: '15px' }}>
-              <div style={{ color: '#0ea5e9', fontSize: '18px' }}><i className="fas fa-map-marker-alt"></i></div>
-              <div><strong style={{ color: 'white' }}>Trụ sở chính:</strong><p style={{ margin: '5px 0 0 0' }}>12 Trịnh Đình Thảo, P. Hòa Thạnh, Q. Tân Phú, TP. Hồ Chí Minh</p></div>
+          <div className="footer-col">
+            <h3>LIÊN HỆ VỚI CHÚNG TÔI</h3>
+            <div className="contact-row">
+              <div className="icon-box">
+                <i className="fas fa-map-marker-alt"></i>
+              </div>
+              <div>
+                <strong>Trụ sở chính:</strong>
+                <p>12 Trịnh Đình Thảo, P. Hòa Thạnh, Q. Tân Phú, TP. Hồ Chí Minh</p>
+              </div>
             </div>
-            <div style={{ display: 'flex', gap: '15px', marginBottom: '15px' }}>
-              <div style={{ color: '#0ea5e9', fontSize: '18px' }}><i className="fas fa-phone-alt"></i></div>
-              <div><strong style={{ color: 'white' }}>Hotline 24/7:</strong><p style={{ margin: '5px 0 0 0', color: '#0ea5e9', fontWeight: 'bold' }}>0971.024.173</p></div>
+            <div className="contact-row">
+              <div className="icon-box">
+                <i className="fas fa-phone-alt"></i>
+              </div>
+              <div>
+                <strong>Hotline 24/7:</strong>
+                <span className="hotline-text">0971.024.173</span>
+              </div>
             </div>
-            <div style={{ display: 'flex', gap: '15px', marginBottom: '15px' }}>
-              <div style={{ color: '#0ea5e9', fontSize: '18px' }}><i className="fas fa-envelope"></i></div>
-              <div><strong style={{ color: 'white' }}>Email hỗ trợ:</strong><p style={{ margin: '5px 0 0 0' }}>hotro@cameracb.com</p></div>
+            <div className="contact-row">
+              <div className="icon-box">
+                <i className="fas fa-envelope"></i>
+              </div>
+              <div>
+                <strong>Email hỗ trợ:</strong>
+                <p>hotro@cameracb.com</p>
+              </div>
             </div>
           </div>
 
-          <div className="footer-col" style={{ flex: 1.5, minWidth: '250px' }}>
-            <h3 style={{ color: 'white', marginBottom: '20px' }}>BẢN ĐỒ CỬA HÀNG</h3>
+          <div className="footer-col">
+            <h3>BẢN ĐỒ CỬA HÀNG</h3>
             <div
               className="map-frame"
               style={{
@@ -772,7 +803,7 @@ export default function CartPage() {
                 borderRadius: "8px",
                 display: "flex",
                 alignItems: "center",
-                justifyItems: "center",
+                justifyContent: "center",
                 overflow: "hidden"
               }}
             >
@@ -787,10 +818,10 @@ export default function CartPage() {
             </div>
           </div>
         </div>
-        <div style={{ background: '#0f172a', textAlign: 'center', padding: '20px', fontSize: '14px', borderTop: '1px solid #334155' }}>
+        <div className="footer-bottom">
           © 2026 Công Ty TNHH CIOs - impossible is nothing. Giấy phép KD số: 0123456789.
         </div>
       </footer>
     </div>
   );
-} 
+}
