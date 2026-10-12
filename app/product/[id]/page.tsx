@@ -31,36 +31,30 @@ export default function ProductDetail() {
   const [reviewImage, setReviewImage] = useState('');
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
-  // STATE KIỂM TRA NGÀY VÀNG (1 VÀ 15)
+  // STATE KIỂM TRA NGÀY VÀNG VÀ % GIẢM GIÁ TỪ ADMIN
   const [isSaleDay, setIsSaleDay] = useState(false);
+  const [saleDiscount, setSaleDiscount] = useState(0);
 
   useEffect(() => {
     const loggedInUser = localStorage.getItem('currentUser');
     if (loggedInUser) setUser(JSON.parse(loggedInUser));
 
-    // KÍCH HOẠT LOGIC GIẢM GIÁ
-    const today = new Date();
-    const currentDay = today.getDate();
-    // Đang để 11 để bạn test, test xong nhớ đổi thành 15
-    setIsSaleDay(currentDay === 1 || currentDay === 11);
-
     const fetchData = async () => {
       try {
         const timestamp = new Date().getTime();
         
-        // 1. GỌI API LẤY SẢN PHẨM & ĐÁNH GIÁ TỪ MONGODB
-        const [prodRes, reviewRes] = await Promise.all([
+        // GỌI THÊM API SETTINGS ĐỂ LẤY CẤU HÌNH ADMIN
+        const [prodRes, reviewRes, setRes] = await Promise.all([
           fetch(`/api/products?t=${timestamp}`),
-          fetch(`/api/reviews?t=${timestamp}`)
+          fetch(`/api/reviews?t=${timestamp}`),
+          fetch(`/api/settings?t=${timestamp}`).catch(() => null)
         ]);
 
         if (prodRes.ok) {
           const allProducts = await prodRes.json();
-          // Tìm sản phẩm hiện tại bằng MongoDB ID
           const currentProduct = allProducts.find((p: any) => String(p._id || p.id) === String(params?.id));
           setProduct(currentProduct);
 
-          // Tìm sản phẩm liên quan cùng danh mục
           if (currentProduct) {
             const related = allProducts
               .filter((p: any) => String(p.category_id) === String(currentProduct.category_id) && String(p._id || p.id) !== String(params?.id))
@@ -73,6 +67,19 @@ export default function ProductDetail() {
           const allReviews = await reviewRes.json();
           const currentReviews = allReviews.filter((r: any) => String(r.product_id) === String(params?.id));
           setReviews(currentReviews);
+        }
+
+        // XỬ LÝ CẤU HÌNH TỪ ADMIN
+        if (setRes && setRes.ok) {
+          const sData = await setRes.json();
+          if (sData) {
+            setSaleDiscount(Number(sData.saleDiscount) || 0);
+            const currentDay = new Date().getDate();
+            const daysArray = (sData.saleDays || "").split(',').map((d: string) => parseInt(d.trim()));
+            if (daysArray.includes(currentDay)) {
+              setIsSaleDay(true);
+            }
+          }
         }
 
       } catch (error) {
@@ -88,7 +95,6 @@ export default function ProductDetail() {
   }, [params?.id]);
 
   const handleLogout = () => {
-    localStorage.removeItem('camera_bn_cart'); 
     localStorage.removeItem('currentUser'); 
     window.location.href = '/'; 
   };
@@ -296,10 +302,10 @@ export default function ProductDetail() {
         </div>
 
         <div className="pd-main-card">
-          {/* TAG SALE DÀNH CHO SẢN PHẨM CHÍNH */}
-          {isSaleDay && (
+          {/* TAG SALE ĐỘNG TỪ ADMIN */}
+          {isSaleDay && saleDiscount > 0 && (
             <div style={{ position: 'absolute', top: '20px', left: '20px', background: '#e11d48', color: 'white', padding: '5px 12px', borderRadius: '6px', fontSize: '16px', fontWeight: 'bold', zIndex: 5, boxShadow: '0 4px 10px rgba(225,29,72,0.3)', transform: 'rotate(-5deg)' }}>
-              -5% GIẢM NGAY
+              -{saleDiscount}% GIẢM NGAY
             </div>
           )}
 
@@ -313,11 +319,11 @@ export default function ProductDetail() {
             
             <h1 className="pd-title">{product.name}</h1>
             
-            {/* CHỖ NÀY ĐÃ SỬA: HIỆN 2 GIÁ CHO SẢN PHẨM CHÍNH */}
+            {/* TÍNH TOÁN GIÁ DỰA THEO ADMIN */}
             <div className="pd-price-box">
-              {isSaleDay ? (
+              {isSaleDay && saleDiscount > 0 ? (
                 <>
-                  <div className="pd-price">{(Number(product.price) * 0.95).toLocaleString('vi-VN')} đ</div>
+                  <div className="pd-price">{(Number(product.price) * (1 - saleDiscount / 100)).toLocaleString('vi-VN')} đ</div>
                   <div className="pd-old-price">{Number(product.price).toLocaleString('vi-VN')} đ</div>
                 </>
               ) : (
@@ -581,8 +587,7 @@ export default function ProductDetail() {
               {relatedProducts.map((p) => {
                 return (
                   <div className="related-card" key={p._id || p.id} style={{ flex: 1, minWidth: '250px' }}>
-                    {/* CHỖ NÀY ĐÃ SỬA: HIỆN TAG SALE CHO SẢN PHẨM LIÊN QUAN */}
-                    {isSaleDay && <div className="badge-discount">-5%</div>}
+                    {isSaleDay && saleDiscount > 0 && <div className="badge-discount">-{saleDiscount}%</div>}
                     
                     <div className="rc-img">
                       <Link href={`/product/${p._id || p.id}`} style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -594,15 +599,14 @@ export default function ProductDetail() {
                       <div className="rc-title">{p.name}</div>
                     </Link>
                     
-                    {/* CHỖ NÀY ĐÃ SỬA: HIỆN 2 GIÁ CHO SẢN PHẨM LIÊN QUAN */}
                     <div className="rc-price-row">
-                      {isSaleDay ? (
+                      {isSaleDay && saleDiscount > 0 ? (
                         <>
                           <span className="rc-old-price" style={{ color: '#94a3b8', textDecoration: 'line-through', fontSize: '12px' }}>
                             {Number(p.price).toLocaleString('vi-VN')} đ
                           </span>
                           <span className="rc-new-price" style={{ color: '#ef4444', fontWeight: '800', fontSize: '16px' }}>
-                            {(Number(p.price) * 0.95).toLocaleString('vi-VN')} đ
+                            {(Number(p.price) * (1 - saleDiscount / 100)).toLocaleString('vi-VN')} đ
                           </span>
                         </>
                       ) : (

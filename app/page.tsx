@@ -16,10 +16,11 @@ export default function Home() {
   const [categories, setCategories] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
-  // STATE HIỂN THỊ POPUP & SALE
+  // STATE HIỂN THỊ POPUP & SALE ĐỘNG TỪ ADMIN
   const [showSalePopup, setShowSalePopup] = useState(false);
   const [isSaleDay, setIsSaleDay] = useState(false);
   const [saleDayText, setSaleDayText] = useState("");
+  const [saleDiscount, setSaleDiscount] = useState(0); // State lưu % giảm giá
 
   // 2. TỰ ĐỘNG GỌI API ĐỂ LẤY DỮ LIỆU TỪ DATABASE
   useEffect(() => {
@@ -28,30 +29,35 @@ export default function Home() {
       setUser(JSON.parse(loggedInUser));
     }
 
-    // KIỂM TRA NGÀY VÀNG
-    const today = new Date();
-    const currentDay = today.getDate();
-    // Đang test ngày 11, test xong bạn đổi số 11 thành 15 nhé
-    const saleCondition = currentDay === 1 || currentDay === 11; 
-    
-    setIsSaleDay(saleCondition);
-    setSaleDayText(currentDay.toString());
-    
-    // ĐÃ SỬA: Cứ đúng ngày Sale là hiện Popup (Không dùng sessionStorage chặn nữa)
-    if (saleCondition) {
-      setShowSalePopup(true);
-    }
-
     const fetchRealData = async () => {
       try {
         const timestamp = new Date().getTime();
-        const [prodRes, catRes] = await Promise.all([
+        const [prodRes, catRes, setRes] = await Promise.all([
           fetch(`/api/products?t=${timestamp}`),
-          fetch(`/api/categories?t=${timestamp}`)
+          fetch(`/api/categories?t=${timestamp}`),
+          fetch(`/api/settings?t=${timestamp}`).catch(() => null)
         ]);
         
         if (prodRes.ok) setProducts(await prodRes.json());
         if (catRes.ok) setCategories(await catRes.json());
+        
+        // NẾU CÓ CẤU HÌNH TỪ ADMIN THÌ ÁP DỤNG VÀO ĐÂY
+        if (setRes && setRes.ok) {
+          const sData = await setRes.json();
+          if (sData) {
+            setSaleDiscount(Number(sData.saleDiscount) || 0);
+            
+            const currentDay = new Date().getDate();
+            const daysArray = (sData.saleDays || "").split(',').map((d: string) => parseInt(d.trim()));
+            
+            if (daysArray.includes(currentDay)) {
+              setIsSaleDay(true);
+              setShowSalePopup(true);
+              setSaleDayText(currentDay.toString());
+            }
+          }
+        }
+
       } catch (error) {
         console.error("Lỗi tải dữ liệu", error);
       }
@@ -62,12 +68,10 @@ export default function Home() {
   }, []);
 
   const handleClosePopup = () => {
-    // ĐÃ SỬA: Chỉ đơn giản là đóng popup trên màn hình, không lưu nhớ gì cả
     setShowSalePopup(false);
   };
 
-const handleLogout = () => {
-    // Không xóa giỏ hàng nữa để lưu lịch sử mua sắm của khách
+  const handleLogout = () => {
     localStorage.removeItem('currentUser'); 
     window.location.href = '/'; 
   };
@@ -123,17 +127,15 @@ const handleLogout = () => {
 
   return (
     <>
-      {/* KHU VỰC POPUP HIỂN THỊ CHƯƠNG TRÌNH KHUYẾN MÃI NGÀY 1 & 15 */}
-      {showSalePopup && (
+      {/* KHU VỰC POPUP HIỂN THỊ CHƯƠNG TRÌNH KHUYẾN MÃI THEO ADMIN */}
+      {showSalePopup && saleDiscount > 0 && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(15, 23, 42, 0.8)', backdropFilter: 'blur(5px)' }}>
           <div style={{ background: 'white', width: '500px', maxWidth: '90%', borderRadius: '16px', overflow: 'hidden', position: 'relative', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', animation: 'popIn 0.5s ease-out' }}>
             
-            {/* Nút đóng */}
             <button onClick={handleClosePopup} style={{ position: 'absolute', top: '15px', right: '15px', background: 'rgba(255,255,255,0.2)', color: 'white', border: 'none', width: '35px', height: '35px', borderRadius: '50%', fontSize: '18px', cursor: 'pointer', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(2px)' }}>
               <i className="fas fa-times"></i>
             </button>
 
-            {/* Banner Header */}
             <div style={{ background: 'linear-gradient(135deg, #e11d48, #f43f5e)', padding: '40px 20px', textAlign: 'center', color: 'white', position: 'relative', overflow: 'hidden' }}>
               <i className="fas fa-gift" style={{ fontSize: '60px', opacity: 0.2, position: 'absolute', left: '-10px', bottom: '-10px', transform: 'rotate(-15deg)' }}></i>
               <i className="fas fa-percentage" style={{ fontSize: '50px', opacity: 0.2, position: 'absolute', right: '10px', top: '10px', transform: 'rotate(15deg)' }}></i>
@@ -143,11 +145,10 @@ const handleLogout = () => {
               </div>
             </div>
 
-            {/* Content Body */}
             <div style={{ padding: '30px', textAlign: 'center' }}>
-              <h3 style={{ fontSize: '22px', color: '#1e293b', margin: '0 0 15px 0', fontWeight: '800' }}>Giảm Ngay <span style={{ color: '#e11d48', fontSize: '32px' }}>5%</span></h3>
+              <h3 style={{ fontSize: '22px', color: '#1e293b', margin: '0 0 15px 0', fontWeight: '800' }}>Giảm Ngay <span style={{ color: '#e11d48', fontSize: '32px' }}>{saleDiscount}%</span></h3>
               <p style={{ color: '#475569', fontSize: '15px', lineHeight: '1.6', marginBottom: '25px' }}>
-                Mua sắm thả ga, không lo về giá! Áp dụng trực tiếp 5% vào toàn bộ sản phẩm cửa hàng và tổng hóa đơn khi bạn chốt đơn trong hôm nay.
+                Mua sắm thả ga, không lo về giá! Áp dụng trực tiếp {saleDiscount}% vào toàn bộ sản phẩm cửa hàng và tổng hóa đơn khi bạn chốt đơn trong hôm nay.
               </p>
               <button 
                 onClick={handleClosePopup}
@@ -489,10 +490,10 @@ const handleLogout = () => {
                 <div className="hot-badge">TOP</div>
                 
                 <div className="hot-img" style={{ position: 'relative' }}>
-                  {/* TAG SALE GÓC TRÁI DÀNH CHO NGÀY VÀNG */}
-                  {isSaleDay && (
+                  {/* TAG SALE GÓC TRÁI DÀNH CHO NGÀY VÀNG DỰA VÀO ADMIN */}
+                  {isSaleDay && saleDiscount > 0 && (
                     <div style={{ position: 'absolute', top: '10px', left: '10px', background: '#e11d48', color: 'white', padding: '3px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold', zIndex: 2, boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
-                      -5%
+                      -{saleDiscount}%
                     </div>
                   )}
                   <Link href={`/product/${product.id || product._id}`}>
@@ -508,15 +509,15 @@ const handleLogout = () => {
                     <h3>{product.name}</h3>
                   </Link>
                   
-                  {/* CHỖ NÀY ĐÃ SỬA: HIỆN 2 GIÁ GẠCH CHÉO NẾU LÀ NGÀY SALE */}
+                  {/* TÍNH TOÁN GIÁ DỰA VÀO ADMIN */}
                   <div className="hot-price" style={{ minHeight: '45px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                    {isSaleDay ? (
+                    {isSaleDay && saleDiscount > 0 ? (
                       <>
                         <span style={{ textDecoration: 'line-through', color: '#94a3b8', fontSize: '13px', fontWeight: 'normal', marginBottom: '2px' }}>
                           {Number(product.price).toLocaleString("vi-VN")} đ
                         </span>
                         <span style={{ color: '#e11d48', fontSize: '16px' }}>
-                          {(Number(product.price) * 0.95).toLocaleString("vi-VN")} đ
+                          {(Number(product.price) * (1 - saleDiscount / 100)).toLocaleString("vi-VN")} đ
                         </span>
                       </>
                     ) : (
@@ -560,10 +561,9 @@ const handleLogout = () => {
                 </div>
                 
                 <div className="card-img" style={{ position: 'relative' }}>
-                   {/* TAG SALE GÓC TRÁI DÀNH CHO NGÀY VÀNG */}
-                   {isSaleDay && (
+                   {isSaleDay && saleDiscount > 0 && (
                     <div style={{ position: 'absolute', top: '10px', left: '10px', background: '#e11d48', color: 'white', padding: '3px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold', zIndex: 2, boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
-                      -5%
+                      -{saleDiscount}%
                     </div>
                   )}
                   <Link href={`/product/${product.id || product._id}`}>
@@ -579,15 +579,14 @@ const handleLogout = () => {
                     <h3>{product.name}</h3>
                   </Link>
 
-                  {/* CHỖ NÀY ĐÃ SỬA: HIỆN 2 GIÁ GẠCH CHÉO NẾU LÀ NGÀY SALE */}
                   <div className="price-row" style={{ minHeight: '40px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start' }}>
-                    {isSaleDay ? (
+                    {isSaleDay && saleDiscount > 0 ? (
                       <>
                         <span style={{ textDecoration: 'line-through', color: '#94a3b8', fontSize: '12px', fontWeight: 'normal' }}>
                           {Number(product.price).toLocaleString("vi-VN")} đ
                         </span>
                         <span style={{ color: '#e11d48', fontSize: '16px', fontWeight: 'bold' }}>
-                          {(Number(product.price) * 0.95).toLocaleString("vi-VN")} đ
+                          {(Number(product.price) * (1 - saleDiscount / 100)).toLocaleString("vi-VN")} đ
                         </span>
                       </>
                     ) : (
