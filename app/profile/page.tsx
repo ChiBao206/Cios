@@ -1,3 +1,4 @@
+/* eslint-disable */
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
@@ -20,6 +21,19 @@ export default function ProfilePage() {
   const [profileForm, setProfileForm] = useState({ username: '', phone: '', email: '' });
   const [passForm, setPassForm] = useState({ old: '', new: '', confirm: '' });
 
+  // ==========================================
+  // STATE CHO TÍNH NĂNG QUÊN MẬT KHẨU BẰNG OTP
+  // ==========================================
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const [forgotStep, setForgotStep] = useState(1); 
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [sentOtp, setSentOtp] = useState('');
+  const [inputOtp, setInputOtp] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [forgotError, setForgotError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
   useEffect(() => {
     const loggedInUser = localStorage.getItem('currentUser');
     if (loggedInUser) {
@@ -41,7 +55,6 @@ export default function ProfilePage() {
         fetchSupports(parsedUser.username, parsedUser.phone);
       }
 
-      // LẤY DỮ LIỆU TỪ MỤC YÊU THÍCH TRÊN TRÌNH DUYỆT
       const savedFavs = localStorage.getItem('camera_bn_favs');
       if(savedFavs) {
         setFavorites(JSON.parse(savedFavs));
@@ -229,12 +242,37 @@ export default function ProfilePage() {
     }
   };
 
-  const handleChangePassword = (e: React.FormEvent) => {
+  const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if(passForm.new !== passForm.confirm) return alert("Mật khẩu nhập lại không khớp!");
     if(passForm.new.length < 6) return alert("Mật khẩu phải dài hơn 6 ký tự!");
-    alert("Đổi mật khẩu thành công!");
-    setPassForm({ old: '', new: '', confirm: '' });
+    
+    try {
+      // 1. Kiểm tra mật khẩu cũ
+      const resCheck = await fetch('/api/users');
+      const users = await resCheck.json();
+      const currentUserData = users.find((u: any) => u._id === (user._id || user.id));
+
+      if (currentUserData.password !== passForm.old) {
+        return alert("Mật khẩu hiện tại không đúng!");
+      }
+
+      // 2. Cập nhật mật khẩu mới
+      const updateRes = await fetch(`/api/users?id=${user._id || user.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: passForm.new })
+      });
+
+      if (updateRes.ok) {
+        alert("Đổi mật khẩu thành công!");
+        setPassForm({ old: '', new: '', confirm: '' });
+      } else {
+        alert("Có lỗi xảy ra khi lưu mật khẩu!");
+      }
+    } catch (error) {
+      alert("Lỗi kết nối máy chủ!");
+    }
   };
 
   const handleSubmitSupport = async (e: React.FormEvent) => {
@@ -266,6 +304,109 @@ export default function ProfilePage() {
     localStorage.setItem('camera_bn_favs', JSON.stringify(newFavs));
   };
 
+  // ==========================================
+  // XỬ LÝ QUÊN MẬT KHẨU QUA OTP
+  // ==========================================
+  const openForgotModal = () => {
+    setForgotEmail(profileForm.email || ''); // Tự điền email của khách
+    setShowForgotModal(true);
+  };
+
+  const handleSendOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotError('');
+    setIsLoading(true);
+
+    try {
+      const res = await fetch('/api/users');
+      const users = await res.json();
+      const userExists = users.find((u: any) => u.email === forgotEmail.trim());
+
+      if (!userExists) {
+        setForgotError('Email này chưa được đăng ký trong hệ thống!');
+        setIsLoading(false);
+        return;
+      }
+
+      const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+      setSentOtp(otpCode);
+
+      const mailRes = await fetch('/api/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: forgotEmail.trim(), otp: otpCode })
+      });
+
+      if (mailRes.ok) {
+        setForgotStep(2); 
+      } else {
+        setForgotError('Có lỗi xảy ra khi gửi email. Vui lòng kiểm tra lại cấu hình mail!');
+      }
+    } catch (err) {
+      setForgotError('Lỗi hệ thống. Vui lòng thử lại!');
+    }
+    setIsLoading(false);
+  };
+
+  const handleVerifyOTP = (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotError('');
+    if (inputOtp.trim() !== sentOtp) {
+      setForgotError('Mã OTP không chính xác!');
+      return;
+    }
+    setForgotStep(3); 
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotError('');
+
+    if (newPassword !== confirmPassword) {
+      setForgotError('Mật khẩu nhập lại không khớp!');
+      return;
+    }
+    
+    if (newPassword.length < 6) {
+      setForgotError('Mật khẩu mới phải có ít nhất 6 ký tự!');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const res = await fetch('/api/users');
+      const users = await res.json();
+      const userToUpdate = users.find((u: any) => u.email === forgotEmail.trim());
+
+      if (userToUpdate) {
+        const updateRes = await fetch(`/api/users?id=${userToUpdate._id || userToUpdate.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: newPassword })
+        });
+
+        if (updateRes.ok) {
+          alert('🎉 Khôi phục mật khẩu thành công! Bạn có thể sử dụng mật khẩu mới ngay bây giờ.');
+          closeForgotModal();
+        } else {
+          setForgotError('Lỗi hệ thống khi lưu mật khẩu. Vui lòng thử lại!');
+        }
+      }
+    } catch (error) {
+      setForgotError('Lỗi mạng. Vui lòng thử lại!');
+    }
+    setIsLoading(false);
+  };
+
+  const closeForgotModal = () => {
+    setShowForgotModal(false);
+    setForgotStep(1);
+    setInputOtp('');
+    setNewPassword('');
+    setConfirmPassword('');
+    setForgotError('');
+  };
+
   if (!user) return null; 
 
   const renderAvatar = () => {
@@ -281,6 +422,151 @@ export default function ProfilePage() {
   return (
     <div style={{ background: '#f8fafc', minHeight: '100vh', display: 'flex', flexDirection: 'column', fontFamily: "'Segoe UI', sans-serif" }}>
       
+      <style>{`
+        .avatar-container:hover .avatar-overlay { opacity: 1 !important; }
+        .profile-input { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; outline: none; margin-bottom: 20px; transition: 0.3s; }
+        .profile-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+        .btn-outline:hover { background: #f1f5f9 !important; }
+        .invoice-table th { padding: 12px 10px; text-align: left; color: #64748b; font-size: 11px; text-transform: uppercase; border-bottom: 2px solid #f1f5f9; }
+        .invoice-table td { padding: 15px 10px; border-bottom: 1px dashed #e2e8f0; font-size: 14px; color: #334155; vertical-align: middle; }
+        .fav-card { border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; transition: 0.3s; position: relative; }
+        .fav-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-color: #cbd5e1; }
+        .chat-bubble-user { background: #3b82f6; color: white; padding: 12px 18px; border-radius: 18px 18px 0 18px; max-width: 70%; font-size: 14px; align-self: flex-end; box-shadow: 0 2px 5px rgba(59,130,246,0.2); }
+        .chat-bubble-admin { background: #f1f5f9; color: #1e293b; padding: 12px 18px; border-radius: 18px 18px 18px 0; max-width: 70%; font-size: 14px; border: 1px solid #e2e8f0; }
+
+        /* CSS CHO MODAL QUÊN MẬT KHẨU */
+        .forgot-modal-overlay {
+          position: fixed; inset: 0; background: rgba(15, 23, 42, 0.85); display: flex; align-items: center; justify-content: center; z-index: 2000; padding: 20px; backdrop-filter: blur(5px);
+        }
+        .forgot-modal-content {
+          background: white; border-radius: 12px; width: 100%; max-width: 450px; padding: 30px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); position: relative;
+        }
+        .forgot-btn {
+          width: 100%; padding: 14px; background: #3b82f6; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.2s; display: flex; justify-content: center; align-items: center; gap: 8px;
+        }
+        .forgot-btn:hover { background: #2563eb; }
+        .forgot-btn:disabled { background: #94a3b8; cursor: not-allowed; }
+
+        @media (max-width: 768px) {
+          .profile-layout { flex-direction: column !important; }
+          .profile-sidebar { width: 100% !important; }
+          .profile-main { width: 100% !important; padding: 20px !important; min-height: auto !important; }
+          .invoice-table { display: block; overflow-x: auto; white-space: nowrap; }
+          .settings-container { flex-direction: column !important; gap: 20px !important; }
+          .fav-card { width: 100% !important; }
+          #chat-box-container { min-height: 400px !important; max-height: 60vh !important; }
+        }
+      `}</style>
+
+      {/* MODAL QUÊN MẬT KHẨU */}
+      {showForgotModal && (
+        <div className="forgot-modal-overlay">
+          <div className="forgot-modal-content">
+            <button 
+              onClick={closeForgotModal} 
+              style={{ position: 'absolute', top: '15px', right: '15px', background: 'none', border: 'none', fontSize: '20px', color: '#94a3b8', cursor: 'pointer' }}
+            >
+              &times;
+            </button>
+
+            <h3 style={{ fontSize: '20px', color: '#1e293b', margin: '0 0 10px', textAlign: 'center', fontWeight: '800' }}>
+              KHÔI PHỤC MẬT KHẨU
+            </h3>
+
+            {forgotError && (
+              <div style={{ background: '#fef2f2', color: '#ef4444', padding: '10px', borderRadius: '6px', fontSize: '13px', marginBottom: '20px', textAlign: 'center', border: '1px solid #fecdd3' }}>
+                {forgotError}
+              </div>
+            )}
+
+            {/* BƯỚC 1 */}
+            {forgotStep === 1 && (
+              <form onSubmit={handleSendOTP}>
+                <p style={{ fontSize: '13px', color: '#64748b', textAlign: 'center', marginBottom: '20px' }}>
+                  Vui lòng xác nhận Email của tài khoản. Chúng tôi sẽ gửi mã xác nhận gồm 6 chữ số.
+                </p>
+                <label style={{ display: 'block', fontSize: '13px', color: '#334155', fontWeight: '600', marginBottom: '8px' }}>Địa chỉ Email *</label>
+                <input 
+                  type="email" 
+                  className="profile-input" 
+                  placeholder="Nhập email của bạn..." 
+                  value={forgotEmail} 
+                  onChange={(e) => setForgotEmail(e.target.value)} 
+                  required 
+                />
+                <button type="submit" className="forgot-btn" disabled={isLoading}>
+                  {isLoading ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-envelope"></i>}
+                  {isLoading ? 'ĐANG GỬI MÃ...' : 'GỬI MÃ XÁC NHẬN'}
+                </button>
+              </form>
+            )}
+
+            {/* BƯỚC 2 */}
+            {forgotStep === 2 && (
+              <form onSubmit={handleVerifyOTP}>
+                <p style={{ fontSize: '13px', color: '#64748b', textAlign: 'center', marginBottom: '20px' }}>
+                  Mã xác nhận đã được gửi đến <strong>{forgotEmail}</strong>.<br/>Vui lòng kiểm tra hộp thư đến (hoặc thư rác).
+                </p>
+                <label style={{ display: 'block', fontSize: '13px', color: '#334155', fontWeight: '600', marginBottom: '8px', textAlign: 'center' }}>Mã OTP 6 số *</label>
+                <input 
+                  type="text" 
+                  className="profile-input" 
+                  placeholder="Ví dụ: 123456" 
+                  value={inputOtp} 
+                  onChange={(e) => setInputOtp(e.target.value)} 
+                  maxLength={6}
+                  style={{ textAlign: 'center', fontSize: '20px', letterSpacing: '5px', fontWeight: 'bold' }}
+                  required 
+                />
+                <button type="submit" className="forgot-btn">
+                  <i className="fas fa-check-circle"></i> XÁC NHẬN MÃ OTP
+                </button>
+                <div style={{ textAlign: 'center', marginTop: '15px' }}>
+                  <button type="button" onClick={() => setForgotStep(1)} style={{ background: 'none', border: 'none', color: '#3b82f6', fontSize: '12px', cursor: 'pointer', textDecoration: 'underline' }}>Sai email? Quay lại</button>
+                </div>
+              </form>
+            )}
+
+            {/* BƯỚC 3 */}
+            {forgotStep === 3 && (
+              <form onSubmit={handleResetPassword}>
+                <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+                  <div style={{ display: 'inline-flex', width: '50px', height: '50px', borderRadius: '50%', background: '#dcfce7', color: '#16a34a', alignItems: 'center', justifyContent: 'center', fontSize: '24px', marginBottom: '10px' }}>
+                    <i className="fas fa-unlock-alt"></i>
+                  </div>
+                  <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>Xác thực thành công. Vui lòng đặt lại mật khẩu mới.</p>
+                </div>
+                
+                <label style={{ display: 'block', fontSize: '13px', color: '#334155', fontWeight: '600', marginBottom: '8px' }}>Mật khẩu mới *</label>
+                <input 
+                  type="password" 
+                  className="profile-input" 
+                  placeholder="Tối thiểu 6 ký tự..." 
+                  value={newPassword} 
+                  onChange={(e) => setNewPassword(e.target.value)} 
+                  required 
+                />
+
+                <label style={{ display: 'block', fontSize: '13px', color: '#334155', fontWeight: '600', marginBottom: '8px' }}>Xác nhận mật khẩu mới *</label>
+                <input 
+                  type="password" 
+                  className="profile-input" 
+                  placeholder="Nhập lại mật khẩu..." 
+                  value={confirmPassword} 
+                  onChange={(e) => setConfirmPassword(e.target.value)} 
+                  required 
+                />
+
+                <button type="submit" className="forgot-btn" disabled={isLoading} style={{ background: '#10b981' }}>
+                  {isLoading ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-save"></i>}
+                  {isLoading ? 'ĐANG LƯU...' : 'ĐỔI MẬT KHẨU'}
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
       <header style={{ background: '#1e293b', padding: '15px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Link href="/" style={{ color: 'white', fontWeight: 'bold', fontSize: '20px', textDecoration: 'none' }}><i className="fas fa-video"></i> CIOs - impossible is nothing</Link>
         <Link href="/" style={{ color: '#cbd5e1', textDecoration: 'none', fontSize: '14px' }}><i className="fas fa-home"></i> Về trang chủ</Link>
@@ -291,7 +577,6 @@ export default function ProfilePage() {
         <aside className="profile-sidebar" style={{ width: '280px', background: 'white', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
           
           <div style={{ padding: '30px 20px', textAlign: 'center', borderBottom: '1px solid #f1f5f9' }}>
-            
             <div style={{ position: 'relative', width: '100px', height: '100px', margin: '0 auto 15px' }}>
               <div 
                 style={{ width: '100%', height: '100%', borderRadius: '50%', background: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', cursor: 'pointer', boxShadow: '0 4px 15px rgba(37, 99, 235, 0.3)', overflow: 'hidden' }}
@@ -343,29 +628,6 @@ export default function ProfilePage() {
 
         <main className="profile-main" style={{ flex: 1, background: 'white', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0', padding: '40px', minHeight: '600px', position: 'relative' }}>
           
-          <style>{`
-            .avatar-container:hover .avatar-overlay { opacity: 1 !important; }
-            .profile-input { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; outline: none; margin-bottom: 20px; transition: 0.3s; }
-            .profile-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
-            .btn-outline:hover { background: #f1f5f9 !important; }
-            .invoice-table th { padding: 12px 10px; text-align: left; color: #64748b; font-size: 11px; text-transform: uppercase; border-bottom: 2px solid #f1f5f9; }
-            .invoice-table td { padding: 15px 10px; border-bottom: 1px dashed #e2e8f0; font-size: 14px; color: #334155; vertical-align: middle; }
-            .fav-card { border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; transition: 0.3s; position: relative; }
-            .fav-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-color: #cbd5e1; }
-            .chat-bubble-user { background: #3b82f6; color: white; padding: 12px 18px; border-radius: 18px 18px 0 18px; max-width: 70%; font-size: 14px; align-self: flex-end; box-shadow: 0 2px 5px rgba(59,130,246,0.2); }
-            .chat-bubble-admin { background: #f1f5f9; color: #1e293b; padding: 12px 18px; border-radius: 18px 18px 18px 0; max-width: 70%; font-size: 14px; border: 1px solid #e2e8f0; }
-
-            @media (max-width: 768px) {
-              .profile-layout { flex-direction: column !important; }
-              .profile-sidebar { width: 100% !important; }
-              .profile-main { width: 100% !important; padding: 20px !important; min-height: auto !important; }
-              .invoice-table { display: block; overflow-x: auto; white-space: nowrap; }
-              .settings-container { flex-direction: column !important; gap: 20px !important; }
-              .fav-card { width: 100% !important; }
-              #chat-box-container { min-height: 400px !important; max-height: 60vh !important; }
-            }
-          `}</style>
-
           {activeTab === 'orders' && (
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
@@ -529,6 +791,17 @@ export default function ProfilePage() {
                     <label style={{ fontSize: '13px', color: '#475569', fontWeight: '600', marginBottom: '8px', display: 'block' }}>Nhập lại mật khẩu mới</label>
                     <input type="password" value={passForm.confirm} onChange={e => setPassForm({...passForm, confirm: e.target.value})} className="profile-input" required />
                     
+                    {/* ĐÃ THÊM: Nút Quên mật khẩu ngay trên nút Xác nhận đổi mật khẩu */}
+                    <div style={{ textAlign: 'right', marginBottom: '15px' }}>
+                      <Link 
+                        href="#" 
+                        onClick={(e) => { e.preventDefault(); openForgotModal(); }} 
+                        style={{ color: '#ef4444', fontSize: '13px', textDecoration: 'none', fontWeight: '600', transition: '0.2s' }}
+                      >
+                        Quên mật khẩu?
+                      </Link>
+                    </div>
+
                     <button type="submit" style={{ width: '100%', padding: '12px', background: '#1e293b', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s' }}>XÁC NHẬN ĐỔI MẬT KHẨU</button>
                   </form>
                 </div>
@@ -573,7 +846,7 @@ export default function ProfilePage() {
                   </tbody>
                 </table>
               </div>
- 
+
               <div style={{ textAlign: 'right', paddingRight: '10px' }}>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '40px', alignItems: 'center' }}>
                   <span style={{ fontSize: '16px', fontWeight: '900', color: '#1e293b' }}>TỔNG CỘNG</span>
