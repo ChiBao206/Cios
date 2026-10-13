@@ -561,13 +561,17 @@ export default function AdminDashboard() {
     reviewCount: item.count
   }));
 
-  // Lọc ra Top 5 Cao Nhất (Sắp xếp giảm dần)
+  // ĐÃ SỬA: LỌC CHÍNH XÁC DANH SÁCH (TỪ 3.5 SAO TRỞ LÊN LÀ KHEN, DƯỚI 3.5 SAO LÀ CHÊ)
+  
+  // Lọc ra Top 5 Cao Nhất (>= 3.5 Sao, Sắp xếp giảm dần)
   const topRated = [...rankedProducts]
+    .filter(prod => Number(prod.avgRating) >= 3.5)
     .sort((a, b) => Number(b.avgRating) - Number(a.avgRating))
     .slice(0, 5);
 
-  // Lọc ra Top 5 Thấp Nhất (Sắp xếp tăng dần)
+  // Lọc ra Top 5 Thấp Nhất (< 3.5 Sao, Sắp xếp tăng dần)
   const lowestRated = [...rankedProducts]
+    .filter(prod => Number(prod.avgRating) < 3.5)
     .sort((a, b) => Number(a.avgRating) - Number(b.avgRating))
     .slice(0, 5);
 
@@ -1057,7 +1061,7 @@ export default function AdminDashboard() {
                                   </div>
                                 </div>
                               </div>
-                            )) : <div style={{ padding: '20px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>Chưa có đủ dữ liệu</div>}
+                            )) : <div style={{ padding: '20px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>Chưa có sản phẩm nào đạt từ 3.5 Sao trở lên</div>}
                           </div>
                         </div>
 
@@ -1079,7 +1083,7 @@ export default function AdminDashboard() {
                                   </div>
                                 </div>
                               </div>
-                            )) : <div style={{ padding: '20px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>Chưa có đủ dữ liệu</div>}
+                            )) : <div style={{ padding: '20px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>Chưa có sản phẩm nào bị đánh giá dưới 3.5 Sao</div>}
                           </div>
                         </div>
 
