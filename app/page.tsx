@@ -24,26 +24,34 @@ export default function Home() {
 
   // STATE VOUCHER (MÃ GIẢM GIÁ)
   const [vouchers, setVouchers] = useState<any[]>([]);
-  const [savedVouchers, setSavedVouchers] = useState<string[]>([]); // Mã khách đã lưu
-  const [usedVouchers, setUsedVouchers] = useState<string[]>([]); // MỚI: Mã khách ĐÃ SỬ DỤNG
+  const [savedVouchers, setSavedVouchers] = useState<string[]>([]);
+  const [usedVouchers, setUsedVouchers] = useState<string[]>([]);
+
+  // ĐÃ THÊM: STATE LƯU DANH SÁCH ID SẢN PHẨM ĐÃ THẢ TIM ĐỂ ĐỔI MÀU TRÁI TIM
+  const [favIds, setFavIds] = useState<string[]>([]);
 
   // 2. TỰ ĐỘNG GỌI API ĐỂ LẤY DỮ LIỆU TỪ DATABASE
   useEffect(() => {
     const loggedInUser = localStorage.getItem("currentUser");
     
-    // Gán ngay để check Voucher sau này
     let currentUsername = "";
     if (loggedInUser) {
       const parsedUser = JSON.parse(loggedInUser);
       setUser(parsedUser);
       currentUsername = parsedUser.username;
       
-      // Lấy lịch sử voucher đã lưu và đã sử dụng của tài khoản này
       const localSavedVouchers = localStorage.getItem(`camera_bn_my_vouchers_${currentUsername}`);
       if(localSavedVouchers) setSavedVouchers(JSON.parse(localSavedVouchers));
 
       const localUsedVouchers = localStorage.getItem(`camera_bn_used_vouchers_${currentUsername}`);
       if(localUsedVouchers) setUsedVouchers(JSON.parse(localUsedVouchers));
+    }
+
+    // ĐỌC DỮ LIỆU SẢN PHẨM YÊU THÍCH TỪ LOCALSTORAGE ĐỂ TÔ MÀU TRÁI TIM
+    const localFavs = localStorage.getItem('camera_bn_favs');
+    if (localFavs) {
+      const parsedFavs = JSON.parse(localFavs);
+      setFavIds(parsedFavs.map((f: any) => String(f._id || f.id)));
     }
 
     const fetchRealData = async () => {
@@ -59,7 +67,6 @@ export default function Home() {
         if (prodRes.ok) setProducts(await prodRes.json());
         if (catRes.ok) setCategories(await catRes.json());
         
-        // Lấy danh sách Voucher đang kích hoạt
         if (vouRes && vouRes.ok) {
           const vData = await vouRes.json();
           const validVouchers = vData.filter((v: any) => 
@@ -95,7 +102,6 @@ export default function Home() {
     fetchRealData();
   }, []);
 
-  // HÀM BẤM "LƯU MÃ"
   const handleSaveVoucher = (code: string) => {
     if (!user) {
       alert("Vui lòng đăng nhập để lưu mã giảm giá nhé!");
@@ -120,35 +126,39 @@ export default function Home() {
     window.location.href = '/'; 
   };
 
-  // ĐÃ THÊM: HÀM XỬ LÝ THÊM SẢN PHẨM VÀO YÊU THÍCH
-  const addToFavorite = (productData: any) => {
+  // ĐÃ SỬA: HÀM BẬT/TẮT SẢN PHẨM YÊU THÍCH (TOGGLE)
+  const toggleFavorite = (productData: any) => {
     if (!user) {
       alert("Vui lòng đăng nhập để lưu sản phẩm yêu thích nhé!");
       router.push('/login');
       return;
     }
     
+    const productId = String(productData._id || productData.id);
     const saved = localStorage.getItem('camera_bn_favs');
     let favList = saved ? JSON.parse(saved) : [];
     
-    // Kiểm tra xem sản phẩm đã có trong danh sách chưa
-    const exists = favList.find((item: any) => String(item._id || item.id) === String(productData._id || productData.id));
+    const existsIndex = favList.findIndex((item: any) => String(item._id || item.id) === productId);
     
-    if(!exists) {
+    if (existsIndex === -1) {
+      // Nếu chưa có -> Thêm vào yêu thích (Tim đỏ)
       favList.push(productData);
+      setFavIds([...favIds, productId]);
       localStorage.setItem('camera_bn_favs', JSON.stringify(favList));
-      alert("❤️ Đã thêm vào mục Sản phẩm yêu thích thành công!");
     } else { 
-      alert("Sản phẩm này đã nằm trong mục Yêu thích rồi!"); 
+      // Nếu đã có -> Xóa khỏi yêu thích (Tim xám)
+      favList.splice(existsIndex, 1);
+      setFavIds(favIds.filter(id => id !== productId));
+      localStorage.setItem('camera_bn_favs', JSON.stringify(favList));
     }
   };
 
-  // 3. CHIA SẢN PHẨM DỰA TRÊN DỮ LIỆU THẬT (Sau khi đã tải xong)
+  // 3. CHIA SẢN PHẨM DỰA TRÊN DỮ LIỆU THẬT
   const hotProducts = products.slice(0, 4);
   const baseProducts = products.slice(4);
 
   // ==========================================
-  // THUẬT TOÁN BỘ LỌC & PHÂN TRANG (PAGINATION LOGIC)
+  // THUẬT TOÁN BỘ LỌC & PHÂN TRANG
   // ==========================================
   const [currentPage, setCurrentPage] = useState(1);
   const [isCategoryOpen, setIsCategoryOpen] = useState(false); 
@@ -749,86 +759,91 @@ export default function Home() {
             <i className="fas fa-box-open" style={{ color: "#b45309" }}></i> TẤT CẢ SẢN PHẨM
           </h2>
           <div className="product-grid">
-            {currentProducts.map((product) => (
-              <div className="product-card" key={product.id || product._id}>
-                {/* ĐÃ SỬA: Gắn onClick gọi hàm addToFavorite vào nút trái tim */}
-                <div 
-                  className="favorite-btn" 
-                  onClick={(e) => {
-                    e.stopPropagation(); // Tránh bị click đè vào thẻ cha
-                    addToFavorite(product);
-                  }}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <i className="fas fa-heart"></i>
-                </div>
-                
-                <div className="card-img" style={{ position: 'relative' }}>
-                   {isSaleDay && saleDiscount > 0 && (
-                    <div style={{ position: 'absolute', top: '10px', left: '10px', background: '#e11d48', color: 'white', padding: '3px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold', zIndex: 2, boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
-                      -{saleDiscount}%
-                    </div>
-                  )}
-                  <Link href={`/product/${product.id || product._id}`}>
-                    <img src={product.image} alt={product.name} />
-                  </Link>
-                </div>
+            {currentProducts.map((product) => {
+              // KIỂM TRA XEM SẢN PHẨM NÀY ĐÃ ĐƯỢC THẢ TIM HAY CHƯA
+              const isFav = favIds.includes(String(product.id || product._id));
 
-                <div className="card-body">
-                  <Link
-                    href={`/product/${product.id || product._id}`}
-                    style={{ textDecoration: "none" }}
-                  >
-                    <h3>{product.name}</h3>
-                  </Link>
-
-                  <div className="price-row" style={{ minHeight: '40px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start' }}>
-                    {isSaleDay && saleDiscount > 0 ? (
-                      <>
-                        <span style={{ textDecoration: 'line-through', color: '#94a3b8', fontSize: '12px', fontWeight: 'normal' }}>
-                          {Number(product.price).toLocaleString("vi-VN")} đ
-                        </span>
-                        <span style={{ color: '#e11d48', fontSize: '16px', fontWeight: 'bold' }}>
-                          {(Number(product.price) * (1 - saleDiscount / 100)).toLocaleString("vi-VN")} đ
-                        </span>
-                      </>
-                    ) : (
-                      <span style={{ color: '#e11d48', fontSize: '16px', fontWeight: 'bold' }}>
-                        {Number(product.price).toLocaleString("vi-VN")} đ
-                      </span>
-                    )}
-                  </div>
-
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: "#e58e26",
-                      marginBottom: "8px",
-                      fontWeight: "bold",
+              return (
+                <div className="product-card" key={product.id || product._id}>
+                  {/* ĐÃ SỬA: Giao diện và logic đổi màu trái tim */}
+                  <div 
+                    className="favorite-btn" 
+                    onClick={(e) => {
+                      e.stopPropagation(); 
+                      toggleFavorite(product);
                     }}
+                    style={{ cursor: 'pointer', transition: '0.3s' }}
                   >
-                    <i className="fas fa-tag"></i> Chỉ còn: {product.quantity} cái
+                    <i className="fas fa-heart" style={{ color: isFav ? '#e11d48' : '#cbd5e1', transition: '0.3s' }}></i>
                   </div>
                   
-                  {Number(product.quantity) > 0 ? (
-                    <button className="btn-hot-add" onClick={() => {
-                      if (!user) {
-                        alert("Vui lòng đăng nhập để thêm vào giỏ hàng!");
-                        router.push('/login');
-                      } else {
-                        addToCart(product);
-                      }
-                    }}>
-                      Thêm vào giỏ hàng
-                    </button>
-                  ) : (
-                    <button className="btn-hot-add" disabled style={{ background: '#cbd5e1', color: '#64748b', cursor: 'not-allowed' }}>
-                      Tạm hết hàng
-                    </button>
-                  )}
+                  <div className="card-img" style={{ position: 'relative' }}>
+                     {isSaleDay && saleDiscount > 0 && (
+                      <div style={{ position: 'absolute', top: '10px', left: '10px', background: '#e11d48', color: 'white', padding: '3px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold', zIndex: 2, boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
+                        -{saleDiscount}%
+                      </div>
+                    )}
+                    <Link href={`/product/${product.id || product._id}`}>
+                      <img src={product.image} alt={product.name} />
+                    </Link>
+                  </div>
+
+                  <div className="card-body">
+                    <Link
+                      href={`/product/${product.id || product._id}`}
+                      style={{ textDecoration: "none" }}
+                    >
+                      <h3>{product.name}</h3>
+                    </Link>
+
+                    <div className="price-row" style={{ minHeight: '40px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start' }}>
+                      {isSaleDay && saleDiscount > 0 ? (
+                        <>
+                          <span style={{ textDecoration: 'line-through', color: '#94a3b8', fontSize: '12px', fontWeight: 'normal' }}>
+                            {Number(product.price).toLocaleString("vi-VN")} đ
+                          </span>
+                          <span style={{ color: '#e11d48', fontSize: '16px', fontWeight: 'bold' }}>
+                            {(Number(product.price) * (1 - saleDiscount / 100)).toLocaleString("vi-VN")} đ
+                          </span>
+                        </>
+                      ) : (
+                        <span style={{ color: '#e11d48', fontSize: '16px', fontWeight: 'bold' }}>
+                          {Number(product.price).toLocaleString("vi-VN")} đ
+                        </span>
+                      )}
+                    </div>
+
+                    <div
+                      style={{
+                        fontSize: "11px",
+                        color: "#e58e26",
+                        marginBottom: "8px",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      <i className="fas fa-tag"></i> Chỉ còn: {product.quantity} cái
+                    </div>
+                    
+                    {Number(product.quantity) > 0 ? (
+                      <button className="btn-hot-add" onClick={() => {
+                        if (!user) {
+                          alert("Vui lòng đăng nhập để thêm vào giỏ hàng!");
+                          router.push('/login');
+                        } else {
+                          addToCart(product);
+                        }
+                      }}>
+                        Thêm vào giỏ hàng
+                      </button>
+                    ) : (
+                      <button className="btn-hot-add" disabled style={{ background: '#cbd5e1', color: '#64748b', cursor: 'not-allowed' }}>
+                        Tạm hết hàng
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* THANH PHÂN TRANG */}
@@ -957,6 +972,7 @@ export default function Home() {
                 display: "flex",
                 alignItems: "center",
                 justifyItems: "center",
+                overflow: "hidden"
               }}
             >
               <iframe
