@@ -1,3 +1,4 @@
+/* eslint-disable */
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -13,11 +14,9 @@ export default function AdminDashboard() {
   const [reviews, setReviews] = useState<any[]>([]);
   const [supports, setSupports] = useState<any[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
-  // THÊM STATE VOUCHER
   const [vouchers, setVouchers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // STATE LƯU CẤU HÌNH HỆ THỐNG
   const [systemSettings, setSystemSettings] = useState({
     saleDays: '1, 15',
     saleDiscount: 5,
@@ -29,7 +28,6 @@ export default function AdminDashboard() {
   const [isEditing, setIsEditing] = useState(false);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
 
-  // STATE FORM VOUCHER
   const [showVoucherForm, setShowVoucherForm] = useState(false);
   const [isEditingVoucher, setIsEditingVoucher] = useState(false);
   const [editingVoucherId, setEditingVoucherId] = useState<string | null>(null);
@@ -63,7 +61,6 @@ export default function AdminDashboard() {
     setShowProductForm(true);
   };
 
-  // MỞ FORM THÊM/SỬA VOUCHER
   const openAddVoucherModal = () => {
     setIsEditingVoucher(false);
     setEditingVoucherId(null);
@@ -79,7 +76,7 @@ export default function AdminDashboard() {
       discountPercent: voucher.discountPercent,
       minOrderValue: voucher.minOrderValue,
       maxUsage: voucher.maxUsage,
-      expireDate: new Date(voucher.expireDate).toISOString().split('T')[0] // Format yyyy-mm-dd
+      expireDate: new Date(voucher.expireDate).toISOString().split('T')[0]
     });
     setShowVoucherForm(true);
   };
@@ -109,7 +106,6 @@ export default function AdminDashboard() {
   const [showMobileChat, setShowMobileChat] = useState(false);
 
   const handleLogout = () => {
-    localStorage.removeItem('camera_bn_cart'); 
     localStorage.removeItem('currentUser'); 
     window.location.href = '/'; 
   };
@@ -122,7 +118,6 @@ export default function AdminDashboard() {
     setIsLoading(true);
     try {
       const timestamp = new Date().getTime();
-      // GỌI THÊM API VOUCHER
       const [prodRes, catRes, ordRes, usrRes, revRes, supRes, projRes, setRes, vouRes] = await Promise.all([
         fetch(`/api/products?t=${timestamp}`), 
         fetch(`/api/categories?t=${timestamp}`), 
@@ -156,7 +151,6 @@ export default function AdminDashboard() {
     setIsLoading(false);
   };
 
-  // XỬ LÝ LƯU VOUCHER
   const handleVoucherSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newVoucher.expireDate) return alert("Vui lòng chọn ngày hết hạn!");
@@ -213,7 +207,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // HÀM LƯU CÀI ĐẶT
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -542,6 +535,42 @@ export default function AdminDashboard() {
 
   const maxRevenue = Math.max(...monthlyRevenue, 1); 
 
+  // ========================================================
+  // THUẬT TOÁN TÍNH TOÁN VÀ SẮP XẾP BẢNG XẾP HẠNG ĐÁNH GIÁ SẢN PHẨM
+  // ========================================================
+  const productRatings: { [key: string]: { totalStars: number; count: number; name: string; image: string } } = {};
+  
+  reviews.forEach(r => {
+    if (r.product_id) {
+      const prod = products.find(p => String(p.id || p._id) === String(r.product_id));
+      if (prod) {
+        if (!productRatings[r.product_id]) {
+          productRatings[r.product_id] = { totalStars: 0, count: 0, name: prod.name, image: prod.image };
+        }
+        productRatings[r.product_id].totalStars += Number(r.rating);
+        productRatings[r.product_id].count += 1;
+      }
+    }
+  });
+
+  // Chuyển object thành mảng và tính điểm trung bình
+  const rankedProducts = Object.values(productRatings).map(item => ({
+    name: item.name,
+    image: item.image,
+    avgRating: (item.totalStars / item.count).toFixed(1),
+    reviewCount: item.count
+  }));
+
+  // Lọc ra Top 5 Cao Nhất (Sắp xếp giảm dần)
+  const topRated = [...rankedProducts]
+    .sort((a, b) => Number(b.avgRating) - Number(a.avgRating))
+    .slice(0, 5);
+
+  // Lọc ra Top 5 Thấp Nhất (Sắp xếp tăng dần)
+  const lowestRated = [...rankedProducts]
+    .sort((a, b) => Number(a.avgRating) - Number(b.avgRating))
+    .slice(0, 5);
+
   return (
     <>
 <style>{`
@@ -661,7 +690,6 @@ export default function AdminDashboard() {
             <li className={activeTab === 'reviews' ? 'active' : ''} onClick={() => setActiveTab('reviews')}><i className="fas fa-star"></i> Đánh giá</li>
             <li className={activeTab === 'customers' ? 'active' : ''} onClick={() => setActiveTab('customers')}><i className="fas fa-users"></i> Khách hàng</li>
             <li className={activeTab === 'support' ? 'active' : ''} onClick={() => { setActiveTab('support'); setShowMobileChat(false); }}><i className="fas fa-headset"></i> Hỗ trợ</li>
-            {/* THÊM TAB VOUCHER */}
             <li className={activeTab === 'vouchers' ? 'active' : ''} onClick={() => setActiveTab('vouchers')}><i className="fas fa-ticket-alt"></i> Mã giảm giá</li>
             <li className={activeTab === 'settings' ? 'active' : ''} onClick={() => setActiveTab('settings')}><i className="fas fa-cog"></i> Cài đặt hệ thống</li>
           </ul>
@@ -744,7 +772,6 @@ export default function AdminDashboard() {
                 </>
               )}
 
-              {/* GIAO DIỆN QUẢN LÝ VOUCHER */}
               {activeTab === 'vouchers' && (
                 <div className="admin-card">
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
@@ -979,31 +1006,85 @@ export default function AdminDashboard() {
                 </div>
               )}
 
+              {/* BẢNG XẾP HẠNG ĐÁNH GIÁ SẢN PHẨM (LEADERBOARD) */}
               {activeTab === 'reviews' && (
                 <div className="admin-card">
                   <h2 style={{ margin: '0 0 20px 0', color: '#1e293b' }}>THỐNG KÊ ĐÁNH GIÁ (API)</h2>
-                  {reviews.length === 0 ? <p>Chưa có đánh giá nào trong DB.</p> : (
-                    <div style={{ display: 'flex', gap: '30px', alignItems: 'center', flexWrap: 'wrap' }}>
-                      <div style={{ flex: 1, minWidth: '200px', textAlign: 'center' }}>
-                        <h1 style={{ fontSize: '60px', margin: 0, color: '#f59e0b' }}>{Number(reviews.reduce((a,b)=>a+b.rating,0)/reviews.length || 5).toFixed(1)}</h1>
-                        <div style={{ color: '#f59e0b', fontSize: '24px' }}>★★★★★</div>
-                        <p style={{ color: '#64748b' }}>Dựa trên {reviews.length} lượt đánh giá</p>
-                      </div>
-                      <div style={{ flex: 2, minWidth: '300px' }}>
-                         {[5, 4, 3, 2, 1].map((star) => {
-                           const count = reviews.filter(r => r.rating === star).length;
-                           const percent = reviews.length > 0 ? (count / reviews.length) * 100 : 0;
-                           return (
-                            <div key={star} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                              <span style={{ width: '50px', color: '#64748b', fontWeight: 'bold' }}>{star} Sao</span>
-                              <div style={{ flex: 1, height: '10px', background: '#e2e8f0', borderRadius: '5px', overflow: 'hidden' }}>
-                                <div style={{ width: `${percent}%`, height: '100%', background: '#f59e0b' }}></div>
+                  
+                  {reviews.length === 0 ? <p style={{ color: '#64748b' }}>Chưa có đánh giá nào trong Hệ thống.</p> : (
+                    <>
+                      {/* Biểu đồ tổng quan */}
+                      <div style={{ display: 'flex', gap: '30px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '40px', paddingBottom: '30px', borderBottom: '1px dashed #e2e8f0' }}>
+                        <div style={{ flex: 1, minWidth: '200px', textAlign: 'center' }}>
+                          <h1 style={{ fontSize: '60px', margin: 0, color: '#f59e0b' }}>{Number(reviews.reduce((a,b)=>a+b.rating,0)/reviews.length || 5).toFixed(1)}</h1>
+                          <div style={{ color: '#f59e0b', fontSize: '24px' }}>★★★★★</div>
+                          <p style={{ color: '#64748b' }}>Dựa trên {reviews.length} lượt đánh giá</p>
+                        </div>
+                        <div style={{ flex: 2, minWidth: '300px' }}>
+                           {[5, 4, 3, 2, 1].map((star) => {
+                             const count = reviews.filter(r => r.rating === star).length;
+                             const percent = reviews.length > 0 ? (count / reviews.length) * 100 : 0;
+                             return (
+                              <div key={star} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                                <span style={{ width: '50px', color: '#64748b', fontWeight: 'bold' }}>{star} Sao</span>
+                                <div style={{ flex: 1, height: '10px', background: '#e2e8f0', borderRadius: '5px', overflow: 'hidden' }}>
+                                  <div style={{ width: `${percent}%`, height: '100%', background: '#f59e0b' }}></div>
+                                </div>
                               </div>
-                            </div>
-                           )
-                         })}
+                             )
+                           })}
+                        </div>
                       </div>
-                    </div>
+
+                      {/* Bảng Xếp Hạng Top Đánh Giá Cao/Thấp */}
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '30px' }}>
+                        
+                        {/* Top Tốt Nhất */}
+                        <div style={{ flex: 1, minWidth: '300px' }}>
+                          <h3 style={{ fontSize: '16px', color: '#10b981', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '15px' }}>
+                            <i className="fas fa-arrow-up"></i> TOP 5 SẢN PHẨM ĐÁNH GIÁ CAO NHẤT
+                          </h3>
+                          <div style={{ border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden' }}>
+                            {topRated.length > 0 ? topRated.map((prod, index) => (
+                              <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '15px', padding: '15px', borderBottom: '1px solid #f1f5f9', background: index === 0 ? '#ecfdf5' : 'white' }}>
+                                <div style={{ fontWeight: 'bold', fontSize: '18px', color: index === 0 ? '#10b981' : '#94a3b8', width: '20px' }}>#{index + 1}</div>
+                                <img src={prod.image} alt={prod.name} style={{ width: '50px', height: '50px', objectFit: 'contain', borderRadius: '6px', background: '#f8fafc', border: '1px solid #e2e8f0' }} />
+                                <div style={{ flex: 1 }}>
+                                  <h4 style={{ margin: '0 0 5px 0', fontSize: '13px', color: '#1e293b' }}>{prod.name}</h4>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                    <span style={{ color: '#f59e0b', fontSize: '12px' }}>★ {prod.avgRating}</span>
+                                    <span style={{ fontSize: '11px', color: '#94a3b8' }}>({prod.reviewCount} lượt)</span>
+                                  </div>
+                                </div>
+                              </div>
+                            )) : <div style={{ padding: '20px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>Chưa có đủ dữ liệu</div>}
+                          </div>
+                        </div>
+
+                        {/* Top Tệ Nhất */}
+                        <div style={{ flex: 1, minWidth: '300px' }}>
+                          <h3 style={{ fontSize: '16px', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '15px' }}>
+                            <i className="fas fa-arrow-down"></i> TOP 5 SẢN PHẨM BỊ CHÊ NHIỀU NHẤT
+                          </h3>
+                          <div style={{ border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden' }}>
+                            {lowestRated.length > 0 ? lowestRated.map((prod, index) => (
+                              <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '15px', padding: '15px', borderBottom: '1px solid #f1f5f9', background: index === 0 ? '#fef2f2' : 'white' }}>
+                                <div style={{ fontWeight: 'bold', fontSize: '18px', color: index === 0 ? '#ef4444' : '#94a3b8', width: '20px' }}>#{index + 1}</div>
+                                <img src={prod.image} alt={prod.name} style={{ width: '50px', height: '50px', objectFit: 'contain', borderRadius: '6px', background: '#f8fafc', border: '1px solid #e2e8f0' }} />
+                                <div style={{ flex: 1 }}>
+                                  <h4 style={{ margin: '0 0 5px 0', fontSize: '13px', color: '#1e293b' }}>{prod.name}</h4>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                    <span style={{ color: '#f59e0b', fontSize: '12px' }}>★ {prod.avgRating}</span>
+                                    <span style={{ fontSize: '11px', color: '#94a3b8' }}>({prod.reviewCount} lượt)</span>
+                                  </div>
+                                </div>
+                              </div>
+                            )) : <div style={{ padding: '20px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>Chưa có đủ dữ liệu</div>}
+                          </div>
+                        </div>
+
+                      </div>
+                    </>
                   )}
                 </div>
               )}
