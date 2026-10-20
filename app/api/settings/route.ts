@@ -8,11 +8,7 @@ export async function GET() {
   try {
     await connectDB();
     // Hệ thống chỉ cần duy nhất 1 dòng cấu hình, nên ta dùng findOne()
-<<<<<<< HEAD
     let settings = await Setting.findOne({}).lean();
-=======
-    let settings = await Setting.findOne({});
->>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
     
     // Nếu lần đầu tiên chạy web chưa có data, tự động tạo mặc định
     if (!settings) {
@@ -27,7 +23,6 @@ export async function GET() {
     
     return NextResponse.json(settings);
   } catch (error: any) {
-<<<<<<< HEAD
     console.warn("Lỗi kết nối CSDL cấu hình, sử dụng dữ liệu dự phòng:", error.message);
     return NextResponse.json({
       saleDays: '1, 11, 15',
@@ -36,10 +31,6 @@ export async function GET() {
       feeSouth: 50000,
       feeOther: 80000
     });
-=======
-    console.error("❌ LỖI LẤY CẤU HÌNH:", error.message);
-    return NextResponse.json({ message: "Lỗi kết nối CSDL" }, { status: 500 });
->>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
   }
 }
 

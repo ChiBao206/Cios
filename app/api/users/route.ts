@@ -3,16 +3,12 @@ import connectDB from '../../../lib/mongodb';
 import User from '../../../models/User';
 // Import cỗ máy gửi mail bạn vừa tạo ở Bước 4
 import { sendEmail } from '../../../lib/sendEmail'; 
-<<<<<<< HEAD
 
 import db from '../../../db.json';
-=======
->>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
 
 export async function GET() {
   try {
     await connectDB();
-<<<<<<< HEAD
     let data = await User.find({}).lean();
     if (!data || data.length === 0) {
       if (db.users && db.users.length > 0) {
@@ -28,12 +24,6 @@ export async function GET() {
   } catch (error) {
     console.error("Lỗi kết nối User DB, dùng db.json dự phòng:", error);
     return NextResponse.json(db.users || []);
-=======
-    const data = await User.find({});
-    return NextResponse.json(data);
-  } catch (error) {
-    return NextResponse.json({ error: 'Lỗi server' }, { status: 500 });
->>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
   }
 }
 

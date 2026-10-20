@@ -323,55 +323,35 @@ export default function CartPage() {
   };
 
   if (isLoadingAuth) {
-<<<<<<< HEAD
     return <div style={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'transparent', color: '#0369a1', fontWeight: 'bold' }}><i className="fas fa-spinner fa-spin" style={{ marginRight: '10px' }}></i> Đang tải giỏ hàng...</div>;
   }
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-=======
-    return <div style={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#f8fafc', color: '#64748b', fontWeight: 'bold' }}><i className="fas fa-spinner fa-spin" style={{ marginRight: '10px' }}></i> Đang tải giỏ hàng...</div>;
-  }
-
-  return (
-    <div style={{ background: '#f8fafc', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
->>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
       
       {/* CSS DẠNG KEBAB-CASE CHUẨN */}
       <style>{`
         .voucher-modal-overlay {
           position: fixed; 
           inset: 0; 
-<<<<<<< HEAD
           background: rgba(12,74,110,0.7); 
-=======
-          background: rgba(15,23,42,0.7); 
->>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
           display: flex; 
           justify-content: center; 
           align-items: center; 
           z-index: 1000; 
           padding: 20px;
-<<<<<<< HEAD
           backdrop-filter: blur(8px);
           -webkit-backdrop-filter: blur(8px);
         }
         .voucher-modal-content {
           background: rgba(240, 249, 255, 0.95); 
           border-radius: 16px; 
-=======
-        }
-        .voucher-modal-content {
-          background: #f8fafc; 
-          border-radius: 12px; 
->>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
           width: 100%; 
           max-width: 500px; 
           max-height: 80vh; 
           display: flex; 
           flex-direction: column; 
           overflow: hidden; 
-<<<<<<< HEAD
           box-shadow: 0 25px 50px -12px rgba(2,132,199,0.35);
           border: 1px solid rgba(186, 230, 253, 0.85);
           backdrop-filter: blur(16px);
@@ -384,17 +364,6 @@ export default function CartPage() {
           justify-content: space-between; 
           align-items: center; 
           border-bottom: 1px solid #bae6fd;
-=======
-          box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
-        }
-        .voucher-modal-header {
-          padding: 20px; 
-          background: white; 
-          display: flex; 
-          justify-content: space-between; 
-          align-items: center; 
-          border-bottom: 1px solid #e2e8f0;
->>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
         }
         .voucher-modal-body {
           padding: 20px; 
@@ -406,7 +375,6 @@ export default function CartPage() {
         }
         .v-item {
           display: flex; 
-<<<<<<< HEAD
           background: rgba(255, 255, 255, 0.85); 
           border-radius: 10px; 
           border: 1px solid #bae6fd; 
@@ -416,17 +384,6 @@ export default function CartPage() {
         .v-item-left {
           width: 90px; 
           background: linear-gradient(135deg, #0369a1, #0ea5e9); 
-=======
-          background: white; 
-          border-radius: 8px; 
-          border: 1px solid #e2e8f0; 
-          overflow: hidden; 
-          box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-        }
-        .v-item-left {
-          width: 90px; 
-          background: linear-gradient(135deg, #e11d48, #f43f5e); 
->>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
           color: white; 
           display: flex; 
           flex-direction: column; 
@@ -489,7 +446,6 @@ export default function CartPage() {
                 })
               )}
             </div>
-<<<<<<< HEAD
           </div>
         </div>
       )}
@@ -505,46 +461,6 @@ export default function CartPage() {
             <span><i className="fas fa-truck"></i> Miễn phí lắp đặt nội thành</span>
             <span><i className="fas fa-shield-alt"></i> Bảo hành chính hãng 24 tháng</span>
           </div>
-=======
-          </div>
-        </div>
-      )}
-
-      <header style={{ background: '#1e293b', padding: '12px 0', borderBottom: '1px solid #0f172a' }}>
-        <div style={{ maxWidth: '1140px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '96%', flexWrap: 'wrap', gap: '10px' }}>
-          <div style={{ color: 'white', fontWeight: 'bold', fontSize: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <i className="fas fa-video"></i> CIOs - impossible is nothing
-          </div>
-          <nav style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', alignItems: 'center' }}>
-            <Link href="/" className="nav-link" style={{ color: 'white', textDecoration: 'none', fontSize: '14px', fontWeight: 'bold' }}><i className="fas fa-home"></i> Trang chủ</Link>
-            <Link href="/contact" className="nav-link" style={{ color: 'white', textDecoration: 'none', fontSize: '14px', fontWeight: 'bold' }}><i className="fas fa-phone-alt"></i> Liên hệ</Link>
-            <Link href="/notifications" className="nav-link" style={{ position: 'relative', color: 'white', textDecoration: 'none', fontSize: '14px', fontWeight: 'bold' }}>
-              <i className="fas fa-bell"></i> Thông báo
-              <NotifBadge />
-            </Link>
-            <Link href="/cart" className="nav-link" style={{ color: '#38bdf8', textDecoration: 'none', fontSize: '14px', fontWeight: 'bold', position: 'relative' }}>
-              <i className="fas fa-shopping-cart"></i> Giỏ hàng
-              {totalItems > 0 && (
-                <span style={{ position: 'absolute', top: '-8px', right: '-12px', background: '#e11d48', color: 'white', fontSize: '10px', padding: '2px 6px', borderRadius: '50%' }}>
-                  {totalItems}
-                </span>
-              )}
-            </Link>
-            {user ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <Link href="/profile" style={{ textAlign: 'right', fontSize: '12px', color: '#94a3b8', textDecoration: 'none' }}>
-                  Xin chào,<br/>
-                  <strong style={{ color: '#4ade80', fontSize: '14px', textTransform: 'uppercase' }}>{user.username}</strong>
-                </Link>
-                <button onClick={handleLogout} style={{ background: '#ef4444', color: 'white', border: 'none', padding: '6px 10px', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s', fontSize: '12px' }}>Thoát</button>
-              </div>
-            ) : (
-              <Link href="/login" className="nav-link" style={{ color: 'white', textDecoration: 'none', fontSize: '14px', fontWeight: 'bold' }}>
-                <i className="fas fa-user"></i> Đăng nhập
-              </Link>
-            )}
-          </nav>
->>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
         </div>
       </div>
 
@@ -568,24 +484,15 @@ export default function CartPage() {
             <Link href="/" style={{ display: 'inline-block', background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)', color: 'white', padding: '12px 30px', borderRadius: '30px', fontWeight: 'bold', textDecoration: 'none', boxShadow: '0 4px 15px rgba(2, 132, 199, 0.35)' }}>MUA SẮM NGAY</Link>
           </div>
         ) : (
-<<<<<<< HEAD
           <div className="cart-layout-flex" style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
 
             <div className="cart-items-col" style={{ flex: hasCheckedItems ? '1 1 60%' : '1 1 100%', width: '100%', background: 'rgba(240, 249, 255, 0.78)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', borderRadius: '16px', padding: '0 20px 20px 20px', boxShadow: '0 8px 30px rgba(2, 132, 199, 0.1)', border: '1px solid rgba(186, 230, 253, 0.75)', transition: 'all 0.3s ease' }}>
               
               <div style={{ display: 'flex', alignItems: 'center', padding: '15px 0', borderBottom: '2px solid rgba(186, 230, 253, 0.8)', gap: '12px', marginBottom: '5px' }}>
-=======
-          <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
-
-            <div style={{ flex: hasCheckedItems ? '1 1 60%' : '1 1 100%', width: '100%', background: 'white', borderRadius: '12px', padding: '0 15px 15px 15px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0', transition: 'all 0.3s ease' }}>
-              
-              <div style={{ display: 'flex', alignItems: 'center', padding: '15px 0', borderBottom: '2px solid #e2e8f0', gap: '12px', marginBottom: '5px' }}>
->>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
                 <input 
                   type="checkbox" 
                   checked={isAllChecked} 
                   onChange={(e) => toggleAllCheck(e.target.checked)} 
-<<<<<<< HEAD
                   style={{ cursor: 'pointer', width: '18px', height: '18px', accentColor: '#0ea5e9' }} 
                 />
                 <span style={{ fontWeight: '700', color: '#0369a1', fontSize: '15px' }}>Chọn tất cả ({cartItems.length} sản phẩm)</span>
@@ -599,31 +506,12 @@ export default function CartPage() {
                   </div>
 
                   <div style={{ width: '80px', height: '80px', border: '1px solid #bae6fd', borderRadius: '10px', padding: '6px', flexShrink: 0, background: 'rgba(255, 255, 255, 0.7)' }}>
-=======
-                  style={{ cursor: 'pointer', width: '18px', height: '18px', accentColor: '#e11d48' }} 
-                />
-                <span style={{ fontWeight: '700', color: '#1e293b', fontSize: '15px' }}>Chọn tất cả ({cartItems.length} sản phẩm)</span>
-              </div>
-
-              {cartItems.map((item: any) => (
-                <div key={item._id || item.id} style={{ display: 'flex', alignItems: 'stretch', padding: '15px 0', borderBottom: '1px solid #f1f5f9', gap: '12px' }}>
-                  
-                  <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <input type="checkbox" checked={item.checked} onChange={() => toggleCheck(item._id || item.id)} style={{ cursor: 'pointer', width: '18px', height: '18px', accentColor: '#e11d48' }} />
-                  </div>
-
-                  <div style={{ width: '80px', height: '80px', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '4px', flexShrink: 0 }}>
->>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
                     <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                   </div>
 
                   <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minWidth: 0 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' }}>
-<<<<<<< HEAD
                       <Link href={`/product/${item._id || item.id}`} style={{ fontWeight: '600', color: '#0f172a', textDecoration: 'none', fontSize: '14px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-=======
-                      <Link href={`/product/${item._id || item.id}`} style={{ fontWeight: '600', color: '#1e293b', textDecoration: 'none', fontSize: '14px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
->>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
                         {item.name}
                       </Link>
                       <button onClick={() => removeFromCart(item._id || item.id)} style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '15px', marginTop: '2px' }}>
@@ -632,7 +520,6 @@ export default function CartPage() {
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
-<<<<<<< HEAD
                       <span style={{ fontWeight: '700', color: '#0284c7', fontSize: '15px' }}>
                         {Number(item.price).toLocaleString('vi-VN')} đ
                       </span>
@@ -641,16 +528,6 @@ export default function CartPage() {
                         <button onClick={() => updateQty(item._id || item.id, item.cartQty - 1)} disabled={item.cartQty <= 1} style={{ width: '28px', height: '28px', background: 'rgba(240, 249, 255, 0.9)', border: 'none', cursor: 'pointer', fontWeight: 'bold', color: '#0369a1' }}>-</button>
                         <input type="text" value={item.cartQty} readOnly style={{ width: '35px', height: '28px', border: 'none', borderLeft: '1px solid #bae6fd', borderRight: '1px solid #bae6fd', textAlign: 'center', fontWeight: 'bold', fontSize: '13px', color: '#0c4a6e', background: 'white' }} />
                         <button onClick={() => updateQty(item._id || item.id, item.cartQty + 1)} disabled={item.cartQty >= (item.quantity || item.maxQty)} style={{ width: '28px', height: '28px', background: 'rgba(240, 249, 255, 0.9)', border: 'none', cursor: 'pointer', fontWeight: 'bold', color: '#0369a1' }}>+</button>
-=======
-                      <span style={{ fontWeight: '700', color: '#e11d48', fontSize: '15px' }}>
-                        {Number(item.price).toLocaleString('vi-VN')} đ
-                      </span>
-                      
-                      <div style={{ display: 'flex', border: '1px solid #cbd5e1', borderRadius: '4px', overflow: 'hidden' }}>
-                        <button onClick={() => updateQty(item._id || item.id, item.cartQty - 1)} disabled={item.cartQty <= 1} style={{ width: '28px', height: '28px', background: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold', color: '#475569' }}>-</button>
-                        <input type="text" value={item.cartQty} readOnly style={{ width: '35px', height: '28px', border: 'none', borderLeft: '1px solid #cbd5e1', borderRight: '1px solid #cbd5e1', textAlign: 'center', fontWeight: 'bold', fontSize: '13px', color: '#1e293b' }} />
-                        <button onClick={() => updateQty(item._id || item.id, item.cartQty + 1)} disabled={item.cartQty >= (item.quantity || item.maxQty)} style={{ width: '28px', height: '28px', background: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold', color: '#475569' }}>+</button>
->>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
                       </div>
                     </div>
                   </div>
@@ -659,7 +536,6 @@ export default function CartPage() {
             </div>
 
             {hasCheckedItems && (
-<<<<<<< HEAD
               <div className="cart-summary-col" style={{ flex: '1 1 35%', minWidth: '300px', width: '100%', transition: 'all 0.3s ease' }}>
                 <div style={{ background: 'rgba(240, 249, 255, 0.82)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', borderRadius: '16px', padding: '25px', boxShadow: '0 8px 30px rgba(2, 132, 199, 0.1)', border: '1px solid rgba(186, 230, 253, 0.75)' }}>
                   <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#0369a1', textTransform: 'uppercase', marginBottom: '20px' }}>THÔNG TIN GIAO HÀNG</h3>
@@ -706,54 +582,6 @@ export default function CartPage() {
                       <input type="radio" checked={paymentMethod === 'qr'} readOnly style={{ cursor: 'pointer', width: '18px', height: '18px', accentColor: '#0284c7' }} />
                       <div>
                         <div style={{ fontWeight: '700', color: '#0c4a6e', fontSize: '14px' }}>Chuyển khoản / Quét mã QR</div>
-=======
-              <div style={{ flex: '1 1 35%', minWidth: '300px', width: '100%', transition: 'all 0.3s ease' }}>
-                <div style={{ background: 'white', borderRadius: '12px', padding: '25px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0' }}>
-                  <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#1e293b', textTransform: 'uppercase', marginBottom: '20px' }}>THÔNG TIN GIAO HÀNG</h3>
-
-                  <div style={{ marginBottom: '15px' }}>
-                    <label style={{ display: 'block', fontSize: '13px', color: '#475569', marginBottom: '8px' }}>Họ tên</label>
-                    <input type="text" placeholder="Nhập họ và tên người nhận" value={name} onChange={(e) => setName(e.target.value)} style={{ width: '100%', padding: '12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '14px', outline: 'none' }} />
-                  </div>
-
-                  <div style={{ marginBottom: '20px' }}>
-                    <label style={{ display: 'block', fontSize: '13px', color: '#475569', marginBottom: '8px' }}>Điện thoại</label>
-                    <input type="tel" placeholder="Nhập số điện thoại" value={phone} onChange={(e) => setPhone(e.target.value)} style={{ width: '100%', padding: '12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '14px', outline: 'none' }} />
-                  </div>
-
-                  <div style={{ border: '1px dashed #cbd5e1', background: '#f8fafc', padding: '20px', borderRadius: '8px', marginBottom: '30px' }}>
-                    <label style={{ display: 'block', fontSize: '14px', color: '#e11d48', fontWeight: 'bold', marginBottom: '15px' }}>
-                      <i className="fas fa-map-marker-alt"></i> Địa chỉ nhận hàng (*)
-                    </label>
-                    <select value={selectedProvince} onChange={handleProvinceChange} style={{ width: '100%', padding: '12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '14px', outline: 'none', marginBottom: '10px', background: 'white', cursor: 'pointer' }}>
-                      <option value="" disabled>Chọn Tỉnh/Thành phố</option>
-                      {provinces.map((prov) => (<option key={prov.code} value={prov.code}>{prov.name}</option>))}
-                    </select>
-                    <select value={selectedDistrict} onChange={handleDistrictChange} disabled={!selectedProvince} style={{ width: '100%', padding: '12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '14px', outline: 'none', marginBottom: '10px', background: selectedProvince ? 'white' : '#f1f5f9', cursor: selectedProvince ? 'pointer' : 'not-allowed' }}>
-                      <option value="" disabled>Chọn Quận/Huyện</option>
-                      {districts.map((dist) => (<option key={dist.code} value={dist.code}>{dist.name}</option>))}
-                    </select>
-                    <select value={selectedWard} onChange={(e) => setSelectedWard(e.target.value)} disabled={!selectedDistrict} style={{ width: '100%', padding: '12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '14px', outline: 'none', marginBottom: '10px', background: selectedDistrict ? 'white' : '#f1f5f9', cursor: selectedDistrict ? 'pointer' : 'not-allowed' }}>
-                      <option value="" disabled>Chọn Phường/Xã</option>
-                      {wards.map((ward) => (<option key={ward.code} value={ward.code}>{ward.name}</option>))}
-                    </select>
-                    <input type="text" placeholder="Nhập số nhà, tên đường, tòa nhà..." value={addressDetail} onChange={(e) => setAddressDetail(e.target.value)} style={{ width: '100%', padding: '12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '14px', outline: 'none' }} />
-                  </div>
-
-                  <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#1e293b', textTransform: 'uppercase', marginBottom: '15px' }}>Phương thức thanh toán</h3>
-                  <div style={{ marginBottom: '30px' }}>
-                    <div onClick={() => setPaymentMethod('cod')} style={{ display: 'flex', alignItems: 'center', gap: '15px', padding: '15px', border: '1px solid', borderColor: paymentMethod === 'cod' ? '#3b82f6' : '#cbd5e1', borderRadius: '8px', marginBottom: '10px', cursor: 'pointer', background: paymentMethod === 'cod' ? '#eff6ff' : 'white', transition: '0.2s' }}>
-                      <input type="radio" checked={paymentMethod === 'cod'} readOnly style={{ cursor: 'pointer', width: '18px', height: '18px', accentColor: '#3b82f6' }} />
-                      <div>
-                        <div style={{ fontWeight: '700', color: '#1e293b', fontSize: '14px' }}>Thanh toán khi nhận hàng (COD)</div>
-                        <div style={{ fontSize: '12px', color: '#64748b' }}>Giao hàng tận nơi rồi mới thu tiền</div>
-                      </div>
-                    </div>
-                    <div onClick={() => setPaymentMethod('qr')} style={{ display: 'flex', alignItems: 'center', gap: '15px', padding: '15px', border: '1px solid', borderColor: paymentMethod === 'qr' ? '#3b82f6' : '#cbd5e1', borderRadius: '8px', cursor: 'pointer', background: paymentMethod === 'qr' ? '#eff6ff' : 'white', transition: '0.2s' }}>
-                      <input type="radio" checked={paymentMethod === 'qr'} readOnly style={{ cursor: 'pointer', width: '18px', height: '18px', accentColor: '#3b82f6' }} />
-                      <div>
-                        <div style={{ fontWeight: '700', color: '#1e293b', fontSize: '14px' }}>Chuyển khoản / Quét mã QR</div>
->>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
                         <div style={{ fontSize: '12px', color: '#64748b' }}>Quét mã QR qua ứng dụng ngân hàng, Momo</div>
                       </div>
                     </div>
@@ -777,7 +605,6 @@ export default function CartPage() {
                   </div>
 
                   {/* KHUNG ÁP DỤNG VOUCHER BẰNG NÚT */}
-<<<<<<< HEAD
                   <div style={{ border: '1px dashed #bae6fd', background: 'rgba(224, 242, 254, 0.5)', padding: '20px', borderRadius: '12px', marginBottom: '30px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
                       <label style={{ fontSize: '14px', color: '#0369a1', fontWeight: 'bold' }}>
@@ -786,16 +613,6 @@ export default function CartPage() {
                       <button 
                         onClick={() => setShowVoucherModal(true)}
                         style={{ background: 'rgba(224, 242, 254, 0.9)', color: '#0284c7', border: '1px solid #bae6fd', padding: '6px 12px', borderRadius: '20px', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', transition: '0.2s' }}
-=======
-                  <div style={{ border: '1px dashed #cbd5e1', background: '#f8fafc', padding: '20px', borderRadius: '8px', marginBottom: '30px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                      <label style={{ fontSize: '14px', color: '#1e293b', fontWeight: 'bold' }}>
-                        <i className="fas fa-ticket-alt" style={{ color: '#f59e0b' }}></i> Mã giảm giá (Voucher)
-                      </label>
-                      <button 
-                        onClick={() => setShowVoucherModal(true)}
-                        style={{ background: '#eff6ff', color: '#3b82f6', border: '1px solid #bfdbfe', padding: '6px 12px', borderRadius: '20px', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', transition: '0.2s' }}
->>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
                       >
                         <i className="fas fa-wallet"></i> Chọn từ Ví
                       </button>
@@ -809,15 +626,9 @@ export default function CartPage() {
                             placeholder="Nhập mã voucher (nếu có)..." 
                             value={voucherCode} 
                             onChange={e => setVoucherCode(e.target.value)} 
-<<<<<<< HEAD
                             style={{ flex: 1, padding: '10px 15px', border: '1px solid #bae6fd', borderRadius: '8px', outline: 'none', textTransform: 'uppercase', fontSize: '14px', background: 'rgba(255, 255, 255, 0.85)' }} 
                           />
                           <button onClick={handleApplyManualVoucher} style={{ background: 'linear-gradient(135deg, #0284c7, #0369a1)', color: 'white', border: 'none', padding: '0 20px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s' }}>
-=======
-                            style={{ flex: 1, padding: '10px 15px', border: '1px solid #cbd5e1', borderRadius: '6px', outline: 'none', textTransform: 'uppercase', fontSize: '14px' }} 
-                          />
-                          <button onClick={handleApplyManualVoucher} style={{ background: '#1e293b', color: 'white', border: 'none', padding: '0 20px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s' }}>
->>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
                             Áp dụng
                           </button>
                         </div>
@@ -840,11 +651,7 @@ export default function CartPage() {
                   </div>
 
                   {/* BẢNG TỔNG KẾT TIỀN TỆ */}
-<<<<<<< HEAD
                   <div style={{ background: 'rgba(224, 242, 254, 0.6)', border: '1px solid rgba(186, 230, 253, 0.8)', padding: '15px', borderRadius: '12px', marginBottom: '20px' }}>
-=======
-                  <div style={{ background: '#f1f5f9', padding: '15px', borderRadius: '8px', marginBottom: '20px' }}>
->>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: '#475569', marginBottom: '10px' }}>
                       <span>Tạm tính ({cartItems.filter((i:any)=>i.checked).length} SP):</span>
                       <span style={{ fontWeight: '600' }}>{totalAmount.toLocaleString('vi-VN')} đ</span>
@@ -874,15 +681,9 @@ export default function CartPage() {
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', paddingTop: '15px', borderTop: '1px dashed #cbd5e1' }}>
                     <span style={{ fontSize: '16px', fontWeight: '800', color: '#1e293b' }}>Tổng cộng:</span>
-<<<<<<< HEAD
                     <span style={{ fontSize: '24px', fontWeight: '800', color: '#0369a1' }}>{finalTotal.toLocaleString('vi-VN')} đ</span>
                   </div>
                   <button onClick={handleCheckout} disabled={isSubmitting} style={{ width: '100%', padding: '15px', background: isSubmitting ? '#38bdf8' : 'linear-gradient(135deg, #0ea5e9, #0284c7)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '800', fontSize: '15px', cursor: isSubmitting ? 'not-allowed' : 'pointer', transition: '0.3s' }}>
-=======
-                    <span style={{ fontSize: '24px', fontWeight: '800', color: '#e11d48' }}>{finalTotal.toLocaleString('vi-VN')} đ</span>
-                  </div>
-                  <button onClick={handleCheckout} disabled={isSubmitting} style={{ width: '100%', padding: '15px', background: isSubmitting ? '#f43f5e' : '#e11d48', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '800', fontSize: '15px', cursor: isSubmitting ? 'not-allowed' : 'pointer', transition: '0.3s' }}>
->>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
                     {isSubmitting ? 'ĐANG XỬ LÝ...' : 'XÁC NHẬN ĐẶT HÀNG'}
                   </button>
                 </div>
@@ -893,128 +694,10 @@ export default function CartPage() {
       </main>
 
       {/* FLOATING BUTTONS */}
-<<<<<<< HEAD
       <FloatingActions />
 
       {/* FOOTER */}
       <Footer />
-=======
-      <div className="floating-buttons">
-        <a href="https://zalo.me/0971024173" target="_blank" rel="noopener noreferrer" className="float-btn zalo">
-          <i className="fas fa-comment-dots"></i> Chat Zalo
-        </a>
-        <a href="tel:0971024173" className="float-btn phone">
-          <i className="fas fa-phone-alt"></i> 0971.024.173
-        </a>
-        <button 
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} 
-          className="float-btn up-top" 
-          style={{ border: 'none', cursor: 'pointer' }}
-        >
-          <i className="fas fa-arrow-up"></i>
-        </button>
-      </div>
-
-      {/* FOOTER */}
-      <footer className="pro-footer" style={{ marginTop: 'auto' }}>
-        <div className="footer-container">
-          <div className="footer-col">
-            <h3>CIOs - impossible is nothing</h3>
-            <p>
-              Đối tác tin cậy cung cấp giải pháp an ninh toàn diện. Cam kết sản
-              phẩm chính hãng, dịch vụ tận tâm và hỗ trợ kỹ thuật trọn đời.
-            </p>
-            <div className="social-icons">
-              <div className="social-btn" style={{ background: "#3b5998" }}>
-                <i className="fab fa-facebook-f"></i>
-              </div>
-              <div className="social-btn" style={{ background: "#e1306c" }}>
-                <i className="fab fa-instagram"></i>
-              </div>
-              <div className="social-btn" style={{ background: "#ff0000" }}>
-                <i className="fab fa-youtube"></i>
-              </div>
-            </div>
-            <div className="newsletter-box">
-              <span>Đăng ký nhận khuyến mãi:</span>
-              <div className="input-group">
-                <input type="email" placeholder="Email của bạn..." />
-                <button>GỬI</button>
-              </div>
-            </div>
-          </div>
-
-          <div className="footer-col">
-            <h3>CHÍNH SÁCH HỖ TRỢ</h3>
-            <ul className="footer-links">
-              <li><span className="bullet">›</span> Chính sách bảo hành 24 tháng</li>
-              <li><span className="bullet">›</span> Đổi trả 1-1 trong 30 ngày</li>
-              <li><span className="bullet">›</span> Chính sách bảo mật thông tin</li>
-              <li><span className="bullet">›</span> Hướng dẫn mua hàng online</li>
-              <li><span className="bullet">›</span> Hướng dẫn thanh toán</li>
-            </ul>
-          </div>
-
-          <div className="footer-col">
-            <h3>LIÊN HỆ VỚI CHÚNG TÔI</h3>
-            <div className="contact-row">
-              <div className="icon-box">
-                <i className="fas fa-map-marker-alt"></i>
-              </div>
-              <div>
-                <strong>Trụ sở chính:</strong>
-                <p>12 Trịnh Đình Thảo, P. Hòa Thạnh, Q. Tân Phú, TP. Hồ Chí Minh</p>
-              </div>
-            </div>
-            <div className="contact-row">
-              <div className="icon-box">
-                <i className="fas fa-phone-alt"></i>
-              </div>
-              <div>
-                <strong>Hotline 24/7:</strong>
-                <span className="hotline-text">0971.024.173</span>
-              </div>
-            </div>
-            <div className="contact-row">
-              <div className="icon-box">
-                <i className="fas fa-envelope"></i>
-              </div>
-              <div>
-                <strong>Email hỗ trợ:</strong>
-                <p>hotro@cameracb.com</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="footer-col">
-            <h3>BẢN ĐỒ CỬA HÀNG</h3>
-            <div
-              className="map-frame"
-              style={{
-                background: "#ccc",
-                height: "150px",
-                borderRadius: "8px",
-                display: "flex",
-                alignItems: "center",
-                justifyItems: "center",
-              }}
-            >
-              <iframe
-                src="https://maps.google.com/maps?q=12%20Tr%E1%BB%8Bnh%20%C4%90%C3%ACnh%20Th%E1%BA%A3o%2C%20Ho%C3%A0%20Th%E1%BA%A1nh%2C%20T%C3%A2n%20Ph%C3%BA%2C%20H%E1%BB%93%20Ch%C3%AD%20Minh&t=&z=16&ie=UTF8&iwloc=&output=embed"
-                width="100%"
-                height="200" 
-                style={{ border: 0 }}
-                allowFullScreen={true}
-                loading="lazy"
-              ></iframe>
-            </div>
-          </div>
-        </div>
-        <div className="footer-bottom">
-          © 2026 Công Ty TNHH CIOs - impossible is nothing. Giấy phép KD số: 0123456789.
-        </div>
-      </footer>
->>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
     </div>
   );
 }

@@ -7,7 +7,6 @@ import db from '../../../db.json';
 export async function GET() {
   try {
     await connectDB();
-<<<<<<< HEAD
     let data = await Category.find({}).lean();
     if (!data || data.length === 0) {
       if (db.categories && db.categories.length > 0) {
@@ -23,12 +22,6 @@ export async function GET() {
   } catch (error) {
     console.error("Lỗi kết nối DB danh mục, dùng dự phòng:", error);
     return NextResponse.json(db.categories || []);
-=======
-    const data = await Category.find({});
-    return NextResponse.json(data);
-  } catch (error) {
-    return NextResponse.json({ message: "Lỗi kết nối DB" }, { status: 500 });
->>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
   }
 }
 

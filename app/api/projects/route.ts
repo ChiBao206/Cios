@@ -82,18 +82,11 @@ export async function GET() {
       await Project.insertMany(initialProjects);
     }
 
-<<<<<<< HEAD
     const data = await Project.find({}).sort({ createdAt: -1 }).lean();
     return NextResponse.json(data);
   } catch (error) {
     console.warn("Lỗi kết nối CSDL dự án, sử dụng dữ liệu dự phòng:", error);
     return NextResponse.json(initialProjects);
-=======
-    const data = await Project.find({}).sort({ createdAt: -1 });
-    return NextResponse.json(data);
-  } catch (error) {
-    return NextResponse.json({ message: "Lỗi lấy dữ liệu dự án" }, { status: 500 });
->>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
   }
 }
 

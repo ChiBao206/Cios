@@ -12,11 +12,7 @@ export async function GET(req: Request) {
 
     // Dành cho khách: Truyền code lên để check xem mã có xài được không
     if (code) {
-<<<<<<< HEAD
       const voucher = await Voucher.findOne({ code: code.toUpperCase() }).lean();
-=======
-      const voucher = await Voucher.findOne({ code: code.toUpperCase() });
->>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
       if (!voucher) return NextResponse.json({ message: "Mã giảm giá không tồn tại!" }, { status: 404 });
       if (!voucher.isActive) return NextResponse.json({ message: "Mã giảm giá đã bị khóa!" }, { status: 400 });
       if (new Date(voucher.expireDate) < new Date()) return NextResponse.json({ message: "Mã giảm giá đã hết hạn!" }, { status: 400 });
@@ -26,11 +22,7 @@ export async function GET(req: Request) {
     }
 
     // Dành cho Admin: Lấy toàn bộ danh sách mã
-<<<<<<< HEAD
     const vouchers = await Voucher.find({}).sort({ createdAt: -1 }).lean();
-=======
-    const vouchers = await Voucher.find({}).sort({ createdAt: -1 });
->>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
     return NextResponse.json(vouchers, { status: 200 });
   } catch (error: any) {
     return NextResponse.json({ message: "Lỗi Server" }, { status: 500 });

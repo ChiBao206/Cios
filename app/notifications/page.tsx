@@ -104,7 +104,6 @@ const handleLogout = () => {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', fontFamily: "'Segoe UI', sans-serif" }}>
       
-<<<<<<< HEAD
       {/* 0. TOP UTILITY BAR */}
       <div className="top-utility-bar">
         <div className="top-bar-container">
@@ -116,41 +115,6 @@ const handleLogout = () => {
             <span><i className="fas fa-truck"></i> Miễn phí lắp đặt nội thành</span>
             <span><i className="fas fa-shield-alt"></i> Bảo hành chính hãng 24 tháng</span>
           </div>
-=======
-      {/* HEADER ĐÃ ĐƯỢC ĐỒNG BỘ 100% */}
-      <header style={{ background: '#1e293b', padding: '12px 0', borderBottom: '1px solid #0f172a' }}>
-        <div style={{ maxWidth: '1140px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '96%' }}>
-          <Link href="/" style={{ color: 'white', fontWeight: 'bold', fontSize: '20px', display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
-            <i className="fas fa-video"></i> CIOs - impossible is nothing
-          </Link>
-          <nav style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
-            <Link href="/" className="nav-link" style={{ color: 'white', textDecoration: 'none', fontSize: '14px', fontWeight: 'bold' }}><i className="fas fa-home"></i> Trang chủ</Link>
-            <Link href="/contact" className="nav-link" style={{ color: 'white', textDecoration: 'none', fontSize: '14px', fontWeight: 'bold' }}><i className="fas fa-phone-alt"></i> Liên hệ</Link>
-            
-            <Link href="/notifications" className="nav-link" style={{ position: 'relative', color: '#38bdf8', textDecoration: 'none', fontSize: '14px', fontWeight: 'bold' }}>
-              <i className="fas fa-bell"></i> Thông báo
-              <NotifBadge />
-            </Link>
-            
-            <Link href="/cart" className="nav-link" style={{ position: 'relative', color: 'white', textDecoration: 'none', fontSize: '14px', fontWeight: 'bold' }}>
-              <i className="fas fa-shopping-cart"></i> Giỏ hàng
-              {totalItems > 0 && <span style={{ position: 'absolute', top: '-8px', right: '-12px', background: '#e11d48', color: 'white', fontSize: '10px', padding: '2px 6px', borderRadius: '50%' }}>{totalItems}</span>}
-            </Link>
-            
-            {user ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <Link href="/profile" style={{ textAlign: 'right', fontSize: '12px', color: '#94a3b8', textDecoration: 'none' }}>
-                  Xin chào,<br/><strong style={{ color: '#4ade80', fontSize: '14px', textTransform: 'uppercase' }}>{user.username}</strong>
-                </Link>
-                <button onClick={handleLogout} style={{ background: '#ef4444', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s' }}>Thoát</button>
-              </div>
-            ) : (
-              <Link href="/login" className="nav-link" style={{ color: 'white', textDecoration: 'none', fontSize: '14px', fontWeight: 'bold' }}>
-                <i className="fas fa-user"></i> Đăng nhập
-              </Link>
-            )}
-          </nav>
->>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
         </div>
       </div>
 

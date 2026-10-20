@@ -9,7 +9,6 @@ const plusJakartaSans = Plus_Jakarta_Sans({
   display: "swap",
 });
 
-<<<<<<< HEAD
 export const metadata: Metadata = {
   title: "CIOs Camera - Thiết Bị An Ninh & Nhà Thông Minh Cao Cấp",
   description: "Cung cấp giải pháp an ninh, camera quan sát AI 4.0, thiết bị mạng router switch toàn diện",
@@ -21,11 +20,6 @@ export const viewport: Viewport = {
   maximumScale: 5,
   userScalable: true,
   themeColor: "#0369a1",
-=======
-export const metadata = {
-  title: "CIOs - impossible is nothing | Chuyên thiết bị an ninh",
-  description: "Cung cấp giải pháp an ninh, camera, mạng toàn diện",
->>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
 };
 
 export default function RootLayout({

@@ -427,7 +427,6 @@ export default function ProfilePage() {
       
       <style>{`
         .avatar-container:hover .avatar-overlay { opacity: 1 !important; }
-<<<<<<< HEAD
         .profile-input { width: 100%; padding: 12px; border: 1px solid #bae6fd; border-radius: 8px; font-size: 14px; outline: none; margin-bottom: 20px; transition: 0.3s; background: rgba(255, 255, 255, 0.85); }
         .profile-input:focus { border-color: #0284c7; box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15); }
         .btn-outline:hover { background: #e0f2fe !important; }
@@ -444,24 +443,6 @@ export default function ProfilePage() {
         }
         .forgot-modal-content {
           background: rgba(240, 249, 255, 0.95); backdrop-filter: blur(16px); border-radius: 16px; width: 100%; max-width: 450px; padding: 30px; box-shadow: 0 25px 50px -12px rgba(2, 132, 199, 0.35); border: 1px solid #bae6fd; position: relative;
-=======
-        .profile-input { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; outline: none; margin-bottom: 20px; transition: 0.3s; }
-        .profile-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
-        .btn-outline:hover { background: #f1f5f9 !important; }
-        .invoice-table th { padding: 12px 10px; text-align: left; color: #64748b; font-size: 11px; text-transform: uppercase; border-bottom: 2px solid #f1f5f9; }
-        .invoice-table td { padding: 15px 10px; border-bottom: 1px dashed #e2e8f0; font-size: 14px; color: #334155; vertical-align: middle; }
-        .fav-card { border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; transition: 0.3s; position: relative; }
-        .fav-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-color: #cbd5e1; }
-        .chat-bubble-user { background: #3b82f6; color: white; padding: 12px 18px; border-radius: 18px 18px 0 18px; max-width: 70%; font-size: 14px; align-self: flex-end; box-shadow: 0 2px 5px rgba(59,130,246,0.2); }
-        .chat-bubble-admin { background: #f1f5f9; color: #1e293b; padding: 12px 18px; border-radius: 18px 18px 18px 0; max-width: 70%; font-size: 14px; border: 1px solid #e2e8f0; }
-
-        /* CSS CHO MODAL QUÊN MẬT KHẨU */
-        .forgot-modal-overlay {
-          position: fixed; inset: 0; background: rgba(15, 23, 42, 0.85); display: flex; align-items: center; justify-content: center; z-index: 2000; padding: 20px; backdrop-filter: blur(5px);
-        }
-        .forgot-modal-content {
-          background: white; border-radius: 12px; width: 100%; max-width: 450px; padding: 30px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); position: relative;
->>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
         }
         .forgot-btn {
           width: 100%; padding: 14px; background: #3b82f6; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.2s; display: flex; justify-content: center; align-items: center; gap: 8px;
@@ -589,7 +570,6 @@ export default function ProfilePage() {
         </div>
       )}
 
-<<<<<<< HEAD
       {/* 0. TOP UTILITY BAR */}
       <div className="top-utility-bar">
         <div className="top-bar-container">
@@ -615,21 +595,6 @@ export default function ProfilePage() {
             <div style={{ position: 'relative', width: '100px', height: '100px', margin: '0 auto 15px' }}>
               <div 
                 style={{ width: '100%', height: '100%', borderRadius: '50%', background: 'linear-gradient(135deg, #0284c7, #0369a1)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', cursor: 'pointer', boxShadow: '0 4px 15px rgba(2, 132, 199, 0.35)', overflow: 'hidden' }}
-=======
-      <header style={{ background: '#1e293b', padding: '15px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Link href="/" style={{ color: 'white', fontWeight: 'bold', fontSize: '20px', textDecoration: 'none' }}><i className="fas fa-video"></i> CIOs - impossible is nothing</Link>
-        <Link href="/" style={{ color: '#cbd5e1', textDecoration: 'none', fontSize: '14px' }}><i className="fas fa-home"></i> Về trang chủ</Link>
-      </header>
-
-      <div className="profile-layout" style={{ maxWidth: '1200px', width: '95%', margin: '30px auto', display: 'flex', gap: '30px', flex: 1, alignItems: 'flex-start' }}>
-        
-        <aside className="profile-sidebar" style={{ width: '280px', background: 'white', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-          
-          <div style={{ padding: '30px 20px', textAlign: 'center', borderBottom: '1px solid #f1f5f9' }}>
-            <div style={{ position: 'relative', width: '100px', height: '100px', margin: '0 auto 15px' }}>
-              <div 
-                style={{ width: '100%', height: '100%', borderRadius: '50%', background: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', cursor: 'pointer', boxShadow: '0 4px 15px rgba(37, 99, 235, 0.3)', overflow: 'hidden' }}
->>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
                 onClick={() => fileInputRef.current?.click()}
                 className="avatar-container"
               >
@@ -676,11 +641,7 @@ export default function ProfilePage() {
           </div>
         </aside>
 
-<<<<<<< HEAD
         <main className="profile-main" style={{ flex: 1, background: 'rgba(240, 249, 255, 0.8)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', borderRadius: '16px', boxShadow: '0 8px 30px rgba(2, 132, 199, 0.1)', border: '1px solid rgba(186, 230, 253, 0.75)', padding: '40px', minHeight: '600px', position: 'relative' }}>
-=======
-        <main className="profile-main" style={{ flex: 1, background: 'white', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0', padding: '40px', minHeight: '600px', position: 'relative' }}>
->>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
           
           {activeTab === 'orders' && (
             <div>

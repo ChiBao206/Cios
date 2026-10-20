@@ -171,13 +171,6 @@ export default function LoginPage() {
 
   return (
     <div style={{ 
-<<<<<<< HEAD
-=======
-      backgroundImage: `linear-gradient(rgba(15, 23, 42, 0.75), rgba(15, 23, 42, 0.9)), url('https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2000&auto=format&fit=crop')`,
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      backgroundRepeat: 'no-repeat',
->>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
       minHeight: '100vh', 
       display: 'flex', 
       alignItems: 'center', 
@@ -188,7 +181,6 @@ export default function LoginPage() {
       {/* CSS DÀNH RIÊNG CHO MODAL QUÊN MẬT KHẨU */}
       <style>{`
         .forgot-modal-overlay {
-<<<<<<< HEAD
           position: fixed; inset: 0; background: rgba(12, 74, 110, 0.8); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; backdrop-filter: blur(8px);
         }
         .forgot-modal-content {
@@ -204,23 +196,6 @@ export default function LoginPage() {
           width: 100%; padding: 14px; background: linear-gradient(135deg, #0284c7, #0369a1); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.2s; display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(2, 132, 199, 0.35);
         }
         .forgot-btn:hover { background: linear-gradient(135deg, #0369a1, #0c4a6e); }
-=======
-          position: fixed; inset: 0; background: rgba(15, 23, 42, 0.85); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; backdrop-filter: blur(5px);
-        }
-        .forgot-modal-content {
-          background: white; border-radius: 12px; width: 100%; max-width: 450px; padding: 30px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); position: relative;
-        }
-        .forgot-input {
-          width: 100%; padding: 12px 15px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; outline: none; margin-bottom: 20px; transition: border-color 0.2s;
-        }
-        .forgot-input:focus {
-          border-color: #3b82f6;
-        }
-        .forgot-btn {
-          width: 100%; padding: 14px; background: #3b82f6; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.2s; display: flex; justify-content: center; align-items: center; gap: 8px;
-        }
-        .forgot-btn:hover { background: #2563eb; }
->>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
         .forgot-btn:disabled { background: #94a3b8; cursor: not-allowed; }
       `}</style>
 
@@ -340,14 +315,9 @@ export default function LoginPage() {
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
         padding: '40px 30px', 
-<<<<<<< HEAD
         borderRadius: '16px', 
         boxShadow: '0 20px 50px rgba(2, 132, 199, 0.25)',
         border: '1px solid rgba(186, 230, 253, 0.85)',
-=======
-        borderRadius: '12px', 
-        boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)',
->>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
         width: '100%', 
         maxWidth: '420px' 
       }}>
@@ -417,11 +387,7 @@ export default function LoginPage() {
           <Link 
             href="#" 
             onClick={(e) => { e.preventDefault(); setShowForgotModal(true); }} 
-<<<<<<< HEAD
             style={{ color: '#0ea5e9', fontSize: '13px', textDecoration: 'none', fontWeight: '600', display: 'block', marginBottom: '20px' }}
-=======
-            style={{ color: '#ef4444', fontSize: '13px', textDecoration: 'none', fontWeight: '600', display: 'block', marginBottom: '20px' }}
->>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
           >
             Quên mật khẩu?
           </Link>
