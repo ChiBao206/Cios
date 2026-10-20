@@ -9,7 +9,11 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     await connectDB();
+<<<<<<< HEAD
     const data = await Order.find({}).sort({ createdAt: -1 }).lean(); 
+=======
+    const data = await Order.find({}).sort({ createdAt: -1 }); 
+>>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
     return NextResponse.json(data);
   } catch (error) {
     return NextResponse.json({ message: "Lỗi kết nối DB" }, { status: 500 });

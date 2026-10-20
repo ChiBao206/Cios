@@ -621,6 +621,7 @@ export default function AdminDashboard() {
         }
         .bar:hover::after { opacity: 1; }
 
+<<<<<<< HEAD
         .admin-card { background: white; border-radius: 16px; padding: 24px; border: 1px solid #e2e8f0; margin-bottom: 25px; box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04); }
         .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
         .admin-table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 650px; }
@@ -708,6 +709,28 @@ export default function AdminDashboard() {
         
         .chat-bubble-customer { background: #f1f5f9; color: #1e293b; padding: 12px 18px; border-radius: 18px 18px 18px 0; max-width: 75%; font-size: 14px; align-self: flex-start; border: 1px solid #e2e8f0; }
         .chat-bubble-admin { background: #0284c7; color: white; padding: 12px 18px; border-radius: 18px 18px 0 18px; max-width: 75%; font-size: 14px; align-self: flex-end; box-shadow: 0 2px 5px rgba(2,132,199,0.2); }
+=======
+        .admin-card { background: white; border-radius: 12px; padding: 30px; border: 1px solid #e2e8f0; margin-bottom: 30px; overflow-x: auto; width: 100%; }
+        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .admin-table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        .admin-table th { padding: 15px; text-align: left; background: #f8fafc; color: #64748b; font-size: 13px; border-bottom: 2px solid #e2e8f0; white-space: nowrap; }
+        .admin-table td { padding: 15px; border-bottom: 1px solid #f1f5f9; color: #334155; font-size: 14px; vertical-align: middle; }
+        
+        .proj-title { color: #3b82f6; font-weight: bold; min-width: 150px; }
+        .proj-desc { color: #64748b; font-size: 13px; min-width: 250px; }
+        
+        .action-btn { padding: 6px 12px; border: 1px solid #cbd5e1; background: white; border-radius: 4px; font-size: 12px; cursor: pointer; margin-right: 5px; color: #64748b; white-space: nowrap; }
+        .status-select { padding: 6px; border-radius: 4px; border: 1px solid #cbd5e1; outline: none; font-weight: bold; font-size: 12px; cursor: pointer; }
+        
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); display: flex; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(4px); padding: 15px; overflow-y: auto;}
+        .modal-content { background: white; padding: 30px; border-radius: 12px; width: 100%; max-width: 650px; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);}
+        .modal-input { width: 100%; padding: 12px 15px; margin-bottom: 15px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; transition: 0.2s;}
+        .modal-input:focus { border-color: #3b82f6; outline: none; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+        .upload-area { border: 2px dashed #cbd5e1; border-radius: 8px; background: #f8fafc; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 150px; padding: 20px; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden; }
+        
+        .chat-bubble-customer { background: #f1f5f9; color: #1e293b; padding: 12px 18px; border-radius: 18px 18px 18px 0; max-width: 75%; font-size: 14px; align-self: flex-start; border: 1px solid #e2e8f0; }
+        .chat-bubble-admin { background: #3b82f6; color: white; padding: 12px 18px; border-radius: 18px 18px 0 18px; max-width: 75%; font-size: 14px; align-self: flex-end; box-shadow: 0 2px 5px rgba(59,130,246,0.2); }
+>>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
         
         .support-box-container { display: flex; height: calc(100vh - 180px); border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
         .support-list-col { width: 320px; background: #f8fafc; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; }
@@ -721,6 +744,7 @@ export default function AdminDashboard() {
           .admin-menu li:hover, .admin-menu li.active { border-left: none; border-bottom-color: #38bdf8; background: #0f172a; }
           .admin-main { margin-left: 0; width: 100%; padding: 12px; }
           .chart-container { flex-direction: column; }
+<<<<<<< HEAD
           .chart-box { height: auto; min-height: 380px; }
           .bar-chart { height: 230px; } 
           .stat-card { min-width: 100%; }
@@ -730,6 +754,14 @@ export default function AdminDashboard() {
           
           .admin-table th, .admin-table td { padding: 10px 8px; font-size: 12.5px; }
           .action-btn { padding: 5px 8px; font-size: 11px; }
+=======
+          .chart-box { height: auto; min-height: 400px; }
+          .bar-chart { height: 250px; } 
+          .stat-card { min-width: 100%; }
+
+          .admin-card { padding: 15px; }
+          .modal-content { padding: 15px; }
+>>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
           
           .support-box-container { flex-direction: column; height: 80vh; border: none; }
           
@@ -951,6 +983,7 @@ export default function AdminDashboard() {
                     <table className="admin-table">
                       <thead>
                         <tr>
+<<<<<<< HEAD
                           <th style={{ width: '80px', whiteSpace: 'nowrap' }}>Mã Đơn</th>
                           <th style={{ minWidth: '130px', whiteSpace: 'nowrap' }}>Khách hàng</th>
                           <th style={{ minWidth: '100px', whiteSpace: 'nowrap' }}>Ngày đặt</th>
@@ -958,6 +991,15 @@ export default function AdminDashboard() {
                           <th style={{ minWidth: '120px', whiteSpace: 'nowrap' }}>Tổng tiền</th>
                           <th style={{ minWidth: '130px', whiteSpace: 'nowrap' }}>Trạng thái</th>
                           <th style={{ textAlign: 'right', minWidth: '120px', whiteSpace: 'nowrap' }}>Hành động</th>
+=======
+                          <th>Mã Đơn</th>
+                          <th>Khách hàng</th>
+                          <th>Ngày đặt</th>
+                          <th>Thanh toán</th>
+                          <th>Tổng tiền</th>
+                          <th>Trạng thái</th>
+                          <th style={{ textAlign: 'right' }}>Hành động</th>
+>>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
                         </tr>
                       </thead>
                       <tbody>
@@ -969,6 +1011,7 @@ export default function AdminDashboard() {
                           })
                           .map((order: any) => (
                           <tr key={order._id || order.id}>
+<<<<<<< HEAD
                             <td style={{ color: '#0284c7', fontWeight: '700', whiteSpace: 'nowrap' }}>#{String(order._id || order.id).slice(-4)}</td>
                             <td style={{ fontWeight: '600', color: '#1e293b', whiteSpace: 'nowrap' }}>{order.user_id === 1 ? 'ADMIN' : (order.customer_name || 'Khách vãng lai')}</td>
                             <td style={{ color: '#64748b', fontSize: '12.5px', whiteSpace: 'nowrap' }}>{order.createdAt ? new Date(order.createdAt).toLocaleDateString('vi-VN') : 'Mới đây'}</td>
@@ -981,15 +1024,27 @@ export default function AdminDashboard() {
                               {Number(order.total_money || order.total || 0).toLocaleString('vi-VN')}&nbsp;đ
                             </td>
                             <td style={{ whiteSpace: 'nowrap' }}>
+=======
+                            <td style={{ color: '#64748b' }}>#{String(order._id || order.id).slice(-4)}</td>
+                            <td style={{ fontWeight: 'bold', color: '#334155' }}>{order.user_id === 1 ? 'ADMIN' : (order.customer_name || 'Khách vãng lai')}</td>
+                            <td style={{ color: '#64748b' }}>{order.createdAt ? new Date(order.createdAt).toLocaleDateString('vi-VN') : 'Mới đây'}</td>
+                            <td style={{ color: '#10b981' }}>Tiền mặt (COD)</td>
+                            <td style={{ color: '#e11d48', fontWeight: 'bold' }}>{Number(order.total_money || order.total || 0).toLocaleString('vi-VN')} đ</td>
+                            <td>
+>>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
                               <select 
                                 className="status-select" 
                                 value={order.status || "Chờ xử lý"} 
                                 onChange={(e) => handleUpdateOrderStatus(order._id || order.id, e.target.value)}
+<<<<<<< HEAD
                                 style={{ 
                                   color: order.status === 'Thành công' ? '#15803d' : order.status === 'Đã hủy' ? '#b91c1c' : '#b45309',
                                   borderColor: order.status === 'Thành công' ? '#86efac' : order.status === 'Đã hủy' ? '#fca5a5' : '#fde047',
                                   backgroundColor: order.status === 'Thành công' ? '#f0fdf4' : order.status === 'Đã hủy' ? '#fef2f2' : '#fefce8'
                                 }}
+=======
+                                style={{ color: order.status === 'Thành công' ? '#16a34a' : order.status === 'Đã hủy' ? '#ef4444' : '#d97706' }}
+>>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
                               >
                                 <option value="Chờ xử lý">Chờ xử lý</option>
                                 <option value="Đã vận chuyển">Đã vận chuyển</option>
@@ -998,12 +1053,21 @@ export default function AdminDashboard() {
                                 <option value="Đã hủy">Đã hủy</option>
                               </select>
                             </td>
+<<<<<<< HEAD
                             <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
                               <button className="action-btn btn-view" onClick={() => setSelectedOrderDetails(order)} title="Xem chi tiết">
                                 <i className="fas fa-eye"></i> Xem
                               </button>
                               <button className="action-btn btn-delete" onClick={() => handleDeleteOrder(order._id || order.id)} title="Xóa đơn hàng">
                                 <i className="fas fa-trash-alt"></i>
+=======
+                            <td style={{ textAlign: 'right' }}>
+                              <button className="action-btn" onClick={() => setSelectedOrderDetails(order)} style={{ color: '#3b82f6', marginRight: '5px' }}>
+                                <i className="fas fa-eye"></i> Xem
+                              </button>
+                              <button className="action-btn" onClick={() => handleDeleteOrder(order._id || order.id)} style={{ color: '#ef4444' }}>
+                                <i className="fas fa-trash"></i>
+>>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
                               </button>
                             </td>
                           </tr>
@@ -1030,6 +1094,7 @@ export default function AdminDashboard() {
                       <tbody>
                         {products.map((product: any) => (
                           <tr key={product._id || product.id}>
+<<<<<<< HEAD
                             <td>
                               <img 
                                 src={product.image} 
@@ -1059,6 +1124,18 @@ export default function AdminDashboard() {
                               </button>
                               <button className="action-btn btn-delete" onClick={() => handleDeleteProduct(product._id || product.id)} title="Xóa sản phẩm">
                                 <i className="fas fa-trash-alt"></i> Xóa
+=======
+                            <td><img src={product.image} alt={product.name} style={{ width: '40px', height: '40px', objectFit: 'contain', borderRadius: '4px', border: '1px solid #e2e8f0' }} /></td>
+                            <td style={{ color: '#334155', minWidth: '150px' }}>{product.name}</td>
+                            <td style={{ color: '#10b981', fontWeight: 'bold' }}>{Number(product.price).toLocaleString('vi-VN')} đ</td>
+                            <td style={{ fontWeight: 'bold' }}>{product.quantity}</td>
+                            <td style={{ textAlign: 'right' }}>
+                              <button className="action-btn" style={{ color: '#3b82f6', marginRight: '5px' }} onClick={() => openEditProductModal(product)}>
+                                <i className="fas fa-edit"></i>
+                              </button>
+                              <button className="action-btn" style={{ color: '#ef4444' }} onClick={() => handleDeleteProduct(product._id || product.id)}>
+                                <i className="fas fa-trash"></i>
+>>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
                               </button>
                             </td>
                           </tr>

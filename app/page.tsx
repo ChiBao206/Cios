@@ -1,7 +1,11 @@
 "use client";
 
 import Link from "next/link";
+<<<<<<< HEAD
 import { useState, useEffect, useRef, useCallback } from "react";
+=======
+import { useState, useEffect } from "react";
+>>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
 import { useRouter } from "next/navigation";
 import { useCart } from "./context/CartContext";
 import NotifBadge from "@/app/components/NotifBadge";
@@ -14,6 +18,7 @@ export default function Home() {
   const router = useRouter(); 
   const { addToCart, totalItems } = useCart();
   
+<<<<<<< HEAD
   // 1. STATE LƯU DỮ LIỆU
   const [user, setUser] = useState<any>(null);
   const [products, setProducts] = useState<any[]>(db.products || []);
@@ -21,16 +26,30 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   
   // POPUP & SALE ĐỘNG TỪ ADMIN
+=======
+  // 1. STATE LƯU DỮ LIỆU TỪ MONGODB THẬT
+  const [user, setUser] = useState<any>(null);
+  const [products, setProducts] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // STATE HIỂN THỊ POPUP & SALE ĐỘNG TỪ ADMIN
+>>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
   const [showSalePopup, setShowSalePopup] = useState(false);
   const [isSaleDay, setIsSaleDay] = useState(false);
   const [saleDayText, setSaleDayText] = useState("");
   const [saleDiscount, setSaleDiscount] = useState(0); 
 
+<<<<<<< HEAD
   // VOUCHERS
+=======
+  // STATE VOUCHER (MÃ GIẢM GIÁ)
+>>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
   const [vouchers, setVouchers] = useState<any[]>([]);
   const [savedVouchers, setSavedVouchers] = useState<string[]>([]);
   const [usedVouchers, setUsedVouchers] = useState<string[]>([]);
 
+<<<<<<< HEAD
   // FAVORITES
   const [favIds, setFavIds] = useState<string[]>([]);
 
@@ -56,6 +75,146 @@ export default function Home() {
     }
     return "all";
   });
+=======
+  // ĐÃ THÊM: STATE LƯU DANH SÁCH ID SẢN PHẨM ĐÃ THẢ TIM ĐỂ ĐỔI MÀU TRÁI TIM
+  const [favIds, setFavIds] = useState<string[]>([]);
+
+  // 2. TỰ ĐỘNG GỌI API ĐỂ LẤY DỮ LIỆU TỪ DATABASE
+  useEffect(() => {
+    const loggedInUser = localStorage.getItem("currentUser");
+    
+    let currentUsername = "";
+    if (loggedInUser) {
+      const parsedUser = JSON.parse(loggedInUser);
+      setUser(parsedUser);
+      currentUsername = parsedUser.username;
+      
+      const localSavedVouchers = localStorage.getItem(`camera_bn_my_vouchers_${currentUsername}`);
+      if(localSavedVouchers) setSavedVouchers(JSON.parse(localSavedVouchers));
+
+      const localUsedVouchers = localStorage.getItem(`camera_bn_used_vouchers_${currentUsername}`);
+      if(localUsedVouchers) setUsedVouchers(JSON.parse(localUsedVouchers));
+    }
+
+    // ĐỌC DỮ LIỆU SẢN PHẨM YÊU THÍCH TỪ LOCALSTORAGE ĐỂ TÔ MÀU TRÁI TIM
+    const localFavs = localStorage.getItem('camera_bn_favs');
+    if (localFavs) {
+      const parsedFavs = JSON.parse(localFavs);
+      setFavIds(parsedFavs.map((f: any) => String(f._id || f.id)));
+    }
+
+    const fetchRealData = async () => {
+      try {
+        const timestamp = new Date().getTime();
+        const [prodRes, catRes, setRes, vouRes] = await Promise.all([
+          fetch(`/api/products?t=${timestamp}`),
+          fetch(`/api/categories?t=${timestamp}`),
+          fetch(`/api/settings?t=${timestamp}`).catch(() => null),
+          fetch(`/api/vouchers?t=${timestamp}`).catch(() => null)
+        ]);
+        
+        if (prodRes.ok) setProducts(await prodRes.json());
+        if (catRes.ok) setCategories(await catRes.json());
+        
+        if (vouRes && vouRes.ok) {
+          const vData = await vouRes.json();
+          const validVouchers = vData.filter((v: any) => 
+            v.isActive && 
+            v.usedCount < v.maxUsage && 
+            new Date(v.expireDate) >= new Date()
+          );
+          setVouchers(validVouchers);
+        }
+        
+        if (setRes && setRes.ok) {
+          const sData = await setRes.json();
+          if (sData) {
+            setSaleDiscount(Number(sData.saleDiscount) || 0);
+            
+            const currentDay = new Date().getDate();
+            const daysArray = (sData.saleDays || "").split(',').map((d: string) => parseInt(d.trim()));
+            
+            if (daysArray.includes(currentDay)) {
+              setIsSaleDay(true);
+              setShowSalePopup(true);
+              setSaleDayText(currentDay.toString());
+            }
+          }
+        }
+
+      } catch (error) {
+        console.error("Lỗi tải dữ liệu", error);
+      }
+      setIsLoading(false);
+    };
+
+    fetchRealData();
+  }, []);
+
+  const handleSaveVoucher = (code: string) => {
+    if (!user) {
+      alert("Vui lòng đăng nhập để lưu mã giảm giá nhé!");
+      router.push('/login');
+      return;
+    }
+
+    if (!savedVouchers.includes(code)) {
+      const newSavedList = [...savedVouchers, code];
+      setSavedVouchers(newSavedList);
+      localStorage.setItem(`camera_bn_my_vouchers_${user.username}`, JSON.stringify(newSavedList));
+      alert(`🎉 Đã lưu mã ${code} vào ví Voucher của bạn! Hãy vào Giỏ hàng để sử dụng nhé.`);
+    }
+  };
+
+  const handleClosePopup = () => {
+    setShowSalePopup(false);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('currentUser'); 
+    window.location.href = '/'; 
+  };
+
+  // ĐÃ SỬA: HÀM BẬT/TẮT SẢN PHẨM YÊU THÍCH (TOGGLE)
+  const toggleFavorite = (productData: any) => {
+    if (!user) {
+      alert("Vui lòng đăng nhập để lưu sản phẩm yêu thích nhé!");
+      router.push('/login');
+      return;
+    }
+    
+    const productId = String(productData._id || productData.id);
+    const saved = localStorage.getItem('camera_bn_favs');
+    let favList = saved ? JSON.parse(saved) : [];
+    
+    const existsIndex = favList.findIndex((item: any) => String(item._id || item.id) === productId);
+    
+    if (existsIndex === -1) {
+      // Nếu chưa có -> Thêm vào yêu thích (Tim đỏ)
+      favList.push(productData);
+      setFavIds([...favIds, productId]);
+      localStorage.setItem('camera_bn_favs', JSON.stringify(favList));
+    } else { 
+      // Nếu đã có -> Xóa khỏi yêu thích (Tim xám)
+      favList.splice(existsIndex, 1);
+      setFavIds(favIds.filter(id => id !== productId));
+      localStorage.setItem('camera_bn_favs', JSON.stringify(favList));
+    }
+  };
+
+  // 3. CHIA SẢN PHẨM DỰA TRÊN DỮ LIỆU THẬT
+  const hotProducts = products.slice(0, 4);
+  const baseProducts = products.slice(4);
+
+  // ==========================================
+  // THUẬT TOÁN BỘ LỌC & PHÂN TRANG
+  // ==========================================
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isCategoryOpen, setIsCategoryOpen] = useState(false); 
+  const productsPerPage = 8; 
+
+  const [selectedCategory, setSelectedCategory] = useState("all");
+>>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
   const [minPrice, setMinPrice] = useState(0); 
   const [maxPrice, setMaxPrice] = useState(5000000); 
   const [searchTerm, setSearchTerm] = useState("");
@@ -366,6 +525,7 @@ export default function Home() {
     } catch (e) {}
   }, [selectedCategory, minPrice, maxPrice, searchTerm]);
 
+<<<<<<< HEAD
   // Tự động cuộn lại đúng vị trí xem trước đó khi khách từ trang chi tiết quay lại
   useEffect(() => {
     try {
@@ -382,6 +542,8 @@ export default function Home() {
     } catch (e) {}
   }, [products]);
 
+=======
+>>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
   const filteredProducts = baseProducts.filter(product => {
     const matchCat = selectedCategory === "all" || String(product.category_id) === String(selectedCategory);
     const matchPrice = Number(product.price) >= minPrice && Number(product.price) <= maxPrice;
@@ -394,6 +556,7 @@ export default function Home() {
   const currentProducts = filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
   const totalPages = Math.ceil(filteredProducts.length / productsPerPage) || 1;
 
+<<<<<<< HEAD
   const scrollToProducts = () => {
     const elem = document.getElementById('products-section');
     if (elem) {
@@ -432,10 +595,27 @@ export default function Home() {
   const handleSearchSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     scrollToProducts();
+=======
+  const handlePrev = () => {
+    setCurrentPage(currentPage === 1 ? totalPages : currentPage - 1);
   };
+  
+  const handleNext = () => {
+    setCurrentPage(currentPage === totalPages ? 1 : currentPage + 1);
+>>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
+  };
+
+  if (isLoading) {
+    return (
+      <div style={{ height: "100vh", display: "flex", justifyContent: "center", alignItems: "center", fontSize: "20px", fontWeight: "bold", color: "#64748b" }}>
+        <i className="fas fa-spinner fa-spin" style={{ marginRight: "10px" }}></i> Đang tải dữ liệu cửa hàng...
+      </div>
+    );
+  }
 
   return (
     <>
+<<<<<<< HEAD
       {/* 0. TOP UTILITY BAR */}
       <div className="top-utility-bar">
         <div className="top-bar-container">
@@ -733,6 +913,360 @@ export default function Home() {
 
             {/* Thanh trượt khoảng giá công nghệ hiện đại */}
             <div className="modern-slider-container">
+=======
+      <style>{`
+        /* CSS CHO VOUCHER TICKETS */
+        .voucher-scroll-container {
+          display: flex;
+          gap: 20px;
+          overflow-x: auto;
+          padding: 10px 5px 20px 5px;
+          margin-bottom: 30px;
+          -ms-overflow-style: none;  /* IE and Edge */
+          scrollbar-width: none;  /* Firefox */
+        }
+        .voucher-scroll-container::-webkit-scrollbar {
+          display: none; /* Chrome, Safari and Opera */
+        }
+        
+        .voucher-ticket {
+          display: flex;
+          min-width: 320px;
+          background: white;
+          border-radius: 12px;
+          box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+          position: relative;
+          border: 1px solid #e2e8f0;
+          overflow: hidden;
+        }
+        
+        .voucher-ticket::before, .voucher-ticket::after {
+          content: '';
+          position: absolute;
+          width: 20px;
+          height: 20px;
+          background: #f8fafc;
+          border-radius: 50%;
+          border: 1px solid #e2e8f0;
+          top: 50%;
+          transform: translateY(-50%);
+          z-index: 2;
+        }
+        .voucher-ticket::before { left: -10px; border-right-color: transparent; border-top-color: transparent; border-bottom-color: transparent;}
+        .voucher-ticket::after { left: 100px; border-left-color: transparent; border-top-color: transparent; border-bottom-color: transparent; }
+
+        .voucher-left {
+          background: linear-gradient(135deg, #e11d48, #f43f5e);
+          width: 110px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          padding: 15px 10px;
+          border-right: 2px dashed rgba(255,255,255,0.5);
+          position: relative;
+        }
+        
+        .voucher-right {
+          flex: 1;
+          padding: 15px;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+        }
+        
+        .btn-save-voucher {
+          background: #3b82f6;
+          color: white;
+          border: none;
+          padding: 6px 12px;
+          border-radius: 4px;
+          font-weight: bold;
+          font-size: 12px;
+          cursor: pointer;
+          transition: 0.2s;
+        }
+        .btn-save-voucher:hover { background: #2563eb; }
+        .btn-save-voucher:disabled {
+          background: #cbd5e1;
+          color: #64748b;
+          cursor: not-allowed;
+        }
+      `}</style>
+
+      {/* KHU VỰC POPUP HIỂN THỊ CHƯƠNG TRÌNH KHUYẾN MÃI THEO ADMIN */}
+      {showSalePopup && saleDiscount > 0 && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(15, 23, 42, 0.8)', backdropFilter: 'blur(5px)' }}>
+          <div style={{ background: 'white', width: '500px', maxWidth: '90%', borderRadius: '16px', overflow: 'hidden', position: 'relative', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', animation: 'popIn 0.5s ease-out' }}>
+            
+            <button onClick={handleClosePopup} style={{ position: 'absolute', top: '15px', right: '15px', background: 'rgba(255,255,255,0.2)', color: 'white', border: 'none', width: '35px', height: '35px', borderRadius: '50%', fontSize: '18px', cursor: 'pointer', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(2px)' }}>
+              <i className="fas fa-times"></i>
+            </button>
+
+            <div style={{ background: 'linear-gradient(135deg, #e11d48, #f43f5e)', padding: '40px 20px', textAlign: 'center', color: 'white', position: 'relative', overflow: 'hidden' }}>
+              <i className="fas fa-gift" style={{ fontSize: '60px', opacity: 0.2, position: 'absolute', left: '-10px', bottom: '-10px', transform: 'rotate(-15deg)' }}></i>
+              <i className="fas fa-percentage" style={{ fontSize: '50px', opacity: 0.2, position: 'absolute', right: '10px', top: '10px', transform: 'rotate(15deg)' }}></i>
+              <h2 style={{ fontSize: '28px', fontWeight: '900', margin: '0 0 10px 0', textTransform: 'uppercase', textShadow: '2px 2px 4px rgba(0,0,0,0.2)' }}>Ngày Vàng Săn Deal</h2>
+              <div style={{ display: 'inline-block', background: '#facc15', color: '#b45309', padding: '5px 15px', borderRadius: '30px', fontWeight: 'bold', fontSize: '14px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+                Duy nhất ngày {saleDayText}
+              </div>
+            </div>
+
+            <div style={{ padding: '30px', textAlign: 'center' }}>
+              <h3 style={{ fontSize: '22px', color: '#1e293b', margin: '0 0 15px 0', fontWeight: '800' }}>Giảm Ngay <span style={{ color: '#e11d48', fontSize: '32px' }}>{saleDiscount}%</span></h3>
+              <p style={{ color: '#475569', fontSize: '15px', lineHeight: '1.6', marginBottom: '25px' }}>
+                Mua sắm thả ga, không lo về giá! Áp dụng trực tiếp {saleDiscount}% vào toàn bộ sản phẩm cửa hàng và tổng hóa đơn khi bạn chốt đơn trong hôm nay.
+              </p>
+              <button 
+                onClick={handleClosePopup}
+                style={{ width: '100%', padding: '15px', background: '#1e293b', color: 'white', border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', transition: '0.3s', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }}
+              >
+                MUA SẮM NGAY
+              </button>
+            </div>
+          </div>
+
+          <style>{`
+            @keyframes popIn {
+              0% { transform: scale(0.8); opacity: 0; }
+              100% { transform: scale(1); opacity: 1; }
+            }
+          `}</style>
+        </div>
+      )}
+
+      {/* 1. HEADER (NAVBAR) */}
+      <header
+        style={{
+          background: "#1e293b",
+          padding: "12px 0",
+          borderBottom: "1px solid #0f172a",
+        }}
+      >
+        <div
+          style={{
+            maxWidth: "1140px",
+            margin: "0 auto",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            width: "96%",
+          }}
+        >
+          <div
+            style={{
+              color: "white",
+              fontWeight: "bold",
+              fontSize: "20px",
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+            }}
+          >
+            <i className="fas fa-video"></i> CIOs - impossible is nothing
+          </div>
+          <nav style={{ display: "flex", gap: "20px" }}>
+            <Link href="/" className="nav-link">
+              <i className="fas fa-home"></i> Trang chủ
+            </Link>
+            <Link href="/contact" className="nav-link">
+              <i className="fas fa-phone-alt"></i> Liên hệ
+            </Link>
+            <Link href="/projects" className="nav-link">
+              <i className="fas fa-project-diagram"></i> Dự án
+            </Link>
+            <Link
+              href="/notifications"
+              className="nav-link"
+              style={{ position: "relative" }}
+            >
+              <i className="fas fa-bell"></i> Thông báo
+              <NotifBadge />
+            </Link>
+            <Link
+              href="/cart"
+              className="nav-link"
+              style={{ position: "relative" }}
+            >
+              <i className="fas fa-shopping-cart"></i> Giỏ hàng
+              {totalItems > 0 && (
+                <span
+                  style={{
+                    position: "absolute",
+                    top: "-8px",
+                    right: "-12px",
+                    background: "#e11d48",
+                    color: "white",
+                    fontSize: "10px",
+                    padding: "2px 6px",
+                    borderRadius: "50%",
+                  }}
+                >
+                  {totalItems}
+                </span>
+              )}
+            </Link>
+            {user ? (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "15px",
+                  marginLeft: "10px",
+                }}
+              >
+                <Link
+                  href={String(user.role) === "1" ? "/admin" : "/profile"}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    textDecoration: "none",
+                    lineHeight: "1.2",
+                  }}
+                >
+                  <span style={{ color: "#94a3b8", fontSize: "11px" }}>
+                    Xin chào,
+                  </span>
+                  <span
+                    style={{
+                      color: "#4ade80",
+                      fontSize: "14px",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {user.username.toUpperCase()}
+                  </span>
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  style={{
+                    background: "#ef4444",
+                    color: "white",
+                    border: "none",
+                    padding: "6px 15px",
+                    borderRadius: "4px",
+                    fontSize: "13px",
+                    fontWeight: "bold",
+                    cursor: "pointer",
+                    transition: "0.2s",
+                  }}
+                >
+                  Thoát
+                </button>
+              </div>
+            ) : (
+              <>
+                <Link href="/login" className="nav-link">
+                  <i className="fas fa-user"></i> Đăng nhập
+                </Link>
+                <Link href="/register" className="nav-link">
+                  <i className="fas fa-user-plus"></i> Đăng ký
+                </Link>
+              </>
+            )}
+          </nav>
+        </div>
+      </header>
+
+      {/* 2. HERO BANNER */}
+      <div className="hero-banner">
+        <div className="hero-content">
+          <h1
+            style={{
+              textTransform: "uppercase",
+              textShadow: "2px 2px 4px rgba(0,0,0,0.5)",
+            }}
+          >
+            Công Nghệ Giám Sát 4.0
+          </h1>
+          <p style={{ fontSize: "16px", marginBottom: "20px" }}>
+            CIOs - impossible is nothing - Đối tác an ninh tin cậy của mọi gia đình Việt
+          </p>
+          <button 
+            className="btn-hero" 
+            style={{ background: "#e11d48" }}
+            onClick={() => router.push('/contact')}
+          >
+            TƯ VẤN NGAY
+          </button>
+        </div>
+      </div>
+
+      {/* 3. MAIN LAYOUT */}
+      <div className="main-container">
+        {/* CỘT TRÁI (SIDEBAR) */}
+        <aside className="sidebar-left">
+          {/* DANH MỤC */}
+          <div
+            className="sidebar-box category-dropdown"
+            onMouseEnter={() => setIsCategoryOpen(true)}
+            onMouseLeave={() => setIsCategoryOpen(false)}
+          >
+            <h3
+              onClick={() => setIsCategoryOpen(!isCategoryOpen)}
+              style={{
+                cursor: "pointer",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <span>
+                <i
+                  className="fas fa-folder-open"
+                  style={{ color: "#facc15", marginRight: "8px" }}
+                ></i>{" "}
+                DANH MỤC
+              </span>
+              <i
+                className="fas fa-caret-down arrow-icon"
+                style={{
+                  transform: isCategoryOpen ? "rotate(180deg)" : "rotate(0deg)",
+                  transition: "0.3s",
+                }}
+              ></i>
+            </h3>
+            <ul 
+              className="category-vertical" 
+              style={{ 
+                maxHeight: isCategoryOpen ? '500px' : '0', 
+                opacity: isCategoryOpen ? 1 : 0,
+                overflow: 'hidden',
+                transition: 'all 0.4s ease',
+                marginTop: isCategoryOpen ? '10px' : '0',
+                paddingTop: isCategoryOpen ? '10px' : '0',
+                borderTop: isCategoryOpen ? '1px dashed #e2e8f0' : 'none'
+              }}
+            >
+              <li 
+                className={selectedCategory === "all" ? "active" : ""} 
+                onClick={() => setSelectedCategory("all")}
+                style={{ cursor: 'pointer' }}
+              >
+                Tất cả <i className="fas fa-arrow-right" style={{ fontSize: '10px' }}></i>
+              </li>
+              {categories.map((cat) => (
+                <li 
+                  key={cat.id || cat._id}
+                  className={selectedCategory === String(cat.id || cat._id) ? "active" : ""} 
+                  onClick={() => setSelectedCategory(String(cat.id || cat._id))}
+                  style={{ cursor: 'pointer' }}
+                >
+                  {cat.name} <i className="fas fa-arrow-right" style={{ fontSize: '10px' }}></i>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="sidebar-box">
+            <h3 style={{ marginBottom: '15px' }}>
+              <i className="fas fa-money-bill-wave" style={{ color: "#eab308" }}></i> KHOẢNG GIÁ
+            </h3>
+            
+            <div style={{ paddingBottom: '15px', borderBottom: '1px solid #e2e8f0', marginBottom: '15px' }}>
+>>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
               <input
                 type="range"
                 min="0"
@@ -755,6 +1289,7 @@ export default function Home() {
               </div>
             </div>
 
+<<<<<<< HEAD
             {/* Các thẻ chọn nhanh khoảng giá dạng pills hiện đại */}
             <div className="price-chip-grid">
               <button 
@@ -793,6 +1328,25 @@ export default function Home() {
                 <span>Trên 3 Triệu</span>
               </button>
             </div>
+=======
+            <ul className="price-filter-list" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              <li style={{ cursor: 'pointer', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: minPrice === 0 && maxPrice === 500000 ? '#e11d48' : '#334155', fontWeight: minPrice === 0 && maxPrice === 500000 ? 'bold' : 'normal' }} onClick={() => { setMinPrice(0); setMaxPrice(500000); }}>
+                <div style={{ width: '16px', height: '16px', borderRadius: '4px', border: '1px solid', borderColor: minPrice === 0 && maxPrice === 500000 ? '#e11d48' : '#cbd5e1', background: minPrice === 0 && maxPrice === 500000 ? '#e11d48' : 'white' }}></div> Dưới 500k
+              </li>
+              <li style={{ cursor: 'pointer', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: minPrice === 500000 && maxPrice === 1000000 ? '#e11d48' : '#334155', fontWeight: minPrice === 500000 && maxPrice === 1000000 ? 'bold' : 'normal' }} onClick={() => { setMinPrice(500000); setMaxPrice(1000000); }}>
+                <div style={{ width: '16px', height: '16px', borderRadius: '4px', border: '1px solid', borderColor: minPrice === 500000 && maxPrice === 1000000 ? '#e11d48' : '#cbd5e1', background: minPrice === 500000 && maxPrice === 1000000 ? '#e11d48' : 'white' }}></div> 500k - 1 Triệu
+              </li>
+              <li style={{ cursor: 'pointer', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: minPrice === 1000000 && maxPrice === 3000000 ? '#e11d48' : '#334155', fontWeight: minPrice === 1000000 && maxPrice === 3000000 ? 'bold' : 'normal' }} onClick={() => { setMinPrice(1000000); setMaxPrice(3000000); }}>
+                <div style={{ width: '16px', height: '16px', borderRadius: '4px', border: '1px solid', borderColor: minPrice === 1000000 && maxPrice === 3000000 ? '#e11d48' : '#cbd5e1', background: minPrice === 1000000 && maxPrice === 3000000 ? '#e11d48' : 'white' }}></div> 1 - 3 Triệu
+              </li>
+              <li style={{ cursor: 'pointer', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: minPrice === 3000000 && maxPrice === 50000000 ? '#e11d48' : '#334155', fontWeight: minPrice === 3000000 && maxPrice === 50000000 ? 'bold' : 'normal' }} onClick={() => { setMinPrice(3000000); setMaxPrice(50000000); }}>
+                <div style={{ width: '16px', height: '16px', borderRadius: '4px', border: '1px solid', borderColor: minPrice === 3000000 && maxPrice === 50000000 ? '#e11d48' : '#cbd5e1', background: minPrice === 3000000 && maxPrice === 50000000 ? '#e11d48' : 'white' }}></div> Trên 3 Triệu
+              </li>
+              <li style={{ cursor: 'pointer', marginTop: '15px', fontSize: '13px', color: '#3b82f6', fontWeight: 'bold', textAlign: 'center' }} onClick={() => { setMinPrice(0); setMaxPrice(5000000); }}>
+                <i className="fas fa-sync-alt"></i> Bỏ lọc giá
+              </li>
+            </ul>
+>>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
           </div>
 
           {/* 1. Box Hotline Hỗ Trợ & Zalo */}
@@ -915,6 +1469,7 @@ export default function Home() {
           </div>
         </aside>
 
+<<<<<<< HEAD
         {/* NỘI DUNG CHÍNH (MAIN CONTENT) */}
         <main className="content-col">
           {/* KHU VỰC VOUCHERS */}
@@ -973,6 +1528,138 @@ export default function Home() {
                     </div>
                   );
                 })}
+=======
+        {/* CỘT PHẢI (NỘI DUNG CHÍNH) */}
+        <main className="content-right">
+          
+          <div className="search-bar-modern">
+            <span style={{ padding: "10px 15px", color: "#3b82f6" }}>
+              <i className="fas fa-search"></i>
+            </span>
+            <input 
+              type="text" 
+              placeholder="Bạn muốn tìm camera loại nào?" 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <button style={{ background: "#1e293b" }}>
+              <i className="fas fa-search"></i>
+            </button>
+          </div>
+
+          {/* ==================================================== */}
+          {/* KHU VỰC VOUCHER "SĂN DEAL" */}
+          {/* ==================================================== */}
+          {vouchers.length > 0 && (
+            <div style={{ marginBottom: '40px' }}>
+              <h2 className="section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span><i className="fas fa-ticket-alt" style={{ color: "#f59e0b" }}></i> MÃ GIẢM GIÁ DÀNH CHO BẠN</span>
+              </h2>
+              
+              <div className="voucher-scroll-container">
+                {vouchers.map((v) => {
+                  const isSaved = savedVouchers.includes(v.code);
+                  const isUsed = usedVouchers.includes(v.code);
+                  
+                  return (
+                    <div className="voucher-ticket" key={v._id}>
+                      <div className="voucher-left">
+                        <span style={{ fontSize: '28px', fontWeight: '900', lineHeight: 1 }}>{v.discountPercent}%</span>
+                        <span style={{ fontSize: '11px', textTransform: 'uppercase', marginTop: '5px', fontWeight: 'bold' }}>Giảm giá</span>
+                      </div>
+                      <div className="voucher-right">
+                        <div>
+                          <div style={{ fontSize: '15px', fontWeight: '800', color: '#1e293b', marginBottom: '4px' }}>Mã: <span style={{ color: '#e11d48' }}>{v.code}</span></div>
+                          <div style={{ fontSize: '12px', color: '#64748b' }}>Đơn tối thiểu {Number(v.minOrderValue).toLocaleString('vi-VN')}đ</div>
+                          <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>HSD: {new Date(v.expireDate).toLocaleDateString('vi-VN')}</div>
+                        </div>
+                        
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
+                          <div style={{ fontSize: '11px', color: '#f59e0b', fontWeight: 'bold' }}>
+                            Còn {v.maxUsage - v.usedCount} lượt
+                          </div>
+                          
+                          <button 
+                            className="btn-save-voucher" 
+                            disabled={isSaved || isUsed}
+                            onClick={() => handleSaveVoucher(v.code)}
+                          >
+                            {isUsed ? 'Đã sử dụng' : (isSaved ? 'Đã lưu' : 'Lưu mã')}
+                          </button>
+
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* BÁN CHẠY NHẤT */}
+          <h2 className="section-title">
+            <i className="fas fa-fire" style={{ color: "#e11d48" }}></i> BÁN CHẠY NHẤT
+          </h2>
+          <div className="hot-grid" style={{ marginBottom: "40px" }}>
+            {hotProducts.map((product) => (
+              <div className="hot-card" key={product.id || product._id}>
+                <div className="hot-badge">TOP</div>
+                
+                <div className="hot-img" style={{ position: 'relative' }}>
+                  {isSaleDay && saleDiscount > 0 && (
+                    <div style={{ position: 'absolute', top: '10px', left: '10px', background: '#e11d48', color: 'white', padding: '3px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold', zIndex: 2, boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
+                      -{saleDiscount}%
+                    </div>
+                  )}
+                  <Link href={`/product/${product.id || product._id}`}>
+                    <img src={product.image} alt={product.name} />
+                  </Link>
+                </div>
+                
+                <div className="hot-info">
+                  <Link
+                    href={`/product/${product.id || product._id}`}
+                    style={{ textDecoration: "none" }}
+                  >
+                    <h3>{product.name}</h3>
+                  </Link>
+                  
+                  <div className="hot-price" style={{ minHeight: '45px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                    {isSaleDay && saleDiscount > 0 ? (
+                      <>
+                        <span style={{ textDecoration: 'line-through', color: '#94a3b8', fontSize: '13px', fontWeight: 'normal', marginBottom: '2px' }}>
+                          {Number(product.price).toLocaleString("vi-VN")} đ
+                        </span>
+                        <span style={{ color: '#e11d48', fontSize: '16px' }}>
+                          {(Number(product.price) * (1 - saleDiscount / 100)).toLocaleString("vi-VN")} đ
+                        </span>
+                      </>
+                    ) : (
+                      <span style={{ color: '#e11d48', fontSize: '16px' }}>
+                        {Number(product.price).toLocaleString("vi-VN")} đ
+                      </span>
+                    )}
+                  </div>
+
+                  {Number(product.quantity) > 0 ? (
+                    <button className="btn-hot-add" onClick={() => {
+                      if (!user) {
+                        alert("Vui lòng đăng nhập để mua hàng!");
+                        router.push('/login');
+                      } else {
+                        addToCart(product);
+                        router.push('/cart');
+                      }
+                    }}>
+                      Mua Ngay
+                    </button>
+                  ) : (
+                    <button className="btn-hot-add" disabled style={{ background: '#cbd5e1', color: '#64748b', cursor: 'not-allowed' }}>
+                      Tạm hết hàng
+                    </button>
+                  )}
+                </div>
+>>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
               </div>
             </div>
           )}
@@ -1061,6 +1748,7 @@ export default function Home() {
           </div>
 
           {/* TẤT CẢ SẢN PHẨM */}
+<<<<<<< HEAD
           <div className="content-section-products">
             <div className="section-header-modern">
               <div className="section-title-modern">
@@ -1163,6 +1851,108 @@ export default function Home() {
                 </button>
 
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map((number) => (
+=======
+          <h2 className="section-title">
+            <i className="fas fa-box-open" style={{ color: "#b45309" }}></i> TẤT CẢ SẢN PHẨM
+          </h2>
+          <div className="product-grid">
+            {currentProducts.map((product) => {
+              // KIỂM TRA XEM SẢN PHẨM NÀY ĐÃ ĐƯỢC THẢ TIM HAY CHƯA
+              const isFav = favIds.includes(String(product.id || product._id));
+
+              return (
+                <div className="product-card" key={product.id || product._id}>
+                  {/* ĐÃ SỬA: Giao diện và logic đổi màu trái tim */}
+                  <div 
+                    className="favorite-btn" 
+                    onClick={(e) => {
+                      e.stopPropagation(); 
+                      toggleFavorite(product);
+                    }}
+                    style={{ cursor: 'pointer', transition: '0.3s' }}
+                  >
+                    <i className="fas fa-heart" style={{ color: isFav ? '#e11d48' : '#cbd5e1', transition: '0.3s' }}></i>
+                  </div>
+                  
+                  <div className="card-img" style={{ position: 'relative' }}>
+                     {isSaleDay && saleDiscount > 0 && (
+                      <div style={{ position: 'absolute', top: '10px', left: '10px', background: '#e11d48', color: 'white', padding: '3px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold', zIndex: 2, boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
+                        -{saleDiscount}%
+                      </div>
+                    )}
+                    <Link href={`/product/${product.id || product._id}`}>
+                      <img src={product.image} alt={product.name} />
+                    </Link>
+                  </div>
+
+                  <div className="card-body">
+                    <Link
+                      href={`/product/${product.id || product._id}`}
+                      style={{ textDecoration: "none" }}
+                    >
+                      <h3>{product.name}</h3>
+                    </Link>
+
+                    <div className="price-row" style={{ minHeight: '40px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start' }}>
+                      {isSaleDay && saleDiscount > 0 ? (
+                        <>
+                          <span style={{ textDecoration: 'line-through', color: '#94a3b8', fontSize: '12px', fontWeight: 'normal' }}>
+                            {Number(product.price).toLocaleString("vi-VN")} đ
+                          </span>
+                          <span style={{ color: '#e11d48', fontSize: '16px', fontWeight: 'bold' }}>
+                            {(Number(product.price) * (1 - saleDiscount / 100)).toLocaleString("vi-VN")} đ
+                          </span>
+                        </>
+                      ) : (
+                        <span style={{ color: '#e11d48', fontSize: '16px', fontWeight: 'bold' }}>
+                          {Number(product.price).toLocaleString("vi-VN")} đ
+                        </span>
+                      )}
+                    </div>
+
+                    <div
+                      style={{
+                        fontSize: "11px",
+                        color: "#e58e26",
+                        marginBottom: "8px",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      <i className="fas fa-tag"></i> Chỉ còn: {product.quantity} cái
+                    </div>
+                    
+                    {Number(product.quantity) > 0 ? (
+                      <button className="btn-hot-add" onClick={() => {
+                        if (!user) {
+                          alert("Vui lòng đăng nhập để thêm vào giỏ hàng!");
+                          router.push('/login');
+                        } else {
+                          addToCart(product);
+                        }
+                      }}>
+                        Thêm vào giỏ hàng
+                      </button>
+                    ) : (
+                      <button className="btn-hot-add" disabled style={{ background: '#cbd5e1', color: '#64748b', cursor: 'not-allowed' }}>
+                        Tạm hết hàng
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* THANH PHÂN TRANG */}
+          <div className="pagination-container">
+            <div className="pagination">
+              <button className="page-btn prev" onClick={handlePrev}>
+                <i className="fas fa-chevron-left"></i>
+              </button>
+
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                (number) => (
+>>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
                   <button
                     key={number}
                     className={`page-btn-pro ${currentPage === number ? "active" : ""}`}
@@ -1170,6 +1960,7 @@ export default function Home() {
                   >
                     {number}
                   </button>
+<<<<<<< HEAD
                 ))}
 
                 <button 
@@ -1181,15 +1972,144 @@ export default function Home() {
                 </button>
               </div>
             )}
+=======
+                )
+              )}
+
+              <button className="page-btn next" onClick={handleNext}>
+                <i className="fas fa-chevron-right"></i>
+              </button>
+            </div>
+>>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
           </div>
         </main>
       </div>
 
+<<<<<<< HEAD
       {/* 5. FLOATING SPEED DIAL */}
       <FloatingActions />
 
       {/* 6. SITE FOOTER */}
       <Footer />
+=======
+      {/* FLOATING BUTTONS */}
+      <div className="floating-buttons">
+        <a href="https://zalo.me/0971024173" target="_blank" rel="noopener noreferrer" className="float-btn zalo">
+          <i className="fas fa-comment-dots"></i> Chat Zalo
+        </a>
+        <a href="tel:0971024173" className="float-btn phone">
+          <i className="fas fa-phone-alt"></i> 0971.024.173
+        </a>
+        <button 
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} 
+          className="float-btn up-top" 
+          style={{ border: 'none', cursor: 'pointer' }}
+        >
+          <i className="fas fa-arrow-up"></i>
+        </button>
+      </div>
+
+      {/* FOOTER */}
+      <footer className="pro-footer">
+        <div className="footer-container">
+          <div className="footer-col">
+            <h3>CIOs - impossible is nothing</h3>
+            <p>
+              Đối tác tin cậy cung cấp giải pháp an ninh toàn diện. Cam kết sản
+              phẩm chính hãng, dịch vụ tận tâm và hỗ trợ kỹ thuật trọn đời.
+            </p>
+            <div className="social-icons">
+              <div className="social-btn" style={{ background: "#3b5998" }}>
+                <i className="fab fa-facebook-f"></i>
+              </div>
+              <div className="social-btn" style={{ background: "#e1306c" }}>
+                <i className="fab fa-instagram"></i>
+              </div>
+              <div className="social-btn" style={{ background: "#ff0000" }}>
+                <i className="fab fa-youtube"></i>
+              </div>
+            </div>
+            <div className="newsletter-box">
+              <span>Đăng ký nhận khuyến mãi:</span>
+              <div className="input-group">
+                <input type="email" placeholder="Email của bạn..." />
+                <button>GỬI</button>
+              </div>
+            </div>
+          </div>
+
+          <div className="footer-col">
+            <h3>CHÍNH SÁCH HỖ TRỢ</h3>
+            <ul className="footer-links">
+              <li><span className="bullet">›</span> Chính sách bảo hành 24 tháng</li>
+              <li><span className="bullet">›</span> Đổi trả 1-1 trong 30 ngày</li>
+              <li><span className="bullet">›</span> Chính sách bảo mật thông tin</li>
+              <li><span className="bullet">›</span> Hướng dẫn mua hàng online</li>
+              <li><span className="bullet">›</span> Hướng dẫn thanh toán</li>
+            </ul>
+          </div>
+
+          <div className="footer-col">
+            <h3>LIÊN HỆ VỚI CHÚNG TÔI</h3>
+            <div className="contact-row">
+              <div className="icon-box">
+                <i className="fas fa-map-marker-alt"></i>
+              </div>
+              <div>
+                <strong>Trụ sở chính:</strong>
+                <p>12 Trịnh Đình Thảo, P. Hòa Thạnh, Q. Tân Phú, TP. Hồ Chí Minh</p>
+              </div>
+            </div>
+            <div className="contact-row">
+              <div className="icon-box">
+                <i className="fas fa-phone-alt"></i>
+              </div>
+              <div>
+                <strong>Hotline 24/7:</strong>
+                <span className="hotline-text">0971.024.173</span>
+              </div>
+            </div>
+            <div className="contact-row">
+              <div className="icon-box">
+                <i className="fas fa-envelope"></i>
+              </div>
+              <div>
+                <strong>Email hỗ trợ:</strong>
+                <p>hotro@cameracb.com</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="footer-col">
+            <h3>BẢN ĐỒ CỬA HÀNG</h3>
+            <div
+              className="map-frame"
+              style={{
+                background: "#ccc",
+                height: "150px",
+                borderRadius: "8px",
+                display: "flex",
+                alignItems: "center",
+                justifyItems: "center",
+                overflow: "hidden"
+              }}
+            >
+              <iframe
+                src="https://maps.google.com/maps?q=12%20Tr%E1%BB%8Bnh%20%C4%90%C3%ACnh%20Th%E1%BA%A3o%2C%20Ho%C3%A0%20Th%E1%BA%A1nh%2C%20T%C3%A2n%20Ph%C3%BA%2C%20H%E1%BB%93%20Ch%C3%AD%20Minh&t=&z=16&ie=UTF8&iwloc=&output=embed"
+                width="100%"
+                height="200"
+                style={{ border: 0 }}
+                allowFullScreen={true}
+                loading="lazy"
+              ></iframe>
+            </div>
+          </div>
+        </div>
+        <div className="footer-bottom">
+          © 2026 Công Ty TNHH CIOs - impossible is nothing. Giấy phép KD số: 0123456789.
+        </div>
+      </footer>
+>>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
     </>
   );
 }

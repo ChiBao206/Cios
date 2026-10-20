@@ -23,12 +23,15 @@ export default function ContactPage() {
     }
   }, []);
 
+<<<<<<< HEAD
   const handleLogout = () => {
+=======
+const handleLogout = () => {
+>>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
     localStorage.removeItem('camera_bn_cart'); 
     localStorage.removeItem('currentUser'); 
     window.location.href = '/'; 
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.phone || !formData.issue) return alert("Vui lòng điền đủ thông tin!");
@@ -51,6 +54,7 @@ export default function ContactPage() {
   };
 
   return (
+<<<<<<< HEAD
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       {/* 0. TOP UTILITY BAR */}
       <div className="top-utility-bar">
@@ -63,6 +67,43 @@ export default function ContactPage() {
             <span><i className="fas fa-truck"></i> Miễn phí lắp đặt nội thành</span>
             <span><i className="fas fa-shield-alt"></i> Bảo hành chính hãng 24 tháng</span>
           </div>
+=======
+    <div style={{ background: '#f8fafc', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      
+      {/* 1. HEADER ĐÃ ĐỒNG BỘ */}
+      <header style={{ background: '#1e293b', padding: '12px 0', borderBottom: '1px solid #0f172a' }}>
+        <div style={{ maxWidth: '1140px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '96%' }}>
+          <Link href="/" style={{ color: 'white', fontWeight: 'bold', fontSize: '20px', display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
+            <i className="fas fa-video"></i> CIOs - impossible is nothing
+          </Link>
+          <nav style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <Link href="/" className="nav-link" style={{ color: 'white', textDecoration: 'none', fontSize: '14px', fontWeight: 'bold' }}><i className="fas fa-home"></i> Trang chủ</Link>
+            <Link href="/contact" className="nav-link" style={{ color: '#38bdf8', textDecoration: 'none', fontSize: '14px', fontWeight: 'bold' }}><i className="fas fa-phone-alt"></i> Liên hệ</Link>
+            
+            <Link href="/notifications" className="nav-link" style={{ color: 'white', textDecoration: 'none', fontSize: '14px', fontWeight: 'bold', position: 'relative' }}>
+              <i className="fas fa-bell"></i> Thông báo <NotifBadge />
+            </Link>
+            
+            <Link href="/cart" className="nav-link" style={{ position: 'relative', color: 'white', textDecoration: 'none', fontSize: '14px', fontWeight: 'bold' }}>
+              <i className="fas fa-shopping-cart"></i> Giỏ hàng
+              {totalItems > 0 && <span style={{ position: 'absolute', top: '-8px', right: '-12px', background: '#e11d48', color: 'white', fontSize: '10px', padding: '2px 6px', borderRadius: '50%' }}>{totalItems}</span>}
+            </Link>
+            
+            {/* THAY THẾ DÒNG ĐĂNG NHẬP BẰNG TÀI KHOẢN ĐỘNG */}
+            {user ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <Link href="/profile" style={{ textAlign: 'right', fontSize: '12px', color: '#94a3b8', textDecoration: 'none' }}>
+                  Xin chào,<br/><strong style={{ color: '#4ade80', fontSize: '14px', textTransform: 'uppercase' }}>{user.username}</strong>
+                </Link>
+                <button onClick={handleLogout} style={{ background: '#ef4444', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s' }}>Thoát</button>
+              </div>
+            ) : (
+              <Link href="/login" className="nav-link" style={{ color: 'white', textDecoration: 'none', fontSize: '14px', fontWeight: 'bold' }}>
+                <i className="fas fa-user"></i> Đăng nhập
+              </Link>
+            )}
+          </nav>
+>>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
         </div>
       </div>
 
@@ -72,6 +113,7 @@ export default function ContactPage() {
       {/* MAIN CONTENT */}
       <main style={{ maxWidth: '1240px', width: '95%', margin: '40px auto 60px', flex: 1 }}>
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+<<<<<<< HEAD
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#e0f2fe', color: '#0369a1', padding: '6px 16px', borderRadius: '20px', fontSize: '13px', fontWeight: '700', marginBottom: '12px' }}>
             <i className="fas fa-headset"></i> TRUNG TÂM HỖ TRỢ KHÁCH HÀNG
           </div>
@@ -81,6 +123,10 @@ export default function ContactPage() {
           <p style={{ color: '#64748b', fontSize: '15px', maxWidth: '600px', margin: '0 auto' }}>
             Đội ngũ chuyên viên kỹ thuật của CIOs Camera luôn sẵn sàng lắng nghe và giải đáp mọi thắc mắc 24/7.
           </p>
+=======
+          <h1 style={{ fontSize: '32px', color: '#1e293b', fontWeight: '900', textTransform: 'uppercase', marginBottom: '10px' }}>Liên hệ với chúng tôi</h1>
+          <p style={{ color: '#64748b' }}>Đội ngũ CIOs - impossible is nothing luôn sẵn sàng hỗ trợ bạn 24/7</p>
+>>>>>>> 083ad7c1a70f1fd081841d97908a4defe4ae5d96
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '30px', alignItems: 'start' }}>
