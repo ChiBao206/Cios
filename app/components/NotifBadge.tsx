@@ -47,17 +47,53 @@ export default function NotifBadge() {
 
     checkUnread();
     
-    // Tự động quét tìm thông báo mới mỗi 5 giây (như web thật)
-    const interval = setInterval(checkUnread, 5000);
-    return () => clearInterval(interval);
+    // Tự động quét tìm thông báo mới mỗi 35 giây khi tab đang mở
+    const interval = setInterval(() => {
+      if (typeof document !== "undefined" && !document.hidden) {
+        checkUnread();
+      }
+    }, 35000);
+
+    const onVisibilityChange = () => {
+      if (typeof document !== "undefined" && !document.hidden) {
+        checkUnread();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
   }, []);
 
   // Nếu không có thông báo mới thì ẩn luôn cục màu đỏ
   if (unreadCount === 0) return null;
 
   return (
-    <span style={{ position: 'absolute', top: '-8px', right: '-12px', background: '#e11d48', color: 'white', fontSize: '10px', padding: '2px 6px', borderRadius: '50%' }}>
-      {unreadCount}
+    <span 
+      style={{ 
+        position: 'absolute', 
+        top: '-7px', 
+        right: '-10px', 
+        background: '#ef4444', 
+        color: '#ffffff', 
+        fontSize: '10px', 
+        fontWeight: '800',
+        minWidth: '18px', 
+        height: '18px', 
+        padding: '0 4px', 
+        borderRadius: '9999px',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        border: '1.5px solid #ffffff',
+        boxShadow: '0 2px 6px rgba(239, 68, 68, 0.45)',
+        lineHeight: 1,
+        zIndex: 10
+      }}
+    >
+      {unreadCount > 99 ? '99+' : unreadCount}
     </span>
   );
 }

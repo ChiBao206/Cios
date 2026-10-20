@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useCart } from '../context/CartContext';
 import NotifBadge from '../components/NotifBadge';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
+import FloatingActions from '../components/FloatingActions';
 
 export default function NotificationsPage() {
   const { totalItems } = useCart(); // Thêm cái này để lấy số lượng giỏ hàng
@@ -26,9 +29,10 @@ export default function NotificationsPage() {
   }, []);
 
   // Thêm hàm Đăng xuất
-  const handleLogout = () => {
-    localStorage.removeItem('currentUser');
-    window.location.reload();
+const handleLogout = () => {
+    localStorage.removeItem('camera_bn_cart'); 
+    localStorage.removeItem('currentUser'); 
+    window.location.href = '/'; 
   };
 
   const fetchNotifications = async (phone: string, username: string) => {
@@ -98,84 +102,65 @@ export default function NotificationsPage() {
   };
 
   return (
-    <div style={{ background: '#f8fafc', minHeight: '100vh', display: 'flex', flexDirection: 'column', fontFamily: "'Segoe UI', sans-serif" }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', fontFamily: "'Segoe UI', sans-serif" }}>
       
-      {/* HEADER ĐÃ ĐƯỢC ĐỒNG BỘ 100% */}
-      <header style={{ background: '#1e293b', padding: '12px 0', borderBottom: '1px solid #0f172a' }}>
-        <div style={{ maxWidth: '1140px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '96%' }}>
-          <Link href="/" style={{ color: 'white', fontWeight: 'bold', fontSize: '20px', display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
-            <i className="fas fa-video"></i> CAMERA B&N
-          </Link>
-          <nav style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
-            <Link href="/" className="nav-link" style={{ color: 'white', textDecoration: 'none', fontSize: '14px', fontWeight: 'bold' }}><i className="fas fa-home"></i> Trang chủ</Link>
-            <Link href="/contact" className="nav-link" style={{ color: 'white', textDecoration: 'none', fontSize: '14px', fontWeight: 'bold' }}><i className="fas fa-phone-alt"></i> Liên hệ</Link>
-            
-            <Link href="/notifications" className="nav-link" style={{ position: 'relative', color: '#38bdf8', textDecoration: 'none', fontSize: '14px', fontWeight: 'bold' }}>
-              <i className="fas fa-bell"></i> Thông báo
-              <NotifBadge />
-            </Link>
-            
-            <Link href="/cart" className="nav-link" style={{ position: 'relative', color: 'white', textDecoration: 'none', fontSize: '14px', fontWeight: 'bold' }}>
-              <i className="fas fa-shopping-cart"></i> Giỏ hàng
-              {totalItems > 0 && <span style={{ position: 'absolute', top: '-8px', right: '-12px', background: '#e11d48', color: 'white', fontSize: '10px', padding: '2px 6px', borderRadius: '50%' }}>{totalItems}</span>}
-            </Link>
-            
-            {user ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <Link href="/profile" style={{ textAlign: 'right', fontSize: '12px', color: '#94a3b8', textDecoration: 'none' }}>
-                  Xin chào,<br/><strong style={{ color: '#4ade80', fontSize: '14px', textTransform: 'uppercase' }}>{user.username}</strong>
-                </Link>
-                <button onClick={handleLogout} style={{ background: '#ef4444', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s' }}>Thoát</button>
-              </div>
-            ) : (
-              <Link href="/login" className="nav-link" style={{ color: 'white', textDecoration: 'none', fontSize: '14px', fontWeight: 'bold' }}>
-                <i className="fas fa-user"></i> Đăng nhập
-              </Link>
-            )}
-          </nav>
+      {/* 0. TOP UTILITY BAR */}
+      <div className="top-utility-bar">
+        <div className="top-bar-container">
+          <div className="top-bar-left">
+            <span><i className="fas fa-phone-alt"></i> Hotline tư vấn: <strong style={{ color: '#ffffff' }}>0971.024.173</strong></span>
+            <span><i className="fas fa-map-marker-alt"></i> 12 Trịnh Đình Thảo, Tân Phú, TP. HCM</span>
+          </div>
+          <div className="top-bar-right">
+            <span><i className="fas fa-truck"></i> Miễn phí lắp đặt nội thành</span>
+            <span><i className="fas fa-shield-alt"></i> Bảo hành chính hãng 24 tháng</span>
+          </div>
         </div>
-      </header>
+      </div>
+
+      {/* 1. HEADER */}
+      <Header user={user} activePage="notifications" onLogout={handleLogout} />
 
       {/* MAIN CONTENT */}
       <main style={{ maxWidth: '800px', width: '95%', margin: '40px auto', flex: 1 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
-          <h1 style={{ fontSize: '24px', color: '#1e293b', fontWeight: '900', margin: 0 }}><i className="fas fa-bell" style={{ color: '#e11d48' }}></i> THÔNG BÁO CỦA BẠN</h1>
+          <h1 style={{ fontSize: '24px', color: '#0c4a6e', fontWeight: '900', margin: 0 }}><i className="fas fa-bell" style={{ color: '#0284c7' }}></i> THÔNG BÁO CỦA BẠN</h1>
         </div>
 
         {/* NẾU CHƯA ĐĂNG NHẬP */}
         {!user && !isLoading && (
-          <div style={{ background: 'white', padding: '60px 20px', borderRadius: '12px', textAlign: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0' }}>
-            <i className="fas fa-user-lock" style={{ fontSize: '60px', color: '#cbd5e1', marginBottom: '20px' }}></i>
-            <h2 style={{ fontSize: '20px', color: '#1e293b', marginBottom: '10px' }}>Vui lòng đăng nhập để xem thông báo</h2>
+          <div style={{ background: 'rgba(240, 249, 255, 0.8)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', padding: '60px 20px', borderRadius: '16px', textAlign: 'center', boxShadow: '0 8px 30px rgba(2, 132, 199, 0.1)', border: '1px solid rgba(186, 230, 253, 0.75)' }}>
+            <i className="fas fa-user-lock" style={{ fontSize: '60px', color: '#7dd3fc', marginBottom: '20px' }}></i>
+            <h2 style={{ fontSize: '20px', color: '#0c4a6e', marginBottom: '10px' }}>Vui lòng đăng nhập để xem thông báo</h2>
             <p style={{ color: '#64748b', marginBottom: '25px' }}>Đăng nhập để theo dõi tình trạng đơn hàng và tin nhắn từ quản trị viên.</p>
             <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
-              <Link href="/login" style={{ padding: '12px 30px', background: '#3b82f6', color: 'white', borderRadius: '6px', fontWeight: 'bold', textDecoration: 'none' }}>Đăng nhập</Link>
-              <Link href="/register" style={{ padding: '12px 30px', background: 'white', color: '#3b82f6', border: '1px solid #3b82f6', borderRadius: '6px', fontWeight: 'bold', textDecoration: 'none' }}>Đăng ký</Link>
+              <Link href="/login" style={{ padding: '12px 30px', background: 'linear-gradient(135deg, #0284c7, #0369a1)', color: 'white', borderRadius: '8px', fontWeight: 'bold', textDecoration: 'none', boxShadow: '0 4px 15px rgba(2, 132, 199, 0.35)' }}>Đăng nhập</Link>
+              <Link href="/register" style={{ padding: '12px 30px', background: 'rgba(255, 255, 255, 0.8)', color: '#0284c7', border: '1px solid #0284c7', borderRadius: '8px', fontWeight: 'bold', textDecoration: 'none' }}>Đăng ký</Link>
             </div>
           </div>
         )}
 
         {/* ĐANG TẢI DỮ LIỆU */}
         {user && isLoading && (
-           <div style={{ textAlign: 'center', padding: '50px', color: '#64748b' }}>Đang tải thông báo...</div>
+           <div style={{ textAlign: 'center', padding: '50px', color: '#0369a1', fontWeight: 'bold' }}>Đang tải thông báo...</div>
         )}
 
         {/* NẾU ĐÃ ĐĂNG NHẬP & CÓ DỮ LIỆU */}
         {user && !isLoading && notifications.length > 0 && (
-          <div style={{ background: 'white', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+          <div style={{ background: 'rgba(240, 249, 255, 0.8)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', borderRadius: '16px', boxShadow: '0 8px 30px rgba(2, 132, 199, 0.1)', border: '1px solid rgba(186, 230, 253, 0.75)', overflow: 'hidden' }}>
             {notifications.map((notif, index) => (
-              <Link key={notif.id} href={notif.link} style={{ display: 'flex', padding: '20px', borderBottom: index !== notifications.length - 1 ? '1px solid #f1f5f9' : 'none', textDecoration: 'none', transition: '0.2s', background: 'white' }} onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'} onMouseLeave={e => e.currentTarget.style.background = 'white'}>
+              <Link key={notif.id} href={notif.link} style={{ display: 'flex', padding: '20px', borderBottom: index !== notifications.length - 1 ? '1px solid rgba(186, 230, 253, 0.5)' : 'none', textDecoration: 'none', transition: '0.2s', background: 'rgba(255, 255, 255, 0.4)' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(224, 242, 254, 0.8)'} onMouseLeave={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.4)'}>
                 <div style={{ width: '50px', height: '50px', borderRadius: '50%', background: `${notif.color}15`, color: notif.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', flexShrink: 0, marginRight: '20px' }}>
                   <i className={notif.icon}></i>
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                    <h4 style={{ margin: 0, fontSize: '15px', color: '#1e293b', fontWeight: 'bold' }}>{notif.title}</h4>
-                    <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+                    <h4 style={{ margin: 0, fontSize: '15px', color: '#0c4a6e', fontWeight: 'bold' }}>{notif.title}</h4>
+                    <span style={{ fontSize: '12px', color: '#64748b' }}>
                       {new Date(notif.date).toLocaleDateString('vi-VN')} {new Date(notif.date).toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit'})}
                     </span>
                   </div>
-                  <p style={{ margin: 0, fontSize: '14px', color: '#475569', lineHeight: '1.5' }}>{notif.message}</p>
+                  <p style={{ margin: 0, fontSize: '14px', color: '#334155', lineHeight: '1.5' }}>{notif.message}</p>
                 </div>
               </Link>
             ))}
@@ -184,12 +169,18 @@ export default function NotificationsPage() {
 
         {/* NẾU KHÔNG CÓ THÔNG BÁO NÀO */}
         {user && !isLoading && notifications.length === 0 && (
-          <div style={{ background: 'white', padding: '60px 20px', borderRadius: '12px', textAlign: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0' }}>
-            <i className="far fa-bell-slash" style={{ fontSize: '60px', color: '#cbd5e1', marginBottom: '20px' }}></i>
-            <h2 style={{ fontSize: '18px', color: '#334155' }}>Bạn chưa có thông báo nào</h2>
+          <div style={{ background: 'rgba(240, 249, 255, 0.8)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', padding: '60px 20px', borderRadius: '16px', textAlign: 'center', boxShadow: '0 8px 30px rgba(2, 132, 199, 0.1)', border: '1px solid rgba(186, 230, 253, 0.75)' }}>
+            <i className="far fa-bell-slash" style={{ fontSize: '60px', color: '#7dd3fc', marginBottom: '20px' }}></i>
+            <h2 style={{ fontSize: '18px', color: '#0369a1' }}>Bạn chưa có thông báo nào</h2>
           </div>
         )}
       </main>
+
+      {/* FLOATING SPEED DIAL */}
+      <FloatingActions />
+
+      {/* FOOTER */}
+      <Footer />
     </div>
   );
 }
