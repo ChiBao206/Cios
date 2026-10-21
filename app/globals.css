@@ -734,7 +734,19 @@ input:focus, select:focus, textarea:focus {
   align-items: start;
 }
 
-/* Sidebar */
+/* Sidebar & Content Layout Base */
+.sidebar-col {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.content-col {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
 .sidebar-box-clean {
   background: var(--card-bg);
   backdrop-filter: blur(14px);
@@ -745,6 +757,8 @@ input:focus, select:focus, textarea:focus {
   box-shadow: var(--card-shadow);
   border: 1px solid var(--card-border);
   transition: all 0.3s ease;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .sidebar-title {
@@ -2056,14 +2070,29 @@ input:focus, select:focus, textarea:focus {
     display: flex;
     flex-direction: column;
     gap: 16px;
-    margin-bottom: 40px;
-    width: 95%;
+    margin: 0 auto 40px;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 12px !important;
+    box-sizing: border-box !important;
+    align-items: stretch !important;
   }
 
   /* Hiển thị đầy đủ sidebar và content trên mobile */
   .sidebar-col,
   .content-col {
     display: contents;
+    width: 100% !important;
+  }
+
+  /* Quy chuẩn chung: Mọi thẻ box sidebar đều full màn hình 100% trên thiết bị di động */
+  .sidebar-box-clean {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    align-self: stretch !important;
+    margin-bottom: 0 !important;
   }
 
   /* 1. Danh Mục Thiết Bị (Vuốt & Kéo ngang mượt mà trên mobile/tablet) */
@@ -2153,50 +2182,79 @@ input:focus, select:focus, textarea:focus {
     box-shadow: 0 3px 10px rgba(2, 132, 199, 0.3);
   }
 
-  /* 2. Khoảng Giá (Lọc giá gọn gàng, hiện đại) */
+  /* 2. Khoảng Giá (Lọc giá full 100% chiều ngang màn hình, hiện đại và chuẩn mọi thiết bị) */
   .sidebar-box-price {
     order: 2;
     margin-bottom: 0;
-    padding: 14px 16px;
+    padding: 16px;
     background: var(--card-bg);
     border-radius: var(--radius-lg);
     box-shadow: var(--card-shadow);
     border: 1px solid var(--card-border);
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    align-self: stretch !important;
   }
   .sidebar-box-price .sidebar-title {
-    font-size: 13.5px;
+    font-size: 14px;
     margin-bottom: 12px;
     padding-bottom: 8px;
   }
+  .price-display-card {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 10px 14px !important;
+  }
+  .modern-slider-container {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    margin-bottom: 16px;
+  }
+  .modern-price-slider {
+    width: 100% !important;
+  }
   .price-chip-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, 1fr);
     gap: 8px;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
   .price-chip {
-    padding: 8px 10px;
-    font-size: 12px;
+    padding: 10px 8px;
+    font-size: 12.5px;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    justify-content: center;
   }
 
   /* 3. Vouchers Giảm Giá */
   .content-section-vouchers {
     order: 3;
     margin-bottom: 10px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
 
   /* 4. Top Bán Chạy */
   .content-section-hot {
     order: 4;
     margin-bottom: 24px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
 
   /* 5. Danh Sách Tất Cả Sản Phẩm */
   .content-section-products {
     order: 5;
     margin-bottom: 16px;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
 
-  /* 6. Đơn Hàng Mới Nhất (Live Real-Time Feed từ MongoDB) */
+  /* 6. Đơn Hàng Mới Nhất (Full 100% chiều ngang màn hình, hiển thị trực quan) */
   .sidebar-box-orders {
     order: 6;
     margin-bottom: 0;
@@ -2205,9 +2263,27 @@ input:focus, select:focus, textarea:focus {
     border-radius: var(--radius-lg);
     box-shadow: var(--card-shadow);
     border: 1px solid var(--card-border);
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    align-self: stretch !important;
+  }
+  .sidebar-orders-list {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .sidebar-order-item {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 11px 14px;
+    border-radius: 12px;
   }
 
-  /* 7. Tiêu Chuẩn CiOs (Cam kết dịch vụ vàng) */
+  /* 7. Tiêu Chuẩn CiOs (Full 100% chiều ngang màn hình, chia 2 cột cân xứng) */
   .sidebar-box-trust {
     order: 7;
     margin-bottom: 0;
@@ -2216,19 +2292,29 @@ input:focus, select:focus, textarea:focus {
     border-radius: var(--radius-lg);
     box-shadow: var(--card-shadow);
     border: 1px solid var(--card-border);
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    align-self: stretch !important;
   }
   .sidebar-trust-list {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
-
-  /* 8. Hotline & Chat Zalo Tư Vấn Nhanh */
-  .sidebar-box-hotline {
-    order: 8;
-    margin-bottom: 0;
-    padding: 16px;
-    border-radius: var(--radius-lg);
+  .sidebar-trust-item {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #f8fafc;
+    border: 1px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+    gap: 10px;
   }
 
   /* Products grid */
@@ -2266,6 +2352,18 @@ input:focus, select:focus, textarea:focus {
   .float-scroll-top { width: 38px; height: 38px; }
 }
 
+/* ---- TABLET / PHABLET (600px - 768px) ---- */
+@media (min-width: 600px) and (max-width: 768px) {
+  .price-chip-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 8px !important;
+  }
+  .sidebar-trust-list {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 10px !important;
+  }
+}
+
 /* ---- SMALL MOBILE (≤ 480px) ---- */
 @media (max-width: 480px) {
   /* Hero */
@@ -2278,16 +2376,36 @@ input:focus, select:focus, textarea:focus {
 
   /* Sidebar widgets on small mobile */
   .sidebar-trust-list {
-    grid-template-columns: 1fr;
-    gap: 10px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .sidebar-trust-item {
+    padding: 8px 10px;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  .sidebar-trust-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 13px;
+    border-radius: 8px;
+    flex-shrink: 0;
+  }
+  .sidebar-trust-text strong {
+    font-size: 12px;
+    line-height: 1.25;
+  }
+  .sidebar-trust-text span {
+    font-size: 10.5px;
+    line-height: 1.25;
   }
   .price-chip-grid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, 1fr);
     gap: 6px;
   }
   .price-chip {
-    padding: 7px 6px;
-    font-size: 11px;
+    padding: 8px 6px;
+    font-size: 11.5px;
   }
 
   /* Products */
@@ -2322,6 +2440,8 @@ input:focus, select:focus, textarea:focus {
   .hero-title { font-size: 20px; }
   .products-grid-modern { grid-template-columns: 1fr; }
   .trust-grid { grid-template-columns: 1fr; }
+  .sidebar-trust-list { grid-template-columns: 1fr; gap: 8px; }
+  .price-chip-grid { grid-template-columns: 1fr; gap: 6px; }
 }
 
 /* ---- ANIMATIONS ---- */

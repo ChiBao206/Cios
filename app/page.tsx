@@ -795,34 +795,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* 1. Box Hotline Hỗ Trợ & Zalo */}
-          <div className="sidebar-box-clean sidebar-box-hotline" style={{ background: 'linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%)', border: '1.5px solid #bae6fd' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-              <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: '#0284c7', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', boxShadow: '0 4px 10px rgba(2, 132, 199, 0.3)' }}>
-                <i className="fas fa-headset"></i>
-              </div>
-              <div>
-                <strong style={{ display: 'block', fontSize: '14.5px', color: '#0c4a6e', fontWeight: '800' }}>Cần Tư Vấn Nhanh?</strong>
-                <span style={{ fontSize: '12px', color: '#0369a1', fontWeight: '600' }}>Kỹ thuật viên trực 24/7</span>
-              </div>
-            </div>
-            <a 
-              href="tel:0971024173" 
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '10px', background: '#0284c7', color: 'white', borderRadius: '8px', fontWeight: '800', fontSize: '14px', textDecoration: 'none', boxShadow: '0 4px 12px rgba(2, 132, 199, 0.3)', marginBottom: '8px' }}
-            >
-              <i className="fas fa-phone-alt"></i> 0971.024.173
-            </a>
-            <a 
-              href="https://zalo.me/0971024173"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="sidebar-zalo-btn"
-            >
-              <i className="fas fa-comment-dots"></i> Chat Zalo Tư Vấn Miễn Phí
-            </a>
-          </div>
-
-          {/* 2. Box Đơn Hàng Mới Nhất (Live Real-Time Feed từ MongoDB) */}
+          {/* Box Đơn Hàng Mới Nhất (Live Real-Time Feed từ MongoDB) */}
           {recentOrders.length > 0 && (
             <div className="sidebar-box-clean sidebar-box-orders">
               <div className="sidebar-widget-header">
