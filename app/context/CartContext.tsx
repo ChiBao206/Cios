@@ -7,54 +7,117 @@ const CartContext = createContext<any>(null);
 export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   const [cartItems, setCartItems] = useState<any[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [user, setUser] = useState<any>(null);
 
-  // 1. KHI VỪA VÀO WEB: Tự động lấy lại giỏ hàng cũ từ bộ nhớ trình duyệt
+  // ======================================================================
+  // 1. TẢI DỮ LIỆU: KIỂM TRA ĐĂNG NHẬP VÀ MÓC ĐÚNG GIỎ HÀNG CỦA TÀI KHOẢN ĐÓ
+  // ======================================================================
   useEffect(() => {
-    const savedCart = localStorage.getItem('camera_bn_cart');
-    if (savedCart) {
-      setCartItems(JSON.parse(savedCart));
+    const loggedInUser = localStorage.getItem('currentUser');
+    
+    if (loggedInUser) {
+      const parsedUser = JSON.parse(loggedInUser);
+      setUser(parsedUser);
+      
+      // Lấy giỏ hàng từ MongoDB
+      fetch(`/api/cart?username=${parsedUser.username}&t=${new Date().getTime()}`, {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache' }
+      }) 
+        .then(res => res.json())
+        .then(data => {
+           if (data && data.cart && data.cart.length > 0) {
+             setCartItems(data.cart);
+           } else {
+             // Nếu DB trống, tìm rổ riêng lưu trên máy của tài khoản này
+             const savedCart = localStorage.getItem(`camera_bn_cart_${parsedUser.username}`);
+             if (savedCart) setCartItems(JSON.parse(savedCart));
+           }
+           setIsLoaded(true);
+        })
+        .catch(() => {
+           const savedCart = localStorage.getItem(`camera_bn_cart_${parsedUser.username}`);
+           if (savedCart) setCartItems(JSON.parse(savedCart));
+           setIsLoaded(true);
+        });
+    } else {
+      // ĐÃ SỬA: NẾU CHƯA ĐĂNG NHẬP -> LẬP TỨC ÉP GIỎ HÀNG VỀ TRỐNG BÓC
+      setUser(null);
+      setCartItems([]);
+      setIsLoaded(true);
     }
-    setIsLoaded(true);
   }, []);
 
-  // 2. MỖI KHI GIỎ HÀNG THAY ĐỔI: Tự động lưu ngay vào bộ nhớ trình duyệt
+  // ======================================================================
+  // 2. LƯU TRỮ: CHỈ LƯU KHI CÓ TÀI KHOẢN VÀ LƯU VÀO ĐÚNG RỔ CỦA NGƯỜI ĐÓ
+  // ======================================================================
   useEffect(() => {
-    if (isLoaded) {
-      localStorage.setItem('camera_bn_cart', JSON.stringify(cartItems));
+    if (isLoaded && user) {
+      // Lưu vào trình duyệt với đuôi là TÊN TÀI KHOẢN (Ví dụ: camera_bn_cart_admin)
+      localStorage.setItem(`camera_bn_cart_${user.username}`, JSON.stringify(cartItems));
+      
+      // Bắn lên lưu vô MongoDB
+      fetch('/api/cart', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: user.username, cart: cartItems })
+      }).catch(err => console.log("Lỗi đồng bộ giỏ hàng:", err));
     }
-  }, [cartItems, isLoaded]);
+  }, [cartItems, isLoaded, user]);
 
-  // THÊM VÀO GIỎ
+  // Các chức năng thêm, xóa, sửa số lượng giữ nguyên
   const addToCart = (product: any, qty: number = 1) => {
     setCartItems(prev => {
-      const existingItem = prev.find(item => item.id === product.id || item._id === product._id);
-      if (existingItem) {
-        return prev.map(item => (item.id === product.id || item._id === product._id) ? { ...item, cartQty: item.cartQty + qty } : item);
+      const productId = product._id ? String(product._id) : String(product.id);
+
+      const existingItemIndex = prev.findIndex(item => {
+        const itemId = item._id ? String(item._id) : String(item.id);
+        return itemId === productId;
+      });
+
+      if (existingItemIndex !== -1) {
+        const newCart = [...prev];
+        newCart[existingItemIndex].cartQty += qty;
+        return newCart;
       }
-      return [...prev, { ...product, id: product._id || product.id, cartQty: qty, checked: true }];
+
+      return [...prev, { ...product, id: productId, cartQty: qty, checked: true }];
     });
   };
 
-  // XÓA KHỎI GIỎ
   const removeFromCart = (id: string) => {
-    setCartItems(cartItems.filter(item => item.id !== id));
+    setCartItems(cartItems.filter(item => {
+      const itemId = item._id ? String(item._id) : String(item.id);
+      return itemId !== String(id);
+    }));
   };
 
-  // TĂNG GIẢM SỐ LƯỢNG
   const updateQty = (id: string, qty: number) => {
-    setCartItems(cartItems.map(item => item.id === id ? { ...item, cartQty: qty } : item));
+    setCartItems(cartItems.map(item => {
+      const itemId = item._id ? String(item._id) : String(item.id);
+      return itemId === String(id) ? { ...item, cartQty: qty } : item;
+    }));
   };
 
-  // TICK CHỌN SẢN PHẨM
   const toggleCheck = (id: string) => {
-    setCartItems(cartItems.map(item => item.id === id ? { ...item, checked: !item.checked } : item));
+    setCartItems(cartItems.map(item => {
+      const itemId = item._id ? String(item._id) : String(item.id);
+      return itemId === String(id) ? { ...item, checked: !item.checked } : item;
+    }));
   };
 
-  // TÍNH TỔNG SỐ LƯỢNG SẢN PHẨM TRÊN ICON GIỎ HÀNG
+  const toggleAllCheck = (status: boolean) => {
+    setCartItems(cartItems.map(item => ({ ...item, checked: status })));
+  };
+
+  const clearCart = () => {
+    setCartItems([]);
+  };
+
   const totalItems = cartItems.reduce((sum, item) => sum + item.cartQty, 0);
 
   return (
-    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, updateQty, toggleCheck, totalItems }}>
+    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, updateQty, toggleCheck, toggleAllCheck, totalItems, clearCart }}>
       {children}
     </CartContext.Provider>
   );
