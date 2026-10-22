@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import connectDB from '../../../lib/mongodb';
 import Product from '../../../models/Product';
-
 import db from '../../../db.json';
-
 import mongoose from 'mongoose';
+
+export const dynamic = 'force-dynamic';
 
 // LẤY DANH SÁCH SẢN PHẨM TỪ MONGODB (KÈM FALLBACK TỰ ĐỘNG KHÔNG LO MẤT DỮ LIỆU)
 export async function GET(request: Request) {
@@ -110,7 +110,7 @@ export async function POST(request: Request) {
   }
 }
 
-// CẬP NHẬT SẢN PHẨM (Dùng cho nút Sửa)
+// CẬP NHẬT SẢN PHẨM (Dùng cho nút Sửa & trừ tồn kho khi mua hàng)
 export async function PUT(request: Request) {
   try {
     const url = new URL(request.url);
@@ -120,14 +120,46 @@ export async function PUT(request: Request) {
     if (!id) return NextResponse.json({ message: "Thiếu ID sản phẩm" }, { status: 400 });
 
     await connectDB();
-    const updatedProduct = await Product.findByIdAndUpdate(id, body, { new: true });
+
+    let query: any = null;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      query = { _id: id };
+    } else {
+      const orConditions: any[] = [
+        { id: id },
+        { id: isNaN(Number(id)) ? id : Number(id) },
+        { id: String(id) }
+      ];
+      // Nếu có trong db.json thì tìm thêm theo tên sản phẩm để đảm bảo 100% khớp MongoDB
+      const matchedDb = db.products?.find((p: any) => String(p.id) === String(id));
+      if (matchedDb && matchedDb.name) {
+        orConditions.push({ name: matchedDb.name });
+      }
+      query = { $or: orConditions };
+    }
+
+    let updatedProduct = await Product.findOneAndUpdate(query, { $set: body }, { returnDocument: 'after' });
+
+    // Fallback tìm lại theo tên nếu query ban đầu không khớp
+    if (!updatedProduct && !mongoose.Types.ObjectId.isValid(id)) {
+      const matchedDb = db.products?.find((p: any) => String(p.id) === String(id));
+      if (matchedDb && matchedDb.name) {
+        updatedProduct = await Product.findOneAndUpdate(
+          { name: matchedDb.name }, 
+          { $set: body }, 
+          { returnDocument: 'after' }
+        );
+      }
+    }
+
     return NextResponse.json({ message: "Đã cập nhật sản phẩm", product: updatedProduct }, { status: 200 });
-  } catch (error) {
-    return NextResponse.json({ message: "Lỗi khi cập nhật sản phẩm" }, { status: 500 });
+  } catch (error: any) {
+    console.error("Lỗi khi cập nhật sản phẩm:", error);
+    return NextResponse.json({ message: "Lỗi khi cập nhật sản phẩm", error: error?.message }, { status: 500 });
   }
 }
 
-// XÓA SẢN PHẨM KHỎI MONGODB (Đã mở khóa lệnh xóa thật)
+// XÓA SẢN PHẨM KHỎI MONGODB (Hỗ trợ cả ObjectId và id số)
 export async function DELETE(request: Request) {
   try {
     const url = new URL(request.url);
@@ -138,8 +170,20 @@ export async function DELETE(request: Request) {
     }
 
     await connectDB();
-    // Đã gỡ bỏ dấu // và gọi đúng tên hàm xóa
-    await Product.findByIdAndDelete(id);
+
+    let query: any = null;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      query = { _id: id };
+    } else {
+      query = {
+        $or: [
+          { id: id },
+          { id: isNaN(Number(id)) ? id : Number(id) }
+        ]
+      };
+    }
+
+    await Product.findOneAndDelete(query);
 
     return NextResponse.json({ message: "Đã xóa sản phẩm thành công" }, { status: 200 });
   } catch (error) {

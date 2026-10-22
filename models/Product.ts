@@ -1,6 +1,7 @@
 import mongoose, { Schema, model, models } from 'mongoose';
 
 const ProductSchema = new Schema({
+  id: { type: Schema.Types.Mixed },
   name: { type: String, required: true },
   price: { type: Number, required: true },
   image: { type: String, required: true },
@@ -8,7 +9,7 @@ const ProductSchema = new Schema({
   category_id: { type: String, required: true },
   sold: { type: Number, default: 0 },
   images: { type: [String], default: [] }
-}, { timestamps: true });
+}, { timestamps: true, strict: false });
 
 const Product = models.Product || model('Product', ProductSchema);
 
