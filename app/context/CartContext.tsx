@@ -78,6 +78,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
       if (existingItemIndex !== -1) {
         const newCart = [...prev];
         newCart[existingItemIndex].cartQty += qty;
+        newCart[existingItemIndex].checked = true;
         return newCart;
       }
 

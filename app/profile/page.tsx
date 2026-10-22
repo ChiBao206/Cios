@@ -7,9 +7,11 @@ import { useRouter } from 'next/navigation';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import FloatingActions from '../components/FloatingActions';
+import { useCart } from '../context/CartContext';
 
 export default function ProfilePage() {
   const router = useRouter();
+  const { addToCart } = useCart() || {};
   const [activeTab, setActiveTab] = useState('orders');
   const [orderSubTab, setOrderSubTab] = useState('placed'); 
   const [user, setUser] = useState<any>(null);
@@ -78,30 +80,42 @@ export default function ProfilePage() {
       if(myOrders && myOrders.length > 0) {
          const formattedOrders = myOrders.map((o: any) => {
            const orderItems = (o.items && o.items.length > 0) ? o.items.map((i:any) => ({
+               _id: i._id || i.id,
+               id: i._id || i.id,
                name: i.name || "Sản phẩm không tên",
-               qty: i.cartQty || 1,
+               qty: Number(i.cartQty || i.quantity || 1),
+               rawPrice: Number(i.price || 0),
                price: Number(i.price || 0).toLocaleString('vi-VN') + ' đ',
-               total: (Number(i.price || 0) * (i.cartQty || 1)).toLocaleString('vi-VN') + ' đ',
-               img: i.image || i.img || "https://placehold.co/100x100?text=Camera"
+               total: (Number(i.price || 0) * Number(i.cartQty || i.quantity || 1)).toLocaleString('vi-VN') + ' đ',
+               img: i.image || i.img || i.image_url || "https://placehold.co/100x100?text=Camera",
+               rawItem: i
            })) : [{ 
-               name: "Sản phẩm trong giỏ (Chưa lưu chi tiết)", qty: 1, 
-               price: Number(o.total_money).toLocaleString('vi-VN') + ' đ', 
-               total: Number(o.total_money).toLocaleString('vi-VN') + ' đ', 
-               img: "https://placehold.co/100x100?text=Camera" 
+               _id: 'item_1',
+               id: 'item_1',
+               name: "Sản phẩm trong giỏ (Chưa lưu chi tiết)", 
+               qty: 1, 
+               rawPrice: Number(o.total_money || 0),
+               price: Number(o.total_money || 0).toLocaleString('vi-VN') + ' đ', 
+               total: Number(o.total_money || 0).toLocaleString('vi-VN') + ' đ', 
+               img: "https://placehold.co/100x100?text=Camera",
+               rawItem: null
            }];
 
            return {
              _id: o._id,
              id: String(o._id || o.id).slice(-6).toUpperCase(), 
              date: o.createdAt ? new Date(o.createdAt).toLocaleDateString('vi-VN') : 'Hôm nay',
-             total: Number(o.total_money).toLocaleString('vi-VN') + ' đ',
+             time: o.createdAt ? new Date(o.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '',
+             total: Number(o.total_money || 0).toLocaleString('vi-VN') + ' đ',
+             subtotal: Number(o.subtotal || o.total_money || 0).toLocaleString('vi-VN') + ' đ',
+             shippingFee: Number(o.shipping_fee || 0).toLocaleString('vi-VN') + ' đ',
+             discount: Number(o.discount || 0) > 0 ? Number(o.discount).toLocaleString('vi-VN') + ' đ' : null,
              status: o.status || 'Chờ xử lý',
              customer: o.customer_name,
              phone: o.customer_phone,
              address: o.shipping_address,
              items: orderItems,
-             subtotal: Number(o.total_money).toLocaleString('vi-VN') + ' đ',
-             shipping: "0 đ",
+             rawItems: o.items || []
            };
          });
          setOrders(formattedOrders); 
@@ -215,12 +229,66 @@ export default function ProfilePage() {
       });
       if (res.ok) {
         setOrders(orders.map(o => o._id === orderId ? { ...o, status: 'Đã hủy' } : o));
-        setViewOrder({ ...viewOrder, status: 'Đã hủy' });
+        if (viewOrder && (viewOrder._id === orderId || viewOrder.id === orderId)) {
+          setViewOrder({ ...viewOrder, status: 'Đã hủy' });
+        }
         alert("Đã hủy đơn hàng thành công!");
       } else {
         alert("Có lỗi xảy ra khi hủy đơn!");
       }
     } catch (error) { alert("Lỗi mạng!"); }
+  };
+
+  // ==========================================
+  // XỬ LÝ MUA LẠI ĐƠN HÀNG ĐÃ HỦY -> ĐƯA VÀO GIỎ HÀNG VÀ CHUYỂN TRANG
+  // ==========================================
+  const handleReorder = (order: any) => {
+    if (!order) return;
+
+    let itemsToReorder: any[] = [];
+    if (order.rawItems && order.rawItems.length > 0) {
+      itemsToReorder = order.rawItems;
+    } else if (order.items && order.items.length > 0) {
+      itemsToReorder = order.items.map((i: any) => i.rawItem || {
+        _id: i._id || i.id,
+        id: i.id || i._id,
+        name: i.name,
+        price: i.rawPrice || Number(String(i.price || '').replace(/\D/g, '')),
+        image: i.img,
+        img: i.img,
+        cartQty: i.qty || 1,
+        checked: true
+      });
+    }
+
+    if (itemsToReorder.length === 0) {
+      alert("Không tìm thấy thông tin sản phẩm trong đơn hàng này!");
+      return;
+    }
+
+    if (!addToCart) {
+      alert("Hệ thống giỏ hàng chưa sẵn sàng, vui lòng thử lại!");
+      return;
+    }
+
+    // Đưa từng món vào giỏ hàng
+    itemsToReorder.forEach((item: any) => {
+      const qty = Number(item.cartQty || item.quantity || item.qty || 1);
+      const productObj = {
+        _id: item._id || item.id,
+        id: item.id || item._id,
+        name: item.name,
+        price: Number(item.price || item.rawPrice || 0),
+        image: item.image || item.img || item.image_url || "https://placehold.co/100x100?text=Camera",
+        cartQty: qty,
+        checked: true
+      };
+      addToCart(productObj, qty);
+    });
+
+    if (viewOrder) setViewOrder(null);
+    alert("Đã thêm các sản phẩm vào giỏ hàng! Đang chuyển đến giỏ hàng để mua ngay.");
+    router.push('/cart');
   };
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
@@ -450,14 +518,32 @@ export default function ProfilePage() {
         .forgot-btn:hover { background: #2563eb; }
         .forgot-btn:disabled { background: #94a3b8; cursor: not-allowed; }
 
+        @keyframes modalFadeIn {
+          from { opacity: 0; transform: translateY(16px) scale(0.97); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .order-modal-content {
+          animation: modalFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .reorder-btn {
+          transition: all 0.2s ease;
+        }
+        .reorder-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 16px rgba(2, 132, 199, 0.35) !important;
+        }
+
         @media (max-width: 768px) {
           .profile-layout { flex-direction: column !important; }
           .profile-sidebar { width: 100% !important; }
-          .profile-main { width: 100% !important; padding: 20px !important; min-height: auto !important; }
-          .invoice-table { display: block; overflow-x: auto; white-space: nowrap; }
+          .profile-main { width: 100% !important; padding: 15px !important; min-height: auto !important; }
+          .invoice-table-wrapper { width: 100% !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; }
+          .invoice-table { width: 100% !important; min-width: 580px !important; }
           .settings-container { flex-direction: column !important; gap: 20px !important; }
           .fav-card { width: 100% !important; }
           #chat-box-container { min-height: 400px !important; max-height: 60vh !important; }
+          .order-modal-content { max-width: 96% !important; border-radius: 16px !important; }
+          .order-modal-body { padding: 14px !important; }
         }
       `}</style>
 
@@ -656,24 +742,92 @@ export default function ProfilePage() {
               </div>
 
               {displayedOrders.length > 0 ? (
-                <table className="invoice-table" style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px' }}>
-                  <thead><tr style={{ textAlign: 'left', color: '#64748b', fontSize: '12px', borderBottom: '2px solid #f1f5f9' }}><th style={{ padding: '15px 10px' }}>MÃ ĐƠN</th><th>NGÀY ĐẶT</th><th>TỔNG TIỀN</th><th>TRẠNG THÁI</th><th style={{ textAlign: 'right', paddingRight: '10px' }}></th></tr></thead>
-                  <tbody>
-                    {displayedOrders.map((order, index) => (
-                      <tr key={index} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                        <td style={{ padding: '20px 10px', color: '#3b82f6', fontWeight: 'bold' }}>#{order.id}</td>
-                        <td style={{ color: '#475569', fontSize: '14px' }}>{order.date}</td>
-                        <td style={{ color: '#1e293b', fontWeight: '900', fontSize: '15px' }}>{order.total}</td>
-                        <td>
-                          <span style={{ padding: '5px 12px', background: order.status === 'Đã hủy' ? '#fee2e2' : order.status === 'Thành công' ? '#dcfce7' : '#eff6ff', color: order.status === 'Đã hủy' ? '#ef4444' : order.status === 'Thành công' ? '#16a34a' : '#2563eb', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold' }}>{order.status}</span>
-                        </td>
-                        <td style={{ textAlign: 'right' }}>
-                          <button onClick={() => setViewOrder(order)} className="btn-outline" style={{ border: '1px solid #cbd5e1', background: 'white', padding: '6px 12px', borderRadius: '4px', fontSize: '12px', color: '#475569', cursor: 'pointer' }}>Xem chi tiết</button>
-                        </td>
+                <div className="invoice-table-wrapper" style={{ overflowX: 'auto', width: '100%', WebkitOverflowScrolling: 'touch' }}>
+                  <table className="invoice-table" style={{ width: '100%', minWidth: '580px', borderCollapse: 'collapse', marginTop: '10px' }}>
+                    <thead>
+                      <tr style={{ textAlign: 'left', color: '#64748b', fontSize: '12px', borderBottom: '2px solid #bae6fd' }}>
+                        <th style={{ padding: '14px 10px' }}>MÃ ĐƠN</th>
+                        <th>NGÀY ĐẶT</th>
+                        <th>TỔNG TIỀN</th>
+                        <th>TRẠNG THÁI</th>
+                        <th style={{ textAlign: 'right', paddingRight: '10px' }}>HÀNH ĐỘNG</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {displayedOrders.map((order, index) => (
+                        <tr key={index} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                          <td style={{ padding: '16px 10px', color: '#0284c7', fontWeight: 'bold' }}>#{order.id}</td>
+                          <td style={{ color: '#475569', fontSize: '13px' }}>{order.date}</td>
+                          <td style={{ color: '#0f172a', fontWeight: '800', fontSize: '15px' }}>{order.total}</td>
+                          <td>
+                            <span style={{ 
+                              padding: '5px 12px', 
+                              background: order.status === 'Đã hủy' ? '#fee2e2' : order.status === 'Thành công' ? '#dcfce7' : '#eff6ff', 
+                              color: order.status === 'Đã hủy' ? '#ef4444' : order.status === 'Thành công' ? '#16a34a' : '#0284c7', 
+                              borderRadius: '20px', 
+                              fontSize: '12px', 
+                              fontWeight: '700',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '5px'
+                            }}>
+                              <span style={{ 
+                                width: '6px', 
+                                height: '6px', 
+                                borderRadius: '50%', 
+                                background: order.status === 'Đã hủy' ? '#ef4444' : order.status === 'Thành công' ? '#16a34a' : '#0284c7' 
+                              }}></span>
+                              {order.status}
+                            </span>
+                          </td>
+                          <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                            <div style={{ display: 'inline-flex', gap: '8px', alignItems: 'center', justifyContent: 'flex-end' }}>
+                              {order.status === 'Đã hủy' && (
+                                <button 
+                                  onClick={() => handleReorder(order)} 
+                                  className="reorder-btn"
+                                  style={{ 
+                                    background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)', 
+                                    color: 'white', 
+                                    border: 'none', 
+                                    padding: '7px 14px', 
+                                    borderRadius: '6px', 
+                                    fontSize: '12px', 
+                                    fontWeight: '700', 
+                                    cursor: 'pointer',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    boxShadow: '0 2px 6px rgba(2, 132, 199, 0.25)'
+                                  }}
+                                  title="Thêm các sản phẩm vào giỏ hàng và mua ngay"
+                                >
+                                  <i className="fas fa-redo-alt"></i> Mua lại
+                                </button>
+                              )}
+                              <button 
+                                onClick={() => setViewOrder(order)} 
+                                className="btn-outline" 
+                                style={{ 
+                                  border: '1px solid #cbd5e1', 
+                                  background: 'white', 
+                                  padding: '7px 14px', 
+                                  borderRadius: '6px', 
+                                  fontSize: '12px', 
+                                  color: '#334155', 
+                                  cursor: 'pointer',
+                                  fontWeight: '600'
+                                }}
+                              >
+                                Xem chi tiết
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               ) : (
                 <div style={{ textAlign: 'center', padding: '60px 0', color: '#64748b', fontSize: '14px' }}>Bạn chưa có đơn hàng nào trong mục này.</div>
               )}
@@ -829,54 +983,388 @@ export default function ProfilePage() {
       </div>
 
       {viewOrder && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(12, 74, 110, 0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, backdropFilter: 'blur(8px)' }}>
-          <div style={{ background: 'rgba(240, 249, 255, 0.95)', backdropFilter: 'blur(16px)', borderRadius: '16px', width: '700px', maxWidth: '95%', boxShadow: '0 25px 50px -12px rgba(2, 132, 199, 0.4)', border: '1px solid #bae6fd', overflow: 'hidden' }}>
-            <div style={{ background: 'linear-gradient(135deg, #0c4a6e 0%, #0369a1 100%)', color: 'white', padding: '15px 25px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '800' }}>HÓA ĐƠN #{viewOrder.id}</h3>
-              <button onClick={() => setViewOrder(null)} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', width: '30px', height: '30px', borderRadius: '50%', cursor: 'pointer' }}>&times;</button>
+        <div 
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setViewOrder(null);
+          }}
+          style={{ 
+            position: 'fixed', 
+            inset: 0, 
+            background: 'rgba(15, 23, 42, 0.75)', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            zIndex: 1000, 
+            backdropFilter: 'blur(8px)',
+            padding: '16px'
+          }}
+        >
+          <div 
+            className="order-modal-content"
+            style={{ 
+              background: '#ffffff', 
+              borderRadius: '20px', 
+              width: '100%', 
+              maxWidth: '620px', 
+              maxHeight: '90vh',
+              boxShadow: '0 25px 60px -15px rgba(2, 132, 199, 0.35)', 
+              border: '1px solid #bae6fd', 
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden'
+            }}
+          >
+            {/* MODAL HEADER */}
+            <div style={{ 
+              background: 'linear-gradient(135deg, #0c4a6e 0%, #0369a1 100%)', 
+              color: 'white', 
+              padding: '16px 20px', 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center' 
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ 
+                  width: '38px', 
+                  height: '38px', 
+                  borderRadius: '10px', 
+                  background: 'rgba(255, 255, 255, 0.15)', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  fontSize: '17px'
+                }}>
+                  <i className="fas fa-file-invoice"></i>
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '17px', fontWeight: '800', letterSpacing: '0.5px' }}>
+                    HÓA ĐƠN #{viewOrder.id}
+                  </h3>
+                  <div style={{ fontSize: '11px', color: '#bae6fd', marginTop: '2px' }}>
+                    {viewOrder.date} {viewOrder.time ? `• ${viewOrder.time}` : ''}
+                  </div>
+                </div>
+              </div>
+              <button 
+                onClick={() => setViewOrder(null)} 
+                title="Đóng"
+                style={{ 
+                  background: 'rgba(255,255,255,0.15)', 
+                  border: 'none', 
+                  color: 'white', 
+                  width: '32px', 
+                  height: '32px', 
+                  borderRadius: '50%', 
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '18px',
+                  transition: 'background 0.2s'
+                }}
+                onMouseOver={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.3)')}
+                onMouseOut={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.15)')}
+              >
+                &times;
+              </button>
             </div>
 
-            <div style={{ padding: '25px', maxHeight: '75vh', overflowY: 'auto' }}>
-              <div style={{ border: '1px dashed #bae6fd', padding: '20px', borderRadius: '12px', background: 'rgba(224, 242, 254, 0.6)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '25px' }}>
-                <div><span style={{ fontSize: '11px', color: '#64748b', fontWeight: '700', display: 'block' }}>NGƯỜI NHẬN</span><strong style={{ color: '#1e293b', fontSize: '14px' }}>{viewOrder.customer}</strong></div>
-                <div><span style={{ fontSize: '11px', color: '#64748b', fontWeight: '700', display: 'block' }}>ĐIỆN THOẠI</span><strong style={{ color: '#1e293b', fontSize: '14px' }}>{viewOrder.phone}</strong></div>
-                <div><span style={{ fontSize: '11px', color: '#64748b', fontWeight: '700', display: 'block' }}>ĐỊA CHỈ</span><span style={{ color: '#334155', fontSize: '14px' }}>{viewOrder.address}</span></div>
-                <div><span style={{ fontSize: '11px', color: '#64748b', fontWeight: '700', display: 'block' }}>TRẠNG THÁI</span><strong style={{ color: viewOrder.status === 'Đã hủy' ? '#ef4444' : '#10b981', fontSize: '14px' }}>{viewOrder.status}</strong></div>
+            {/* MODAL BODY (SCROLLABLE) */}
+            <div className="order-modal-body" style={{ 
+              padding: '18px 20px', 
+              overflowY: 'auto',
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '16px'
+            }}>
+              
+              {/* TRẠNG THÁI ĐƠN HÀNG BANNER */}
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between',
+                padding: '12px 16px',
+                borderRadius: '12px',
+                background: viewOrder.status === 'Đã hủy' ? '#fef2f2' : viewOrder.status === 'Thành công' ? '#f0fdf4' : '#eff6ff',
+                border: `1px solid ${viewOrder.status === 'Đã hủy' ? '#fecdd3' : viewOrder.status === 'Thành công' ? '#bbf7d0' : '#bfdbfe'}`
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <i className={
+                    viewOrder.status === 'Đã hủy' ? "fas fa-times-circle" :
+                    viewOrder.status === 'Thành công' ? "fas fa-check-circle" :
+                    "fas fa-clock"
+                  } style={{ 
+                    color: viewOrder.status === 'Đã hủy' ? '#ef4444' : viewOrder.status === 'Thành công' ? '#16a34a' : '#0284c7',
+                    fontSize: '16px'
+                  }}></i>
+                  <span style={{ fontSize: '13px', color: '#475569', fontWeight: '600' }}>Trạng thái đơn hàng:</span>
+                </div>
+                <span style={{ 
+                  padding: '4px 12px', 
+                  borderRadius: '20px', 
+                  fontSize: '13px', 
+                  fontWeight: '700',
+                  color: viewOrder.status === 'Đã hủy' ? '#ef4444' : viewOrder.status === 'Thành công' ? '#16a34a' : '#0284c7',
+                  background: 'white',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.06)'
+                }}>
+                  {viewOrder.status}
+                </span>
               </div>
 
-              <div style={{ overflowX: 'auto' }}>
-                <table className="invoice-table" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '25px', minWidth: '500px' }}>
-                  <thead><tr><th>ĐÁNH GIÁ</th><th>SP</th><th style={{ textAlign: 'center' }}>HÌNH ẢNH</th><th style={{ textAlign: 'center' }}>SL</th><th style={{ textAlign: 'right' }}>GIÁ</th><th style={{ textAlign: 'right' }}>THÀNH TIỀN</th></tr></thead>
-                  <tbody>
-                    {viewOrder.items?.map((item: any, index: number) => (
-                      <tr key={index}>
-                        <td style={{ color: '#94a3b8', fontSize: '12px', fontStyle: 'italic' }}>(Chưa đánh giá)</td>
-                        <td style={{ width: '30%', lineHeight: '1.4' }}>{item.name}</td>
-                        <td style={{ textAlign: 'center' }}><img src={item.img} alt={item.name} style={{ width: '45px', height: '45px', objectFit: 'contain', border: '1px solid #e2e8f0', borderRadius: '4px' }} /></td>
-                        <td style={{ textAlign: 'center', fontWeight: '600' }}>{item.qty}</td>
-                        <td style={{ textAlign: 'right' }}>{item.price}</td>
-                        <td style={{ textAlign: 'right', fontWeight: '700', color: '#e11d48' }}>{item.total}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              <div style={{ textAlign: 'right', paddingRight: '10px' }}>
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '40px', alignItems: 'center' }}>
-                  <span style={{ fontSize: '16px', fontWeight: '900', color: '#1e293b' }}>TỔNG CỘNG</span>
-                  <span style={{ fontSize: '22px', fontWeight: '900', color: '#e11d48' }}>{viewOrder.total}</span>
+              {/* THÔNG TIN GIAO HÀNG */}
+              <div style={{ 
+                background: '#f8fafc', 
+                border: '1px solid #e2e8f0', 
+                borderRadius: '14px', 
+                padding: '14px 16px' 
+              }}>
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '8px', 
+                  marginBottom: '12px', 
+                  color: '#0369a1', 
+                  fontSize: '12px', 
+                  fontWeight: '800', 
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px'
+                }}>
+                  <i className="fas fa-map-marker-alt"></i> Thông tin nhận hàng
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px', fontSize: '13px' }}>
+                  <div>
+                    <span style={{ color: '#64748b', fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', display: 'block', marginBottom: '2px' }}>Người nhận</span>
+                    <strong style={{ color: '#0f172a' }}>{viewOrder.customer || 'Khách hàng'}</strong>
+                  </div>
+                  <div>
+                    <span style={{ color: '#64748b', fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', display: 'block', marginBottom: '2px' }}>Điện thoại</span>
+                    <strong style={{ color: '#0f172a' }}>{viewOrder.phone || 'Chưa có'}</strong>
+                  </div>
+                  <div style={{ gridColumn: '1 / -1' }}>
+                    <span style={{ color: '#64748b', fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', display: 'block', marginBottom: '2px' }}>Địa chỉ giao hàng</span>
+                    <span style={{ color: '#334155', lineHeight: '1.4' }}>{viewOrder.address || 'Chưa cung cấp'}</span>
+                  </div>
                 </div>
               </div>
 
-              {viewOrder.status === 'Chờ xử lý' && (
-                <div style={{ textAlign: 'center', marginTop: '30px', paddingTop: '20px', borderTop: '1px dashed #e2e8f0' }}>
-                  <button onClick={() => handleCancelOrder(viewOrder._id)} style={{ background: 'white', color: '#ef4444', border: '1px solid #fca5a5', padding: '10px 25px', borderRadius: '6px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                    <i className="fas fa-trash-alt"></i> Hủy đơn hàng này
-                  </button>
+              {/* DANH SÁCH SẢN PHẨM (CARD LIST - KHÔNG BỊ TRÀN TRÊN MOBILE) */}
+              <div>
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'space-between',
+                  marginBottom: '8px', 
+                  color: '#0369a1', 
+                  fontSize: '12px', 
+                  fontWeight: '800', 
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px'
+                }}>
+                  <span><i className="fas fa-box-open"></i> Sản phẩm ({viewOrder.items?.length || 0})</span>
                 </div>
+
+                <div style={{ 
+                  background: 'white', 
+                  border: '1px solid #e2e8f0', 
+                  borderRadius: '14px', 
+                  overflow: 'hidden' 
+                }}>
+                  {viewOrder.items?.map((item: any, index: number) => (
+                    <div 
+                      key={index} 
+                      style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '12px', 
+                        padding: '12px 14px',
+                        borderBottom: index < viewOrder.items.length - 1 ? '1px solid #f1f5f9' : 'none'
+                      }}
+                    >
+                      {/* Product Thumbnail */}
+                      <div style={{ 
+                        width: '54px', 
+                        height: '54px', 
+                        borderRadius: '10px', 
+                        border: '1px solid #e2e8f0', 
+                        background: '#f8fafc',
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                        overflow: 'hidden'
+                      }}>
+                        <img 
+                          src={item.img} 
+                          alt={item.name} 
+                          style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', padding: '4px' }} 
+                        />
+                      </div>
+
+                      {/* Product Info */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ 
+                          fontSize: '13px', 
+                          fontWeight: '600', 
+                          color: '#0f172a', 
+                          lineHeight: '1.35',
+                          marginBottom: '4px',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden'
+                        }}>
+                          {item.name}
+                        </div>
+                        <div style={{ fontSize: '12px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span>{item.price}</span>
+                          <span>&times;</span>
+                          <span style={{ 
+                            background: '#e0f2fe', 
+                            color: '#0284c7', 
+                            padding: '1px 6px', 
+                            borderRadius: '4px', 
+                            fontWeight: '700',
+                            fontSize: '11px' 
+                          }}>
+                            {item.qty}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Product Total */}
+                      <div style={{ 
+                        textAlign: 'right', 
+                        flexShrink: 0,
+                        fontWeight: '700', 
+                        fontSize: '14px', 
+                        color: '#e11d48' 
+                      }}>
+                        {item.total}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* TỔNG KẾT CHI PHÍ */}
+              <div style={{ 
+                background: '#f8fafc', 
+                border: '1px solid #e2e8f0', 
+                borderRadius: '14px', 
+                padding: '14px 16px' 
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#64748b', marginBottom: '8px' }}>
+                  <span>Tạm tính tiền hàng:</span>
+                  <span style={{ fontWeight: '600', color: '#1e293b' }}>{viewOrder.subtotal || viewOrder.total}</span>
+                </div>
+                {viewOrder.discount && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#10b981', marginBottom: '8px' }}>
+                    <span>Giảm giá (Voucher):</span>
+                    <span style={{ fontWeight: '700' }}>- {viewOrder.discount}</span>
+                  </div>
+                )}
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#64748b', marginBottom: '10px' }}>
+                  <span>Phí vận chuyển:</span>
+                  <span style={{ fontWeight: '600', color: '#1e293b' }}>{viewOrder.shippingFee || "0 đ"}</span>
+                </div>
+
+                <div style={{ 
+                  borderTop: '1px dashed #cbd5e1', 
+                  paddingTop: '10px', 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center' 
+                }}>
+                  <span style={{ fontSize: '14px', fontWeight: '800', color: '#0f172a', textTransform: 'uppercase' }}>
+                    TỔNG CỘNG:
+                  </span>
+                  <span style={{ fontSize: '20px', fontWeight: '900', color: '#e11d48' }}>
+                    {viewOrder.total}
+                  </span>
+                </div>
+              </div>
+
+            </div>
+
+            {/* MODAL FOOTER (ACTION BUTTONS) */}
+            <div style={{ 
+              padding: '14px 20px', 
+              background: '#ffffff', 
+              borderTop: '1px solid #e2e8f0', 
+              display: 'flex', 
+              flexWrap: 'wrap',
+              gap: '10px', 
+              justifyContent: 'flex-end',
+              alignItems: 'center'
+            }}>
+              {/* NÚT MUA LẠI KHI ĐƠN HÀNG ĐÃ HỦY */}
+              {viewOrder.status === 'Đã hủy' && (
+                <button 
+                  onClick={() => handleReorder(viewOrder)} 
+                  className="reorder-btn"
+                  style={{ 
+                    flex: '1 1 200px',
+                    background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)', 
+                    color: 'white', 
+                    border: 'none', 
+                    padding: '12px 20px', 
+                    borderRadius: '10px', 
+                    fontWeight: '700', 
+                    fontSize: '14px', 
+                    cursor: 'pointer', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    gap: '8px',
+                    boxShadow: '0 4px 14px rgba(2, 132, 199, 0.35)'
+                  }}
+                >
+                  <i className="fas fa-redo-alt"></i> Mua lại đơn hàng này
+                </button>
               )}
+
+              {/* NÚT HỦY ĐƠN KHI ĐƠN HÀNG ĐANG CHỜ XỬ LÝ */}
+              {viewOrder.status === 'Chờ xử lý' && (
+                <button 
+                  onClick={() => handleCancelOrder(viewOrder._id)} 
+                  style={{ 
+                    background: '#fff', 
+                    color: '#ef4444', 
+                    border: '1px solid #fca5a5', 
+                    padding: '10px 18px', 
+                    borderRadius: '8px', 
+                    fontWeight: '700', 
+                    fontSize: '13px', 
+                    cursor: 'pointer', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '6px' 
+                  }}
+                >
+                  <i className="fas fa-trash-alt"></i> Hủy đơn hàng này
+                </button>
+              )}
+
+              {/* NÚT ĐÓNG */}
+              <button 
+                onClick={() => setViewOrder(null)} 
+                style={{ 
+                  background: '#f1f5f9', 
+                  color: '#475569', 
+                  border: '1px solid #cbd5e1', 
+                  padding: '10px 18px', 
+                  borderRadius: '8px', 
+                  fontWeight: '600', 
+                  fontSize: '13px', 
+                  cursor: 'pointer' 
+                }}
+              >
+                Đóng
+              </button>
             </div>
+
           </div>
         </div>
       )}
