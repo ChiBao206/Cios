@@ -188,10 +188,21 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     setCartItems([]);
   };
 
+  const removePurchasedItems = (purchasedIds: string[]) => {
+    const idSet = new Set(purchasedIds.map(String));
+    setCartItems(prev => {
+      const remaining = prev.filter(item => !idSet.has(String(item._id || item.id)));
+      if (user) {
+        localStorage.setItem(`camera_bn_cart_${user.username}`, JSON.stringify(remaining));
+      }
+      return remaining;
+    });
+  };
+
   const totalItems = cartItems.reduce((sum, item) => sum + item.cartQty, 0);
 
   return (
-    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, updateQty, toggleCheck, toggleAllCheck, totalItems, clearCart, refreshCart }}>
+    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, updateQty, toggleCheck, toggleAllCheck, totalItems, clearCart, refreshCart, removePurchasedItems }}>
       {children}
     </CartContext.Provider>
   );

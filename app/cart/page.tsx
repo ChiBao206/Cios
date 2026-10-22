@@ -1,6 +1,7 @@
 "use client";
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useCart } from '../context/CartContext';
 import { useState, useEffect } from 'react'; 
 import NotifBadge from '@/app/components/NotifBadge';
@@ -9,7 +10,8 @@ import Footer from '@/app/components/Footer';
 import FloatingActions from '@/app/components/FloatingActions';
 
 export default function CartPage() {
-  const { cartItems, removeFromCart, updateQty, toggleCheck, toggleAllCheck, totalItems, clearCart, refreshCart } = useCart();
+  const router = useRouter();
+  const { cartItems, removeFromCart, updateQty, toggleCheck, toggleAllCheck, totalItems, clearCart, refreshCart, removePurchasedItems } = useCart();
   
   // 1. TIỀN HÀNG (TẠM TÍNH)
   const totalAmount = cartItems.reduce((sum: number, item: any) => sum + (item.checked ? Number(item.price) * item.cartQty : 0), 0);
@@ -311,9 +313,31 @@ export default function CartPage() {
           localStorage.setItem(`camera_bn_my_vouchers_${user.username}`, JSON.stringify(updatedSavedList));
         }
 
+        // ==========================================
+        // XỬ LÝ XÓA CÁC SẢN PHẨM ĐÃ MUA KHỎI GIỎ HÀNG (ĐỒNG BỘ LOCAL & MONGODB)
+        // ==========================================
+        const purchasedIds = purchasedItems.map((item: any) => String(item._id || item.id));
+        const remainingCart = cartItems.filter((item: any) => !purchasedIds.includes(String(item._id || item.id)));
+
+        if (user && user.username) {
+          // 1. Cập nhật localStorage ngay lập tức
+          localStorage.setItem(`camera_bn_cart_${user.username}`, JSON.stringify(remainingCart));
+
+          // 2. Cập nhật lên MongoDB và CHỜ (AWAIT) hoàn tất
+          await fetch('/api/cart', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: user.username, cart: remainingCart })
+          }).catch(err => console.log("Lỗi đồng bộ giỏ hàng sau khi đặt:", err));
+        }
+
+        // 3. Cập nhật state CartContext
+        if (removePurchasedItems) {
+          removePurchasedItems(purchasedIds);
+        }
+
         alert("🎉 Đặt hàng thành công! Hệ thống đã ghi nhận đơn hàng.");
-        clearCart(); 
-        window.location.href = '/profile'; 
+        router.push('/profile'); 
       } else {
         alert("Có lỗi xảy ra khi lưu đơn hàng vào hệ thống.");
       }
