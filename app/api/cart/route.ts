@@ -1,19 +1,26 @@
 import { NextResponse } from 'next/server';
-// Dùng ../../../ để lùi ra ngoài 3 thư mục, tìm đến lib và models
 import connectDB from '../../../lib/mongodb'; 
 import User from '../../../models/User'; 
+
+export const dynamic = 'force-dynamic';
 
 // HÀM LẤY GIỎ HÀNG TỪ MONGODB
 export async function GET(request: Request) {
   try {
-    await connectDB(); // Kết nối đến MongoDB Cloud
+    await connectDB();
     const { searchParams } = new URL(request.url);
     const username = searchParams.get('username');
 
-    // Tìm user trong database
-    const user = await User.findOne({ username });
-    
-    return NextResponse.json({ cart: user?.cart || [] });
+    if (!username) {
+      return NextResponse.json({ cart: [] }, {
+        headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0' }
+      });
+    }
+
+    const user = await User.findOne({ username }).lean();
+    return NextResponse.json({ cart: user?.cart || [] }, {
+      headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0' }
+    });
   } catch (error) {
     console.error("Lỗi lấy giỏ hàng:", error);
     return NextResponse.json({ cart: [] });
@@ -23,14 +30,18 @@ export async function GET(request: Request) {
 // HÀM LƯU GIỎ HÀNG LÊN MONGODB
 export async function POST(request: Request) {
   try {
-    await connectDB(); // Kết nối đến MongoDB Cloud
+    await connectDB();
     const { username, cart } = await request.json();
     
+    if (!username) {
+      return NextResponse.json({ success: false, message: 'Thiếu username' }, { status: 400 });
+    }
+
     // Tìm user và cập nhật mảng cart mới nhất
     const user = await User.findOneAndUpdate(
       { username: username }, 
-      { cart: cart },
-      { new: true } // Trả về dữ liệu mới sau khi update
+      { $set: { cart: cart || [] } },
+      { returnDocument: 'after', upsert: false }
     );
 
     if (user) {

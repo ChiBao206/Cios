@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 const CartContext = createContext<any>(null);
 
@@ -10,7 +10,51 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<any>(null);
 
   // ======================================================================
-  // 1. TẢI DỮ LIỆU: KIỂM TRA ĐĂNG NHẬP VÀ MÓC ĐÚNG GIỎ HÀNG CỦA TÀI KHOẢN ĐÓ
+  // HÀM ĐỒNG BỘ GIỎ HÀNG TỪ MONGODB VỀ THIẾT BỊ HIỆN TẠI
+  // ======================================================================
+  const refreshCart = useCallback(async () => {
+    const loggedInUser = localStorage.getItem('currentUser');
+    if (!loggedInUser) return;
+    
+    try {
+      const parsedUser = JSON.parse(loggedInUser);
+      setUser(parsedUser);
+
+      const res = await fetch(`/api/cart?username=${parsedUser.username}&t=${new Date().getTime()}`, {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache, no-store' }
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data && Array.isArray(data.cart)) {
+          if (data.cart.length > 0) {
+            setCartItems(data.cart);
+            localStorage.setItem(`camera_bn_cart_${parsedUser.username}`, JSON.stringify(data.cart));
+          } else {
+            // Nếu DB chưa có nhưng local máy này có hàng, đồng bộ local lên DB
+            const savedCart = localStorage.getItem(`camera_bn_cart_${parsedUser.username}`);
+            if (savedCart) {
+              const localItems = JSON.parse(savedCart);
+              if (localItems && localItems.length > 0) {
+                setCartItems(localItems);
+                fetch('/api/cart', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ username: parsedUser.username, cart: localItems })
+                }).catch(() => {});
+              }
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.log("Lỗi đồng bộ giỏ hàng:", e);
+    }
+  }, []);
+
+  // ======================================================================
+  // 1. TẢI DỮ LIỆU BAN ĐẦU: KIỂM TRA ĐĂNG NHẬP VÀ MÓC ĐÚNG GIỎ HÀNG CỦA TÀI KHOẢN ĐÓ
   // ======================================================================
   useEffect(() => {
     const loggedInUser = localStorage.getItem('currentUser');
@@ -22,16 +66,27 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
       // Lấy giỏ hàng từ MongoDB
       fetch(`/api/cart?username=${parsedUser.username}&t=${new Date().getTime()}`, {
         cache: 'no-store',
-        headers: { 'Cache-Control': 'no-cache' }
+        headers: { 'Cache-Control': 'no-cache, no-store' }
       }) 
         .then(res => res.json())
         .then(data => {
            if (data && data.cart && data.cart.length > 0) {
              setCartItems(data.cart);
+             localStorage.setItem(`camera_bn_cart_${parsedUser.username}`, JSON.stringify(data.cart));
            } else {
              // Nếu DB trống, tìm rổ riêng lưu trên máy của tài khoản này
              const savedCart = localStorage.getItem(`camera_bn_cart_${parsedUser.username}`);
-             if (savedCart) setCartItems(JSON.parse(savedCart));
+             if (savedCart) {
+               const localItems = JSON.parse(savedCart);
+               setCartItems(localItems);
+               if (localItems && localItems.length > 0) {
+                 fetch('/api/cart', {
+                   method: 'POST',
+                   headers: { 'Content-Type': 'application/json' },
+                   body: JSON.stringify({ username: parsedUser.username, cart: localItems })
+                 }).catch(() => {});
+               }
+             }
            }
            setIsLoaded(true);
         })
@@ -41,12 +96,29 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
            setIsLoaded(true);
         });
     } else {
-      // ĐÃ SỬA: NẾU CHƯA ĐĂNG NHẬP -> LẬP TỨC ÉP GIỎ HÀNG VỀ TRỐNG BÓC
       setUser(null);
       setCartItems([]);
       setIsLoaded(true);
     }
   }, []);
+
+  // Tự động kiểm tra và đồng bộ khi người dùng quay lại tab/trình duyệt
+  useEffect(() => {
+    const handleSync = () => {
+      refreshCart();
+    };
+
+    window.addEventListener('focus', handleSync);
+    window.addEventListener('storage', handleSync);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') handleSync();
+    });
+
+    return () => {
+      window.removeEventListener('focus', handleSync);
+      window.removeEventListener('storage', handleSync);
+    };
+  }, [refreshCart]);
 
   // ======================================================================
   // 2. LƯU TRỮ: CHỈ LƯU KHI CÓ TÀI KHOẢN VÀ LƯU VÀO ĐÚNG RỔ CỦA NGƯỜI ĐÓ
@@ -94,6 +166,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const updateQty = (id: string, qty: number) => {
+    if (qty < 1) return;
     setCartItems(cartItems.map(item => {
       const itemId = item._id ? String(item._id) : String(item.id);
       return itemId === String(id) ? { ...item, cartQty: qty } : item;
@@ -118,7 +191,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   const totalItems = cartItems.reduce((sum, item) => sum + item.cartQty, 0);
 
   return (
-    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, updateQty, toggleCheck, toggleAllCheck, totalItems, clearCart }}>
+    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, updateQty, toggleCheck, toggleAllCheck, totalItems, clearCart, refreshCart }}>
       {children}
     </CartContext.Provider>
   );

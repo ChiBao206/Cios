@@ -9,7 +9,7 @@ import Footer from '@/app/components/Footer';
 import FloatingActions from '@/app/components/FloatingActions';
 
 export default function CartPage() {
-  const { cartItems, removeFromCart, updateQty, toggleCheck, toggleAllCheck, totalItems, clearCart } = useCart();
+  const { cartItems, removeFromCart, updateQty, toggleCheck, toggleAllCheck, totalItems, clearCart, refreshCart } = useCart();
   
   // 1. TIỀN HÀNG (TẠM TÍNH)
   const totalAmount = cartItems.reduce((sum: number, item: any) => sum + (item.checked ? Number(item.price) * item.cartQty : 0), 0);
@@ -66,6 +66,7 @@ export default function CartPage() {
     setName(parsedUser.username || '');
     setPhone(parsedUser.phone || '');
     setIsLoadingAuth(false);
+    if (refreshCart) refreshCart();
 
     // Fetch API Tỉnh thành
     fetch('https://provinces.open-api.vn/api/?depth=1')
@@ -519,15 +520,77 @@ export default function CartPage() {
                       </button>
                     </div>
 
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
-                      <span style={{ fontWeight: '700', color: '#0284c7', fontSize: '15px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px', flexWrap: 'wrap', gap: '8px' }}>
+                      <span style={{ fontWeight: '800', color: '#0284c7', fontSize: '15px' }}>
                         {Number(item.price).toLocaleString('vi-VN')} đ
                       </span>
                       
-                      <div style={{ display: 'flex', border: '1px solid #bae6fd', borderRadius: '6px', overflow: 'hidden' }}>
-                        <button onClick={() => updateQty(item._id || item.id, item.cartQty - 1)} disabled={item.cartQty <= 1} style={{ width: '28px', height: '28px', background: 'rgba(240, 249, 255, 0.9)', border: 'none', cursor: 'pointer', fontWeight: 'bold', color: '#0369a1' }}>-</button>
-                        <input type="text" value={item.cartQty} readOnly style={{ width: '35px', height: '28px', border: 'none', borderLeft: '1px solid #bae6fd', borderRight: '1px solid #bae6fd', textAlign: 'center', fontWeight: 'bold', fontSize: '13px', color: '#0c4a6e', background: 'white' }} />
-                        <button onClick={() => updateQty(item._id || item.id, item.cartQty + 1)} disabled={item.cartQty >= (item.quantity || item.maxQty)} style={{ width: '28px', height: '28px', background: 'rgba(240, 249, 255, 0.9)', border: 'none', cursor: 'pointer', fontWeight: 'bold', color: '#0369a1' }}>+</button>
+                      <div style={{ display: 'inline-flex', alignItems: 'center', border: '1.5px solid #bae6fd', borderRadius: '8px', overflow: 'hidden', background: '#ffffff', boxShadow: '0 1px 4px rgba(2, 132, 199, 0.08)' }}>
+                        <button 
+                          onClick={() => updateQty(item._id || item.id, item.cartQty - 1)} 
+                          disabled={item.cartQty <= 1} 
+                          style={{ 
+                            width: '32px', 
+                            height: '32px', 
+                            background: item.cartQty <= 1 ? '#f8fafc' : '#f0f9ff', 
+                            border: 'none', 
+                            cursor: item.cartQty <= 1 ? 'not-allowed' : 'pointer', 
+                            fontWeight: 'bold', 
+                            fontSize: '16px', 
+                            color: item.cartQty <= 1 ? '#cbd5e1' : '#0284c7',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'all 0.15s',
+                            padding: 0
+                          }}
+                          title="Giảm số lượng"
+                        >
+                          -
+                        </button>
+                        <span 
+                          style={{ 
+                            minWidth: '40px', 
+                            height: '32px', 
+                            borderLeft: '1px solid #e0f2fe', 
+                            borderRight: '1px solid #e0f2fe', 
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            textAlign: 'center', 
+                            fontWeight: '800', 
+                            fontSize: '14px', 
+                            color: '#0c4a6e', 
+                            background: '#ffffff',
+                            userSelect: 'none',
+                            padding: '0 4px',
+                            lineHeight: 1
+                          }}
+                        >
+                          {item.cartQty}
+                        </span>
+                        <button 
+                          onClick={() => updateQty(item._id || item.id, item.cartQty + 1)} 
+                          disabled={item.quantity && item.cartQty >= item.quantity} 
+                          style={{ 
+                            width: '32px', 
+                            height: '32px', 
+                            background: (item.quantity && item.cartQty >= item.quantity) ? '#f8fafc' : '#f0f9ff', 
+                            border: 'none', 
+                            cursor: (item.quantity && item.cartQty >= item.quantity) ? 'not-allowed' : 'pointer', 
+                            fontWeight: 'bold', 
+                            fontSize: '16px', 
+                            color: (item.quantity && item.cartQty >= item.quantity) ? '#cbd5e1' : '#0284c7',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'all 0.15s',
+                            padding: 0
+                          }}
+                          title="Tăng số lượng"
+                        >
+                          +
+                        </button>
                       </div>
                     </div>
                   </div>

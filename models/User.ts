@@ -6,10 +6,10 @@ const UserSchema = new mongoose.Schema({
   password: { type: String, required: true },
   phone: { type: String },
   role: { type: String, default: '0' },
-  // BẮT BUỘC PHẢI THÊM 2 DÒNG NÀY ĐỂ MONGODB NHẬN ẢNH BẠN NHÉ:
   avatar: { type: String, default: '' },
-  image: { type: String, default: '' }
-}, { timestamps: true });
+  image: { type: String, default: '' },
+  cart: { type: [mongoose.Schema.Types.Mixed], default: [] }
+}, { timestamps: true, strict: false });
 
 const User = mongoose.models.User || mongoose.model('User', UserSchema);
 export default User;
