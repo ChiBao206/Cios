@@ -2,11 +2,22 @@ import nodemailer from 'nodemailer';
 
 export const sendEmail = async (to: string, subject: string, html: string) => {
   try {
+    const emailPass = (process.env.EMAIL_PASS || '').replace(/\s+/g, '');
+
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
       auth: {
         user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
+        pass: emailPass,
+      },
+      // Cấu hình đặc biệt cho Vercel Serverless
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 15000,
+      tls: {
+        rejectUnauthorized: false,
       },
     });
 
@@ -17,8 +28,8 @@ export const sendEmail = async (to: string, subject: string, html: string) => {
       html,
     };
 
-    await transporter.sendMail(mailOptions);
-    console.log("✅ Đã gửi email thành công tới:", to);
+    const info = await transporter.sendMail(mailOptions);
+    console.log("✅ Đã gửi email thành công tới:", to, "| MessageId:", info.messageId);
     return true;
   } catch (error) {
     console.error("❌ Lỗi gửi email:", error);

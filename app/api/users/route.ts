@@ -53,8 +53,8 @@ export async function POST(req: Request) {
         </div>
       `;
       
-      // Gửi mail ngầm, không dùng await để tránh làm khách hàng phải chờ lâu lúc bấm nút Đăng ký
-      sendEmail(newData.email, subject, html).catch(err => console.log("Lỗi gửi mail ngầm:", err));
+      // Phải dùng await để Vercel không đóng hàm trước khi gửi mail xong
+      await sendEmail(newData.email, subject, html).catch(err => console.log("Lỗi gửi mail đăng ký:", err));
     }
 
     return NextResponse.json(newData);

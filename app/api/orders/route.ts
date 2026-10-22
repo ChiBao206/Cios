@@ -112,7 +112,8 @@ export async function POST(req: Request) {
           </div>
         `;
         
-        sendEmail(customerEmail, subject, html).catch(err => console.log("Lỗi gửi mail đơn hàng ngầm:", err));
+        // Phải dùng await để Vercel không đóng hàm trước khi gửi mail xong
+        await sendEmail(customerEmail, subject, html).catch(err => console.log("Lỗi gửi mail đơn hàng:", err));
       }
     } catch (mailError) {
       console.error("Lỗi hệ thống chuẩn bị mail:", mailError);

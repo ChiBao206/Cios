@@ -14,7 +14,8 @@
     "next": "16.3.3",
     "nodemailer": "^10.0.14",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "resend": "^6.34.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -37,4 +38,3 @@
     "android >= 5"
   ]
 }
-
