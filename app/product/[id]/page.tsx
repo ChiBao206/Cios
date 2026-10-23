@@ -924,9 +924,57 @@ export default function ProductDetail() {
   const [isSaleDay, setIsSaleDay] = useState(false);
   const [saleDiscount, setSaleDiscount] = useState(0);
 
+  // FAVORITES
+  const [favorites, setFavorites] = useState<any[]>([]);
+
+  const isFavorited = Boolean(
+    product &&
+    favorites &&
+    favorites.some((item: any) => {
+      const pId = String(product.id || product._id || '');
+      const pMongoId = String(product._id || product.id || '');
+      const pName = String(product.name || '').trim().toLowerCase();
+      const iId = String(item.id || item._id || '');
+      const iMongoId = String(item._id || item.id || '');
+      const iName = String(item.name || '').trim().toLowerCase();
+      return (
+        (pId && (iId === pId || iMongoId === pId)) ||
+        (pMongoId && (iId === pMongoId || iMongoId === pMongoId)) ||
+        (pName && iName && pName === iName)
+      );
+    })
+  );
+
   useEffect(() => {
     const loggedInUser = localStorage.getItem('currentUser');
-    if (loggedInUser) setUser(JSON.parse(loggedInUser));
+    if (loggedInUser) {
+      try {
+        const parsed = JSON.parse(loggedInUser);
+        setUser(parsed);
+        const userKey = parsed.username ? `camera_bn_favs_${parsed.username}` : 'camera_bn_favs';
+        const localFavs = localStorage.getItem(userKey) || localStorage.getItem('camera_bn_favs');
+        if (localFavs) {
+          try { setFavorites(JSON.parse(localFavs)); } catch(e) {}
+        }
+        if (parsed.username) {
+          fetch(`/api/favorites?username=${encodeURIComponent(parsed.username)}&t=${Date.now()}`)
+            .then(res => res.json())
+            .then(data => {
+              if (data && Array.isArray(data.favorites)) {
+                setFavorites(data.favorites);
+                localStorage.setItem(userKey, JSON.stringify(data.favorites));
+                localStorage.setItem('camera_bn_favs', JSON.stringify(data.favorites));
+              }
+            })
+            .catch(() => {});
+        }
+      } catch (e) {}
+    } else {
+      const localFavs = localStorage.getItem('camera_bn_favs');
+      if (localFavs) {
+        try { setFavorites(JSON.parse(localFavs)); } catch(e) {}
+      }
+    }
 
     if (!params?.id) return;
     const currentId = String(params.id);
@@ -1130,22 +1178,64 @@ export default function ProductDetail() {
     );
   }
 
-  const addToFavorite = (productData: any) => {
+  const toggleFavorite = async (productData: any) => {
     if (!user) {
-      alert("Vui lòng đăng nhập để lưu vào mục yêu thích!");
+      alert("Vui lòng đăng nhập để lưu sản phẩm yêu thích nhé!");
       router.push('/login');
       return;
     }
-    const saved = localStorage.getItem('camera_bn_favs');
-    let favList = saved ? JSON.parse(saved) : [];
-    const exists = favList.find((item: any) => String(item._id || item.id) === String(productData._id || productData.id));
-    
-    if(!exists) {
-      favList.push(productData);
-      localStorage.setItem('camera_bn_favs', JSON.stringify(favList));
+    const userKey = user.username ? `camera_bn_favs_${user.username}` : 'camera_bn_favs';
+    const currentFavs = [...favorites];
+
+    const prodId = String(productData.id || productData._id || '');
+    const prodMongoId = String(productData._id || productData.id || '');
+    const prodName = String(productData.name || '').trim().toLowerCase();
+
+    const existsIndex = currentFavs.findIndex((item: any) => {
+      const iId = String(item.id || item._id || '');
+      const iMongoId = String(item._id || item.id || '');
+      const itemName = String(item.name || '').trim().toLowerCase();
+      return (
+        (prodId && (iId === prodId || iMongoId === prodId)) ||
+        (prodMongoId && (iId === prodMongoId || iMongoId === prodMongoId)) ||
+        (prodName && itemName && prodName === itemName)
+      );
+    });
+
+    let newFavs: any[] = [];
+    if (existsIndex === -1) {
+      const itemToSave = {
+        _id: productData._id || productData.id,
+        id: productData.id || productData._id,
+        name: productData.name,
+        price: Number(productData.price || 0),
+        image: productData.image || productData.img || productData.image_url || "https://placehold.co/300x300?text=Camera",
+        img: productData.image || productData.img || productData.image_url || "https://placehold.co/300x300?text=Camera",
+        category_id: productData.category_id,
+        quantity: productData.quantity,
+        sold: productData.sold
+      };
+      newFavs = [itemToSave, ...currentFavs];
       alert("❤️ Đã thêm sản phẩm vào danh sách yêu thích!");
-    } else { 
-      alert("Sản phẩm này đã có trong danh sách yêu thích của bạn!"); 
+    } else {
+      newFavs = currentFavs.filter((_, idx) => idx !== existsIndex);
+      alert("Đã xóa sản phẩm khỏi danh sách yêu thích!");
+    }
+
+    setFavorites(newFavs);
+    localStorage.setItem(userKey, JSON.stringify(newFavs));
+    localStorage.setItem('camera_bn_favs', JSON.stringify(newFavs));
+
+    if (user.username) {
+      try {
+        await fetch('/api/favorites', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: user.username, favorites: newFavs })
+        });
+      } catch (e) {
+        console.error("Lỗi đồng bộ favorites:", e);
+      }
     }
   };
   
@@ -1335,11 +1425,17 @@ export default function ProductDetail() {
               </div>
 
               <button 
-                onClick={() => addToFavorite(product)}
-                className="product-fav-btn"
-                title="Lưu vào yêu thích"
+                onClick={() => toggleFavorite(product)}
+                className={`product-fav-btn ${isFavorited ? 'active' : ''}`}
+                style={{
+                  color: isFavorited ? '#ef4444' : undefined,
+                  borderColor: isFavorited ? '#f87171' : undefined,
+                  backgroundColor: isFavorited ? '#fef2f2' : undefined,
+                  boxShadow: isFavorited ? '0 2px 10px rgba(239, 68, 68, 0.35)' : undefined
+                }}
+                title={isFavorited ? "Bỏ yêu thích" : "Lưu vào yêu thích"}
               >
-                <i className="fas fa-heart"></i>
+                <i className="fas fa-heart" style={{ color: isFavorited ? '#ef4444' : undefined }}></i>
               </button>
             </div>
 

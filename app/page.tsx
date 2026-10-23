@@ -33,6 +33,27 @@ export default function Home() {
 
   // FAVORITES
   const [favIds, setFavIds] = useState<string[]>([]);
+  const [favorites, setFavorites] = useState<any[]>([]);
+
+  // Helper kiểm tra sản phẩm có trong danh sách yêu thích không
+  const isFavorite = (prod: any) => {
+    if (!prod || !favorites || favorites.length === 0) return false;
+    const prodId = String(prod.id || prod._id || '');
+    const prodMongoId = String(prod._id || prod.id || '');
+    const prodName = String(prod.name || '').trim().toLowerCase();
+
+    return favorites.some((item: any) => {
+      const itemId = String(item.id || item._id || '');
+      const itemMongoId = String(item._id || item.id || '');
+      const itemName = String(item.name || '').trim().toLowerCase();
+
+      return (
+        (prodId && (itemId === prodId || itemMongoId === prodId)) ||
+        (prodMongoId && (itemId === prodMongoId || itemMongoId === prodMongoId)) ||
+        (prodName && itemName && prodName === itemName)
+      );
+    });
+  };
 
   // BỘ LỌC & PHÂN TRANG (Tự động khôi phục trang và danh mục khi khách từ trang chi tiết quay lại)
   const [currentPage, setCurrentPage] = useState<number>(() => {
@@ -222,10 +243,43 @@ export default function Home() {
       if(localUsedVouchers) setUsedVouchers(JSON.parse(localUsedVouchers));
     }
 
-    const localFavs = localStorage.getItem('camera_bn_favs');
+    const userFavKey = currentUsername ? `camera_bn_favs_${currentUsername}` : 'camera_bn_favs';
+    const localFavs = localStorage.getItem(userFavKey) || localStorage.getItem('camera_bn_favs');
     if (localFavs) {
-      const parsedFavs = JSON.parse(localFavs);
-      setFavIds(parsedFavs.map((f: any) => String(f._id || f.id)));
+      try {
+        const parsedFavs = JSON.parse(localFavs);
+        if (Array.isArray(parsedFavs)) {
+          setFavorites(parsedFavs);
+          setFavIds(parsedFavs.map((f: any) => String(f._id || f.id)));
+        }
+      } catch (e) {}
+    }
+
+    if (currentUsername) {
+      fetch(`/api/favorites?username=${encodeURIComponent(currentUsername)}&t=${Date.now()}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && Array.isArray(data.favorites)) {
+            if (data.favorites.length > 0) {
+              setFavorites(data.favorites);
+              setFavIds(data.favorites.map((f: any) => String(f._id || f.id)));
+              localStorage.setItem(userFavKey, JSON.stringify(data.favorites));
+              localStorage.setItem('camera_bn_favs', JSON.stringify(data.favorites));
+            } else if (localFavs) {
+              try {
+                const parsedFavs = JSON.parse(localFavs);
+                if (Array.isArray(parsedFavs) && parsedFavs.length > 0) {
+                  fetch('/api/favorites', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: currentUsername, favorites: parsedFavs })
+                  }).catch(() => {});
+                }
+              } catch (e) {}
+            }
+          }
+        })
+        .catch(() => {});
     }
 
     const fetchRealData = async () => {
@@ -322,27 +376,65 @@ export default function Home() {
     window.location.href = '/'; 
   };
 
-  const toggleFavorite = (productData: any) => {
+  const toggleFavorite = async (productData: any) => {
     if (!user) {
       alert("Vui lòng đăng nhập để lưu sản phẩm yêu thích nhé!");
       router.push('/login');
       return;
     }
     
-    const productId = String(productData._id || productData.id);
-    const saved = localStorage.getItem('camera_bn_favs');
-    let favList = saved ? JSON.parse(saved) : [];
-    
-    const existsIndex = favList.findIndex((item: any) => String(item._id || item.id) === productId);
-    
+    const userKey = user.username ? `camera_bn_favs_${user.username}` : 'camera_bn_favs';
+    const currentFavs = [...favorites];
+
+    const prodId = String(productData.id || productData._id || '');
+    const prodMongoId = String(productData._id || productData.id || '');
+    const prodName = String(productData.name || '').trim().toLowerCase();
+
+    const existsIndex = currentFavs.findIndex((item: any) => {
+      const iId = String(item.id || item._id || '');
+      const iMongoId = String(item._id || item.id || '');
+      const itemName = String(item.name || '').trim().toLowerCase();
+      return (
+        (prodId && (iId === prodId || iMongoId === prodId)) ||
+        (prodMongoId && (iId === prodMongoId || iMongoId === prodMongoId)) ||
+        (prodName && itemName && prodName === itemName)
+      );
+    });
+
+    let newFavs: any[] = [];
     if (existsIndex === -1) {
-      favList.push(productData);
-      setFavIds([...favIds, productId]);
-      localStorage.setItem('camera_bn_favs', JSON.stringify(favList));
-    } else { 
-      favList.splice(existsIndex, 1);
-      setFavIds(favIds.filter(id => id !== productId));
-      localStorage.setItem('camera_bn_favs', JSON.stringify(favList));
+      const itemToSave = {
+        _id: productData._id || productData.id,
+        id: productData.id || productData._id,
+        name: productData.name,
+        price: Number(productData.price || 0),
+        image: productData.image || productData.img || productData.image_url || "https://placehold.co/300x300?text=Camera",
+        img: productData.image || productData.img || productData.image_url || "https://placehold.co/300x300?text=Camera",
+        category_id: productData.category_id,
+        quantity: productData.quantity,
+        sold: productData.sold
+      };
+      newFavs = [itemToSave, ...currentFavs];
+    } else {
+      newFavs = currentFavs.filter((_, idx) => idx !== existsIndex);
+    }
+
+    setFavorites(newFavs);
+    setFavIds(newFavs.map((f: any) => String(f._id || f.id)));
+
+    localStorage.setItem(userKey, JSON.stringify(newFavs));
+    localStorage.setItem('camera_bn_favs', JSON.stringify(newFavs));
+
+    if (user.username) {
+      try {
+        await fetch('/api/favorites', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: user.username, favorites: newFavs })
+        });
+      } catch (e) {
+        console.error("Lỗi đồng bộ favorites lên server:", e);
+      }
     }
   };
 
@@ -968,11 +1060,21 @@ export default function Home() {
                   <div className="card-badge-tag">TOP BÁN CHẠY</div>
                   
                   <div 
-                    className={`card-fav-btn ${favIds.includes(String(product.id || product._id)) ? 'active' : ''}`}
-                    onClick={() => toggleFavorite(product)}
-                    title="Lưu vào yêu thích"
+                    className={`card-fav-btn ${isFavorite(product) ? 'active' : ''}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      toggleFavorite(product);
+                    }}
+                    style={{
+                      color: isFavorite(product) ? '#ef4444' : undefined,
+                      borderColor: isFavorite(product) ? '#f87171' : undefined,
+                      backgroundColor: isFavorite(product) ? '#ffffff' : undefined,
+                      boxShadow: isFavorite(product) ? '0 2px 10px rgba(239, 68, 68, 0.35)' : undefined
+                    }}
+                    title={isFavorite(product) ? "Bỏ yêu thích" : "Lưu vào yêu thích"}
                   >
-                    <i className="fas fa-heart"></i>
+                    <i className="fas fa-heart" style={{ color: isFavorite(product) ? '#ef4444' : undefined }}></i>
                   </div>
 
                   <div className="card-img-wrapper">
@@ -1060,11 +1162,21 @@ export default function Home() {
                     )}
 
                     <div 
-                      className={`card-fav-btn ${favIds.includes(String(product.id || product._id)) ? 'active' : ''}`}
-                      onClick={() => toggleFavorite(product)}
-                      title="Lưu vào yêu thích"
+                      className={`card-fav-btn ${isFavorite(product) ? 'active' : ''}`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        toggleFavorite(product);
+                      }}
+                      style={{
+                        color: isFavorite(product) ? '#ef4444' : undefined,
+                        borderColor: isFavorite(product) ? '#f87171' : undefined,
+                        backgroundColor: isFavorite(product) ? '#ffffff' : undefined,
+                        boxShadow: isFavorite(product) ? '0 2px 10px rgba(239, 68, 68, 0.35)' : undefined
+                      }}
+                      title={isFavorite(product) ? "Bỏ yêu thích" : "Lưu vào yêu thích"}
                     >
-                      <i className="fas fa-heart"></i>
+                      <i className="fas fa-heart" style={{ color: isFavorite(product) ? '#ef4444' : undefined }}></i>
                     </div>
 
                     <div className="card-img-wrapper">

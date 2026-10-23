@@ -8,7 +8,8 @@ const UserSchema = new mongoose.Schema({
   role: { type: String, default: '0' },
   avatar: { type: String, default: '' },
   image: { type: String, default: '' },
-  cart: { type: [mongoose.Schema.Types.Mixed], default: [] }
+  cart: { type: [mongoose.Schema.Types.Mixed], default: [] },
+  favorites: { type: [mongoose.Schema.Types.Mixed], default: [] }
 }, { timestamps: true, strict: false });
 
 const User = mongoose.models.User || mongoose.model('User', UserSchema);

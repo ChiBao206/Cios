@@ -60,9 +60,13 @@ export default function ProfilePage() {
         fetchSupports(parsedUser.username, parsedUser.phone);
       }
 
-      const savedFavs = localStorage.getItem('camera_bn_favs');
-      if(savedFavs) {
-        setFavorites(JSON.parse(savedFavs));
+      if (parsedUser.username) {
+        fetchFavorites(parsedUser.username);
+      } else {
+        const savedFavs = localStorage.getItem('camera_bn_favs');
+        if(savedFavs) {
+          try { setFavorites(JSON.parse(savedFavs)); } catch(e) {}
+        }
       }
 
     } else {
@@ -132,6 +136,43 @@ export default function ProfilePage() {
         setSupports(mySupports);  
       }
     } catch (e) { console.log(e); }
+  };
+
+  const fetchFavorites = async (username: string) => {
+    const userKey = `camera_bn_favs_${username}`;
+    let loadedFavs: any[] = [];
+    const localFavs = localStorage.getItem(userKey) || localStorage.getItem('camera_bn_favs');
+    if (localFavs) {
+      try {
+        const parsed = JSON.parse(localFavs);
+        if (Array.isArray(parsed)) {
+          loadedFavs = parsed;
+          setFavorites(parsed);
+        }
+      } catch (e) {}
+    }
+
+    try {
+      const res = await fetch(`/api/favorites?username=${encodeURIComponent(username)}&t=${Date.now()}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && Array.isArray(data.favorites)) {
+          if (data.favorites.length > 0) {
+            setFavorites(data.favorites);
+            localStorage.setItem(userKey, JSON.stringify(data.favorites));
+            localStorage.setItem('camera_bn_favs', JSON.stringify(data.favorites));
+          } else if (loadedFavs.length > 0) {
+            fetch('/api/favorites', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ username, favorites: loadedFavs })
+            }).catch(() => {});
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Lỗi lấy danh sách yêu thích:", e);
+    }
   };
 
   const handleLogout = () => {
@@ -369,10 +410,39 @@ export default function ProfilePage() {
     } catch (e) { alert("Lỗi khi gửi tin nhắn!"); }
   };
 
-  const removeFavorite = (id: string) => {
-    const newFavs = favorites.filter(f => String(f._id || f.id) !== String(id));
+  const removeFavorite = async (itemToRemove: any) => {
+    const targetId = typeof itemToRemove === 'object'
+      ? String(itemToRemove._id || itemToRemove.id || '')
+      : String(itemToRemove);
+    const targetName = typeof itemToRemove === 'object' ? String(itemToRemove.name || '').trim().toLowerCase() : '';
+
+    const newFavs = favorites.filter((f: any) => {
+      const fId = String(f._id || f.id || '');
+      const fMongoId = String(f.id || f._id || '');
+      const fName = String(f.name || '').trim().toLowerCase();
+
+      if (targetId && (fId === targetId || fMongoId === targetId)) return false;
+      if (targetName && fName && fName === targetName) return false;
+      return true;
+    });
+
     setFavorites(newFavs);
+
+    const userKey = user?.username ? `camera_bn_favs_${user.username}` : 'camera_bn_favs';
+    localStorage.setItem(userKey, JSON.stringify(newFavs));
     localStorage.setItem('camera_bn_favs', JSON.stringify(newFavs));
+
+    if (user?.username) {
+      try {
+        await fetch('/api/favorites', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: user.username, favorites: newFavs })
+        });
+      } catch (e) {
+        console.error("Lỗi xóa yêu thích:", e);
+      }
+    }
   };
 
   // ==========================================
@@ -850,17 +920,21 @@ export default function ProfilePage() {
                 </div>
               ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px' }}>
-                  {favorites.map((fav) => (
-                    <div key={fav._id || fav.id} className="fav-card">
-                      <button onClick={() => removeFavorite(fav._id || fav.id)} style={{ position: 'absolute', top: '10px', right: '10px', background: 'white', border: '1px solid #e2e8f0', color: '#ef4444', width: '30px', height: '30px', borderRadius: '50%', cursor: 'pointer', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {favorites.map((fav, fIdx) => (
+                    <div key={fav._id || fav.id || fIdx} className="fav-card">
+                      <button 
+                        onClick={() => removeFavorite(fav)} 
+                        title="Xóa khỏi yêu thích"
+                        style={{ position: 'absolute', top: '10px', right: '10px', background: 'white', border: '1px solid #fecdd3', color: '#ef4444', width: '32px', height: '32px', borderRadius: '50%', cursor: 'pointer', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.08)', transition: 'all 0.2s' }}
+                      >
                         <i className="fas fa-trash-alt"></i>
                       </button>
                       <div style={{ height: '180px', padding: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'white' }}>
-                        <img src={fav.img || fav.image || fav.image_url} alt={fav.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                        <img src={fav.image || fav.img || fav.image_url || "https://placehold.co/200x200?text=Camera"} alt={fav.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
                       </div>
                       <div style={{ padding: '15px', background: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
                         <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#1e293b', lineHeight: '1.4', height: '40px', overflow: 'hidden' }}>{fav.name}</h4>
-                        <div style={{ color: '#e11d48', fontWeight: 'bold', fontSize: '15px' }}>{Number(fav.price).toLocaleString('vi-VN')} đ</div>
+                        <div style={{ color: '#e11d48', fontWeight: 'bold', fontSize: '15px' }}>{Number(fav.price || 0).toLocaleString('vi-VN')} đ</div>
                         <Link href={`/product/${fav._id || fav.id}`} style={{ display: 'block', textAlign: 'center', background: '#3b82f6', color: 'white', padding: '8px', borderRadius: '4px', textDecoration: 'none', fontWeight: 'bold', fontSize: '12px', marginTop: '15px' }}>XEM CHI TIẾT</Link>
                       </div>
                     </div>
